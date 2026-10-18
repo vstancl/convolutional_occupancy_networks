@@ -16,7 +16,7 @@ numpy_include_dir = numpy.get_include()
 pykdtree = Extension(
     'src.utils.libkdtree.pykdtree.kdtree',
     sources=[
-        'src/utils/libkdtree/pykdtree/kdtree.c',
+        'src/utils/libkdtree/pykdtree/kdtree.pyx',
         'src/utils/libkdtree/pykdtree/_kdtree_core.c'
     ],
     language='c',

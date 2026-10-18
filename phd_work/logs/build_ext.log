@@ -1,40 +1,490 @@
-/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libmcubes/mcubes.pyx
-  tree = Parsing.p_module(s, pxd, full_module_name)
-/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libmesh/triangle_hash.pyx
-  tree = Parsing.p_module(s, pxd, full_module_name)
-/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libmise/mise.pyx
-  tree = Parsing.p_module(s, pxd, full_module_name)
-warning: src/utils/libmise/mise.pyx:65:33: Not all members given for struct 'Voxel'
-warning: src/utils/libmise/mise.pyx:65:33: Not all members given for struct 'Voxel'
-warning: src/utils/libmise/mise.pyx:259:33: Not all members given for struct 'Voxel'
-warning: src/utils/libmise/mise.pyx:259:33: Not all members given for struct 'Voxel'
-/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libsimplify/simplify_mesh.pyx
-  tree = Parsing.p_module(s, pxd, full_module_name)
-warning: src/utils/libsimplify/simplify_mesh.pyx:42:18: Not all members given for struct 'Vertex'
-warning: src/utils/libsimplify/simplify_mesh.pyx:42:18: Not all members given for struct 'Vertex'
-warning: src/utils/libsimplify/simplify_mesh.pyx:50:20: Not all members given for struct 'Triangle'
-warning: src/utils/libsimplify/simplify_mesh.pyx:50:20: Not all members given for struct 'Triangle'
-/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libvoxelize/voxelize.pyx
-  tree = Parsing.p_module(s, pxd, full_module_name)
-Compiling src/utils/libmcubes/mcubes.pyx because it changed.
-Compiling src/utils/libmesh/triangle_hash.pyx because it changed.
-Compiling src/utils/libmise/mise.pyx because it changed.
-Compiling src/utils/libsimplify/simplify_mesh.pyx because it changed.
-Compiling src/utils/libvoxelize/voxelize.pyx because it changed.
-[1/5] Cythonizing src/utils/libmcubes/mcubes.pyx
-[2/5] Cythonizing src/utils/libmesh/triangle_hash.pyx
-[3/5] Cythonizing src/utils/libmise/mise.pyx
-[4/5] Cythonizing src/utils/libsimplify/simplify_mesh.pyx
-[5/5] Cythonizing src/utils/libvoxelize/voxelize.pyx
 running build_ext
-W1018 20:08:56.679000 54594 .venv/lib/python3.12/site-packages/torch/utils/cpp_extension.py:680] Attempted to use ninja as the BuildExtension backend but we could not find ninja.. Falling back to using the slow distutils backend.
-W1018 20:08:56.684000 54594 .venv/lib/python3.12/site-packages/torch/utils/cpp_extension.py:489]                                !! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Your compiler (c++) is not compatible with the compiler Pytorch wasbuilt with for this platform, which is g++ on linux. Pleaseuse g++ to compile your extension. Alternatively, you maycompile PyTorch from source using c++, and then you can also usec++ to compile your extension.See https://github.com/pytorch/pytorch/blob/master/CONTRIBUTING.md for helpwith compiling PyTorch from source.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!                              !! WARNING !!
+W1018 20:22:27.223000 56500 .venv/lib/python3.12/site-packages/torch/utils/cpp_extension.py:680] Attempted to use ninja as the BuildExtension backend but we could not find ninja.. Falling back to using the slow distutils backend.
 building 'src.utils.libkdtree.pykdtree.kdtree' extension
 creating build/temp.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree
 cc -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -I/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libkdtree/pykdtree/_kdtree_core.c -o build/temp.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree/_kdtree_core.o -std=c99 -O3 -fopenmp -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=kdtree
 cc -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -I/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libkdtree/pykdtree/kdtree.c -o build/temp.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree/kdtree.o -std=c99 -O3 -fopenmp -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=kdtree
-src/utils/libkdtree/pykdtree/kdtree.c:181:12: fatal error: longintrepr.h: No such file or directory
-  181 |   #include "longintrepr.h"
-      |            ^~~~~~~~~~~~~~~
-compilation terminated.
-error: command '/usr/bin/cc' failed with exit code 1
+In file included from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarraytypes.h:1929,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/arrayobject.h:5,
+                 from src/utils/libkdtree/pykdtree/kdtree.c:784:
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+   17 | #warning "Using deprecated NumPy API, disable it with " \
+      |  ^~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c: In function ‘__pyx_pf_3src_5utils_9libkdtree_8pykdtree_6kdtree_6KDTree_4query’:
+src/utils/libkdtree/pykdtree/kdtree.c:4157:11: warning: ‘__pyx_v_closest_dists_data_float’ may be used uninitialized [-Wmaybe-uninitialized]
+ 4157 |           search_tree_float(__pyx_v_self->_kdtree_float, __pyx_v_self->_data_pts_data_float, __pyx_v_query_array_data_float, __pyx_v_num_qpoints, __pyx_v_num_n, __pyx_v_dub_float, __pyx_v_epsilon_float, __pyx_v_query_mask_data, __pyx_v_closest_idxs_data, __pyx_v_closest_dists_data_float);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:2950:10: note: ‘__pyx_v_closest_dists_data_float’ was declared here
+ 2950 |   float *__pyx_v_closest_dists_data_float;
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:4212:11: warning: ‘__pyx_v_closest_dists_data_double’ may be used uninitialized [-Wmaybe-uninitialized]
+ 4212 |           search_tree_double(__pyx_v_self->_kdtree_double, __pyx_v_self->_data_pts_data_double, __pyx_v_query_array_data_double, __pyx_v_num_qpoints, __pyx_v_num_n, __pyx_v_dub_double, __pyx_v_epsilon_double, __pyx_v_query_mask_data, __pyx_v_closest_idxs_data, __pyx_v_closest_dists_data_double);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:2951:11: note: ‘__pyx_v_closest_dists_data_double’ was declared here
+ 2951 |   double *__pyx_v_closest_dists_data_double;
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:4157:11: warning: ‘__pyx_v_query_array_data_float’ may be used uninitialized [-Wmaybe-uninitialized]
+ 4157 |           search_tree_float(__pyx_v_self->_kdtree_float, __pyx_v_self->_data_pts_data_float, __pyx_v_query_array_data_float, __pyx_v_num_qpoints, __pyx_v_num_n, __pyx_v_dub_float, __pyx_v_epsilon_float, __pyx_v_query_mask_data, __pyx_v_closest_idxs_data, __pyx_v_closest_dists_data_float);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:2954:10: note: ‘__pyx_v_query_array_data_float’ was declared here
+ 2954 |   float *__pyx_v_query_array_data_float;
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:4212:11: warning: ‘__pyx_v_query_array_data_double’ may be used uninitialized [-Wmaybe-uninitialized]
+ 4212 |           search_tree_double(__pyx_v_self->_kdtree_double, __pyx_v_self->_data_pts_data_double, __pyx_v_query_array_data_double, __pyx_v_num_qpoints, __pyx_v_num_n, __pyx_v_dub_double, __pyx_v_epsilon_double, __pyx_v_query_mask_data, __pyx_v_closest_idxs_data, __pyx_v_closest_dists_data_double);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:2955:11: note: ‘__pyx_v_query_array_data_double’ was declared here
+ 2955 |   double *__pyx_v_query_array_data_double;
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:4157:11: warning: ‘__pyx_v_dub_float’ may be used uninitialized [-Wmaybe-uninitialized]
+ 4157 |           search_tree_float(__pyx_v_self->_kdtree_float, __pyx_v_self->_data_pts_data_float, __pyx_v_query_array_data_float, __pyx_v_num_qpoints, __pyx_v_num_n, __pyx_v_dub_float, __pyx_v_epsilon_float, __pyx_v_query_mask_data, __pyx_v_closest_idxs_data, __pyx_v_closest_dists_data_float);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:2959:9: note: ‘__pyx_v_dub_float’ was declared here
+ 2959 |   float __pyx_v_dub_float;
+      |         ^~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:4212:11: warning: ‘__pyx_v_dub_double’ may be used uninitialized [-Wmaybe-uninitialized]
+ 4212 |           search_tree_double(__pyx_v_self->_kdtree_double, __pyx_v_self->_data_pts_data_double, __pyx_v_query_array_data_double, __pyx_v_num_qpoints, __pyx_v_num_n, __pyx_v_dub_double, __pyx_v_epsilon_double, __pyx_v_query_mask_data, __pyx_v_closest_idxs_data, __pyx_v_closest_dists_data_double);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libkdtree/pykdtree/kdtree.c:2960:10: note: ‘__pyx_v_dub_double’ was declared here
+ 2960 |   double __pyx_v_dub_double;
+      |          ^~~~~~~~~~~~~~~~~~
+creating build/lib.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree
+cc -pthread -shared -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--build-id=sha1 -Wl,--exclude-libs,ALL build/temp.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree/_kdtree_core.o build/temp.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree/kdtree.o -L/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/lib -o build/lib.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree/kdtree.cpython-312-x86_64-linux-gnu.so -lgomp
+building 'src.utils.libmcubes.mcubes' extension
+creating build/temp.linux-x86_64-cpython-312/src/utils/libmcubes
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -Isrc/utils/libmcubes -I/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libmcubes/marchingcubes.cpp -o build/temp.linux-x86_64-cpython-312/src/utils/libmcubes/marchingcubes.o -std=c++11 -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=mcubes
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -Isrc/utils/libmcubes -I/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libmcubes/mcubes.cpp -o build/temp.linux-x86_64-cpython-312/src/utils/libmcubes/mcubes.o -std=c++11 -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=mcubes
+In file included from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarraytypes.h:1929,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/arrayobject.h:5,
+                 from src/utils/libmcubes/mcubes.cpp:798:
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+   17 | #warning "Using deprecated NumPy API, disable it with " \
+      |  ^~~~~~~
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -Isrc/utils/libmcubes -I/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libmcubes/pywrapper.cpp -o build/temp.linux-x86_64-cpython-312/src/utils/libmcubes/pywrapper.o -std=c++11 -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=mcubes
+In file included from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarraytypes.h:1929,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/arrayobject.h:5,
+                 from src/utils/libmcubes/pyarraymodule.h:11,
+                 from src/utils/libmcubes/pywrapper.h:6,
+                 from src/utils/libmcubes/pywrapper.cpp:2:
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+   17 | #warning "Using deprecated NumPy API, disable it with " \
+      |  ^~~~~~~
+src/utils/libmcubes/pywrapper.cpp: In function ‘PyObject* marching_cubes(PyArrayObject*, double)’:
+src/utils/libmcubes/pywrapper.cpp:98:32: warning: narrowing conversion of ‘((* shape) - 1)’ from ‘npy_intp’ {aka ‘long int’} to ‘double’ [-Wnarrowing]
+   98 |     double upper[3] = {shape[0]-1, shape[1]-1, shape[2]-1};
+      |                        ~~~~~~~~^~
+src/utils/libmcubes/pywrapper.cpp:98:44: warning: narrowing conversion of ‘((*(shape + 8)) - 1)’ from ‘npy_intp’ {aka ‘long int’} to ‘double’ [-Wnarrowing]
+   98 |     double upper[3] = {shape[0]-1, shape[1]-1, shape[2]-1};
+      |                                    ~~~~~~~~^~
+src/utils/libmcubes/pywrapper.cpp:98:56: warning: narrowing conversion of ‘((*(shape + 16)) - 1)’ from ‘npy_intp’ {aka ‘long int’} to ‘double’ [-Wnarrowing]
+   98 |     double upper[3] = {shape[0]-1, shape[1]-1, shape[2]-1};
+      |                                                ~~~~~~~~^~
+src/utils/libmcubes/pywrapper.cpp: In function ‘PyObject* marching_cubes2(PyArrayObject*, double)’:
+src/utils/libmcubes/pywrapper.cpp:137:32: warning: narrowing conversion of ‘((* shape) - 1)’ from ‘npy_intp’ {aka ‘long int’} to ‘double’ [-Wnarrowing]
+  137 |     double upper[3] = {shape[0]-1, shape[1]-1, shape[2]-1};
+      |                        ~~~~~~~~^~
+src/utils/libmcubes/pywrapper.cpp:137:44: warning: narrowing conversion of ‘((*(shape + 8)) - 1)’ from ‘npy_intp’ {aka ‘long int’} to ‘double’ [-Wnarrowing]
+  137 |     double upper[3] = {shape[0]-1, shape[1]-1, shape[2]-1};
+      |                                    ~~~~~~~~^~
+src/utils/libmcubes/pywrapper.cpp:137:56: warning: narrowing conversion of ‘((*(shape + 16)) - 1)’ from ‘npy_intp’ {aka ‘long int’} to ‘double’ [-Wnarrowing]
+  137 |     double upper[3] = {shape[0]-1, shape[1]-1, shape[2]-1};
+      |                                                ~~~~~~~~^~
+src/utils/libmcubes/pywrapper.cpp: In function ‘PyObject* marching_cubes3(PyArrayObject*, double)’:
+src/utils/libmcubes/pywrapper.cpp:176:32: warning: narrowing conversion of ‘((* shape) - 1)’ from ‘npy_intp’ {aka ‘long int’} to ‘double’ [-Wnarrowing]
+  176 |     double upper[3] = {shape[0]-1, shape[1]-1, shape[2]-1};
+      |                        ~~~~~~~~^~
+src/utils/libmcubes/pywrapper.cpp:176:44: warning: narrowing conversion of ‘((*(shape + 8)) - 1)’ from ‘npy_intp’ {aka ‘long int’} to ‘double’ [-Wnarrowing]
+  176 |     double upper[3] = {shape[0]-1, shape[1]-1, shape[2]-1};
+      |                                    ~~~~~~~~^~
+src/utils/libmcubes/pywrapper.cpp:176:56: warning: narrowing conversion of ‘((*(shape + 16)) - 1)’ from ‘npy_intp’ {aka ‘long int’} to ‘double’ [-Wnarrowing]
+  176 |     double upper[3] = {shape[0]-1, shape[1]-1, shape[2]-1};
+      |                                                ~~~~~~~~^~
+creating build/lib.linux-x86_64-cpython-312/src/utils/libmcubes
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -shared -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--build-id=sha1 -Wl,--exclude-libs,ALL build/temp.linux-x86_64-cpython-312/src/utils/libmcubes/marchingcubes.o build/temp.linux-x86_64-cpython-312/src/utils/libmcubes/mcubes.o build/temp.linux-x86_64-cpython-312/src/utils/libmcubes/pywrapper.o -L/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/lib -o build/lib.linux-x86_64-cpython-312/src/utils/libmcubes/mcubes.cpython-312-x86_64-linux-gnu.so
+building 'src.utils.libmesh.triangle_hash' extension
+creating build/temp.linux-x86_64-cpython-312/src/utils/libmesh
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -I/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libmesh/triangle_hash.cpp -o build/temp.linux-x86_64-cpython-312/src/utils/libmesh/triangle_hash.o -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=triangle_hash -std=c++20
+In file included from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarraytypes.h:1929,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/arrayobject.h:5,
+                 from src/utils/libmesh/triangle_hash.cpp:792:
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+   17 | #warning "Using deprecated NumPy API, disable it with " \
+      |  ^~~~~~~
+src/utils/libmesh/triangle_hash.cpp: In function ‘PyObject* __pyx_f_3src_5utils_7libmesh_13triangle_hash_12TriangleHash_query(__pyx_obj_3src_5utils_7libmesh_13triangle_hash_TriangleHash*, __Pyx_memviewslice, int)’:
+src/utils/libmesh/triangle_hash.cpp:3567:33: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<int>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+ 3567 |   for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_19; __pyx_t_6+=1) {
+      |                       ~~~~~~~~~~^~~~~~~~~~~~
+src/utils/libmesh/triangle_hash.cpp:3590:33: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<int>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+ 3590 |   for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_19; __pyx_t_6+=1) {
+      |                       ~~~~~~~~~~^~~~~~~~~~~~
+src/utils/libmesh/triangle_hash.cpp: In function ‘int __pyx_add_acquisition_count_locked(__pyx_atomic_int*, PyThread_type_lock)’:
+src/utils/libmesh/triangle_hash.cpp:20046:15: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+20046 |     result = (*acquisition_count)++;
+      |              ~^~~~~~~~~~~~~~~~~~~
+src/utils/libmesh/triangle_hash.cpp: In function ‘int __pyx_sub_acquisition_count_locked(__pyx_atomic_int*, PyThread_type_lock)’:
+src/utils/libmesh/triangle_hash.cpp:20056:15: warning: ‘--’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+20056 |     result = (*acquisition_count)--;
+      |              ~^~~~~~~~~~~~~~~~~~~
+creating build/lib.linux-x86_64-cpython-312/src/utils/libmesh
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -shared -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--build-id=sha1 -Wl,--exclude-libs,ALL build/temp.linux-x86_64-cpython-312/src/utils/libmesh/triangle_hash.o -L/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/lib -lm -o build/lib.linux-x86_64-cpython-312/src/utils/libmesh/triangle_hash.cpython-312-x86_64-linux-gnu.so
+building 'src.utils.libmise.mise' extension
+creating build/temp.linux-x86_64-cpython-312/src/utils/libmise
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libmise/mise.cpp -o build/temp.linux-x86_64-cpython-312/src/utils/libmise/mise.o -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=mise -std=c++20
+src/utils/libmise/mise.cpp: In function ‘PyObject* __pyx_pf_3src_5utils_7libmise_4mise_4MISE_8get_points(__pyx_obj_3src_5utils_7libmise_4mise_MISE*)’:
+src/utils/libmise/mise.cpp:4386:35: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<__pyx_t_3src_5utils_7libmise_4mise_GridPoint>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+ 4386 |   for (__pyx_t_10 = 0; __pyx_t_10 < __pyx_t_9; __pyx_t_10+=1) {
+      |                        ~~~~~~~~~~~^~~~~~~~~~~
+src/utils/libmise/mise.cpp: In function ‘void __pyx_f_3src_5utils_7libmise_4mise_4MISE_subdivide_voxels(__pyx_obj_3src_5utils_7libmise_4mise_MISE*)’:
+src/utils/libmise/mise.cpp:4851:33: warning: comparison of integer expressions of different signedness: ‘long int’ and ‘std::vector<__pyx_t_3src_5utils_7libmise_4mise_Voxel>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+ 4851 |   for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_11; __pyx_t_9+=1) {
+      |                       ~~~~~~~~~~^~~~~~~~~~~~
+src/utils/libmise/mise.cpp:4867:62: warning: comparison of integer expressions of different signedness: ‘unsigned int’ and ‘int’ [-Wsign-compare]
+ 4867 |     __pyx_t_12 = (((__pyx_v_self->voxels[__pyx_v_idx]).level == __pyx_v_self->depth) != 0);
+src/utils/libmise/mise.cpp:4955:33: warning: comparison of integer expressions of different signedness: ‘long int’ and ‘std::vector<__pyx_t_3src_5utils_7libmise_4mise_Voxel>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+ 4955 |   for (__pyx_t_9 = 0; __pyx_t_9 < __pyx_t_11; __pyx_t_9+=1) {
+      |                       ~~~~~~~~~~^~~~~~~~~~~~
+src/utils/libmise/mise.cpp:4971:62: warning: comparison of integer expressions of different signedness: ‘unsigned int’ and ‘int’ [-Wsign-compare]
+ 4971 |     __pyx_t_12 = (((__pyx_v_self->voxels[__pyx_v_idx]).level == __pyx_v_self->depth) != 0);
+src/utils/libmise/mise.cpp: In function ‘int __pyx_add_acquisition_count_locked(__pyx_atomic_int*, PyThread_type_lock)’:
+src/utils/libmise/mise.cpp:21818:15: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+21818 |     result = (*acquisition_count)++;
+      |              ~^~~~~~~~~~~~~~~~~~~
+src/utils/libmise/mise.cpp: In function ‘int __pyx_sub_acquisition_count_locked(__pyx_atomic_int*, PyThread_type_lock)’:
+src/utils/libmise/mise.cpp:21828:15: warning: ‘--’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+21828 |     result = (*acquisition_count)--;
+      |              ~^~~~~~~~~~~~~~~~~~~
+src/utils/libmise/mise.cpp: At global scope:
+src/utils/libmise/mise.cpp:24440:18: warning: ‘PyObject* __pyx_convert__to_py_struct____pyx_t_3src_5utils_7libmise_4mise_Vector3D(__pyx_t_3src_5utils_7libmise_4mise_Vector3D)’ defined but not used [-Wunused-function]
+24440 | static PyObject* __pyx_convert__to_py_struct____pyx_t_3src_5utils_7libmise_4mise_Vector3D(struct __pyx_t_3src_5utils_7libmise_4mise_Vector3D s) {
+      |                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+creating build/lib.linux-x86_64-cpython-312/src/utils/libmise
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -shared -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--build-id=sha1 -Wl,--exclude-libs,ALL build/temp.linux-x86_64-cpython-312/src/utils/libmise/mise.o -L/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/lib -o build/lib.linux-x86_64-cpython-312/src/utils/libmise/mise.cpython-312-x86_64-linux-gnu.so
+building 'src.utils.libsimplify.simplify_mesh' extension
+creating build/temp.linux-x86_64-cpython-312/src/utils/libsimplify
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -Isrc/utils/libsimplify -I/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libsimplify/simplify_mesh.cpp -o build/temp.linux-x86_64-cpython-312/src/utils/libsimplify/simplify_mesh.o -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=simplify_mesh -std=c++20
+In file included from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarraytypes.h:1929,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/arrayobject.h:5,
+                 from src/utils/libsimplify/simplify_mesh.cpp:796:
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+   17 | #warning "Using deprecated NumPy API, disable it with " \
+      |  ^~~~~~~
+In file included from src/utils/libsimplify/simplify_mesh.cpp:804:
+src/utils/libsimplify/Simplify.h: In function ‘void Simplify::simplify_mesh(int, double, bool)’:
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:348:17: note: in expansion of macro ‘loopi’
+  348 |                 loopi(0,triangles.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:370:25: note: in expansion of macro ‘loopi’
+  370 |                         loopi(0,triangles.size()) triangles[i].dirty=0;
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:386:25: note: in expansion of macro ‘loopi’
+  386 |                         loopi(0,triangles.size())
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h: In function ‘void Simplify::simplify_mesh_lossless(bool)’:
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:450:17: note: in expansion of macro ‘loopi’
+  450 |                 loopi(0,triangles.size()) triangles[i].deleted=0;
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:463:25: note: in expansion of macro ‘loopi’
+  463 |                         loopi(0,triangles.size()) triangles[i].dirty=0;
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:476:25: note: in expansion of macro ‘loopi’
+  476 |                         loopi(0,triangles.size())
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:455:21: warning: unused variable ‘triangle_count’ [-Wunused-variable]
+  455 |                 int triangle_count=triangles.size();
+      |                     ^~~~~~~~~~~~~~
+src/utils/libsimplify/Simplify.h: In function ‘void Simplify::update_mesh(int)’:
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:621:25: note: in expansion of macro ‘loopi’
+  621 |                         loopi(0,triangles.size())
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Vertex>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:637:25: note: in expansion of macro ‘loopi’
+  637 |                         loopi(0,vertices.size())
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:640:25: note: in expansion of macro ‘loopi’
+  640 |                         loopi(0,triangles.size())
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:651:25: note: in expansion of macro ‘loopi’
+  651 |                         loopi(0,triangles.size())
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Vertex>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:661:17: note: in expansion of macro ‘loopi’
+  661 |                 loopi(0,vertices.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:666:17: note: in expansion of macro ‘loopi’
+  666 |                 loopi(0,triangles.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Vertex>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:672:17: note: in expansion of macro ‘loopi’
+  672 |                 loopi(0,vertices.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:682:17: note: in expansion of macro ‘loopi’
+  682 |                 loopi(0,triangles.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Vertex>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:699:25: note: in expansion of macro ‘loopi’
+  699 |                         loopi(0,vertices.size())
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Vertex>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:702:25: note: in expansion of macro ‘loopi’
+  702 |                         loopi(0,vertices.size())
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:714:58: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<int>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+  714 |                                                 while(ofs<vcount.size())
+      |                                                       ~~~^~~~~~~~~~~~~~
+src/utils/libsimplify/Simplify.h:719:55: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<int>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+  719 |                                                 if(ofs==vcount.size())
+      |                                                    ~~~^~~~~~~~~~~~~~~
+src/utils/libsimplify/Simplify.h:32:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<int>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   32 | #define loopj(start_l,end_l) for ( int j=start_l;j<end_l;++j )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:728:33: note: in expansion of macro ‘loopj’
+  728 |                                 loopj(0,vcount.size()) if(vcount[j]==1)
+      |                                 ^~~~~
+src/utils/libsimplify/Simplify.h: In function ‘void Simplify::compact_mesh()’:
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Vertex>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:739:17: note: in expansion of macro ‘loopi’
+  739 |                 loopi(0,vertices.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:743:17: note: in expansion of macro ‘loopi’
+  743 |                 loopi(0,triangles.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Vertex>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:752:17: note: in expansion of macro ‘loopi’
+  752 |                 loopi(0,vertices.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:759:17: note: in expansion of macro ‘loopi’
+  759 |                 loopi(0,triangles.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h: In function ‘void Simplify::load_obj(const char*, bool)’:
+src/utils/libsimplify/Simplify.h:875:36: warning: suggest explicit braces to avoid ambiguous ‘else’ [-Wdangling-else]
+  875 |                                 if ( line[2] == ' ' )
+      |                                    ^
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:963:25: note: in expansion of macro ‘loopi’
+  963 |                         loopi(0,triangles.size())
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h: In function ‘void Simplify::write_obj(const char*)’:
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Vertex>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:992:17: note: in expansion of macro ‘loopi’
+  992 |                 loopi(0,vertices.size())
+      |                 ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:999:25: note: in expansion of macro ‘loopi’
+  999 |                         loopi(0,triangles.size()) if(!triangles[i].deleted)
+      |                         ^~~~~
+src/utils/libsimplify/Simplify.h:31:51: warning: comparison of integer expressions of different signedness: ‘int’ and ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} [-Wsign-compare]
+   31 | #define loopi(start_l,end_l) for ( int i=start_l;i<end_l;++i )
+      |                                                   ^
+src/utils/libsimplify/Simplify.h:1007:17: note: in expansion of macro ‘loopi’
+ 1007 |                 loopi(0,triangles.size()) if(!triangles[i].deleted)
+      |                 ^~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘PyObject* __pyx_f_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(__Pyx_memviewslice, __Pyx_memviewslice, int, int, __pyx_opt_args_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify*)’:
+src/utils/libsimplify/simplify_mesh.cpp:2820:33: warning: comparison of integer expressions of different signedness: ‘std::vector<Simplify::Vertex>::size_type’ {aka ‘long unsigned int’} and ‘Py_ssize_t’ {aka ‘long int’} [-Wsign-compare]
+ 2820 |   for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
+      |                       ~~~~~~~~~~^~~~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp:2919:33: warning: comparison of integer expressions of different signedness: ‘std::vector<Simplify::Triangle>::size_type’ {aka ‘long unsigned int’} and ‘Py_ssize_t’ {aka ‘long int’} [-Wsign-compare]
+ 2919 |   for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_2; __pyx_t_8+=1) {
+      |                       ~~~~~~~~~~^~~~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘int __pyx_add_acquisition_count_locked(__pyx_atomic_int*, PyThread_type_lock)’:
+src/utils/libsimplify/simplify_mesh.cpp:19580:15: warning: ‘++’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+19580 |     result = (*acquisition_count)++;
+      |              ~^~~~~~~~~~~~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘int __pyx_sub_acquisition_count_locked(__pyx_atomic_int*, PyThread_type_lock)’:
+src/utils/libsimplify/simplify_mesh.cpp:19590:15: warning: ‘--’ expression of ‘volatile’-qualified type is deprecated [-Wvolatile]
+19590 |     result = (*acquisition_count)--;
+      |              ~^~~~~~~~~~~~~~~~~~~
+In member function ‘Simplify::Vertex& Simplify::Vertex::operator=(const Simplify::Vertex&)’,
+    inlined from ‘PyObject* __pyx_f_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(__Pyx_memviewslice, __Pyx_memviewslice, int, int, __pyx_opt_args_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify*)’ at src/utils/libsimplify/simplify_mesh.cpp:2830:17,
+    inlined from ‘PyObject* __pyx_pf_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(PyObject*, __Pyx_memviewslice, __Pyx_memviewslice, int, double)’ at src/utils/libsimplify/simplify_mesh.cpp:3523:80,
+    inlined from ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’ at src/utils/libsimplify/simplify_mesh.cpp:3501:77:
+src/utils/libsimplify/Simplify.h:319:16: warning: ‘__pyx_t_4.Simplify::Vertex::border’ may be used uninitialized [-Wmaybe-uninitialized]
+  319 |         struct Vertex { vec3f p;int tstart,tcount;SymetricMatrix q;int border;};
+      |                ^~~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’:
+src/utils/libsimplify/simplify_mesh.cpp:2762:27: note: ‘__pyx_t_4’ declared here
+ 2762 |   struct Simplify::Vertex __pyx_t_4;
+      |                           ^~~~~~~~~
+In file included from /usr/include/c++/16/bits/stl_iterator.h:78,
+                 from /usr/include/c++/16/bits/stl_algobase.h:66,
+                 from /usr/include/c++/16/bits/specfun.h:44,
+                 from /usr/include/c++/16/cmath:3913,
+                 from /usr/include/c++/16/math.h:36,
+                 from /home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12/pyport.h:195,
+                 from /home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12/Python.h:38,
+                 from src/utils/libsimplify/simplify_mesh.cpp:31:
+In function ‘constexpr _Tp* std::construct_at(_Tp*, _Args&& ...) [with _Tp = Simplify::Vertex; _Args = {const Simplify::Vertex&}]’,
+    inlined from ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = Simplify::Vertex; _Args = {const Simplify::Vertex&}; _Tp = Simplify::Vertex]’ at /usr/include/c++/16/bits/alloc_traits.h:716:21,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = Simplify::Vertex; _Alloc = std::allocator<Simplify::Vertex>]’ at /usr/include/c++/16/bits/stl_vector.h:1411:30,
+    inlined from ‘PyObject* __pyx_f_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(__Pyx_memviewslice, __Pyx_memviewslice, int, int, __pyx_opt_args_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify*)’ at src/utils/libsimplify/simplify_mesh.cpp:2903:35,
+    inlined from ‘PyObject* __pyx_pf_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(PyObject*, __Pyx_memviewslice, __Pyx_memviewslice, int, double)’ at src/utils/libsimplify/simplify_mesh.cpp:3523:80,
+    inlined from ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’ at src/utils/libsimplify/simplify_mesh.cpp:3501:77:
+/usr/include/c++/16/bits/stl_construct.h:110:16: warning: ‘__pyx_t_4.Simplify::Vertex::tstart’ may be used uninitialized [-Wmaybe-uninitialized]
+  110 |         return ::new(__loc) _Tp(std::forward<_Args>(__args)...);
+      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’:
+src/utils/libsimplify/simplify_mesh.cpp:2762:27: note: ‘__pyx_t_4.Simplify::Vertex::tstart’ was declared here
+ 2762 |   struct Simplify::Vertex __pyx_t_4;
+      |                           ^~~~~~~~~
+In function ‘constexpr _Tp* std::construct_at(_Tp*, _Args&& ...) [with _Tp = Simplify::Vertex; _Args = {const Simplify::Vertex&}]’,
+    inlined from ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = Simplify::Vertex; _Args = {const Simplify::Vertex&}; _Tp = Simplify::Vertex]’ at /usr/include/c++/16/bits/alloc_traits.h:716:21,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = Simplify::Vertex; _Alloc = std::allocator<Simplify::Vertex>]’ at /usr/include/c++/16/bits/stl_vector.h:1411:30,
+    inlined from ‘PyObject* __pyx_f_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(__Pyx_memviewslice, __Pyx_memviewslice, int, int, __pyx_opt_args_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify*)’ at src/utils/libsimplify/simplify_mesh.cpp:2903:35,
+    inlined from ‘PyObject* __pyx_pf_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(PyObject*, __Pyx_memviewslice, __Pyx_memviewslice, int, double)’ at src/utils/libsimplify/simplify_mesh.cpp:3523:80,
+    inlined from ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’ at src/utils/libsimplify/simplify_mesh.cpp:3501:77:
+/usr/include/c++/16/bits/stl_construct.h:110:16: warning: ‘__pyx_t_4.Simplify::Vertex::tcount’ may be used uninitialized [-Wmaybe-uninitialized]
+  110 |         return ::new(__loc) _Tp(std::forward<_Args>(__args)...);
+      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’:
+src/utils/libsimplify/simplify_mesh.cpp:2762:27: note: ‘__pyx_t_4.Simplify::Vertex::tcount’ was declared here
+ 2762 |   struct Simplify::Vertex __pyx_t_4;
+      |                           ^~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::n.vec3f::x’ may be used uninitialized [-Wmaybe-uninitialized]
+ 2767 |   struct Simplify::Triangle __pyx_t_9;
+      |                             ^~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::n.vec3f::y’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::n.vec3f::z’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::uvs[0].vec3f::x’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::uvs[0].vec3f::y’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::uvs[0].vec3f::z’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::uvs[1].vec3f::x’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::uvs[1].vec3f::y’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::uvs[1].vec3f::z’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::uvs[2].vec3f::x’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::uvs[2].vec3f::y’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::uvs[2].vec3f::z’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::err[0]’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::err[1]’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::err[2]’ may be used uninitialized [-Wmaybe-uninitialized]
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: warning: ‘__pyx_t_9.Simplify::Triangle::err[3]’ may be used uninitialized [-Wmaybe-uninitialized]
+In function ‘constexpr _Tp* std::construct_at(_Tp*, _Args&& ...) [with _Tp = Simplify::Triangle; _Args = {const Simplify::Triangle&}]’,
+    inlined from ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = Simplify::Triangle; _Args = {const Simplify::Triangle&}; _Tp = Simplify::Triangle]’ at /usr/include/c++/16/bits/alloc_traits.h:716:21,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = Simplify::Triangle; _Alloc = std::allocator<Simplify::Triangle>]’ at /usr/include/c++/16/bits/stl_vector.h:1411:30,
+    inlined from ‘PyObject* __pyx_f_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(__Pyx_memviewslice, __Pyx_memviewslice, int, int, __pyx_opt_args_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify*)’ at src/utils/libsimplify/simplify_mesh.cpp:3002:36,
+    inlined from ‘PyObject* __pyx_pf_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(PyObject*, __Pyx_memviewslice, __Pyx_memviewslice, int, double)’ at src/utils/libsimplify/simplify_mesh.cpp:3523:80,
+    inlined from ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’ at src/utils/libsimplify/simplify_mesh.cpp:3501:77:
+/usr/include/c++/16/bits/stl_construct.h:110:16: warning: ‘__pyx_t_9.Simplify::Triangle::deleted’ may be used uninitialized [-Wmaybe-uninitialized]
+  110 |         return ::new(__loc) _Tp(std::forward<_Args>(__args)...);
+      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’:
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: note: ‘__pyx_t_9.Simplify::Triangle::deleted’ was declared here
+ 2767 |   struct Simplify::Triangle __pyx_t_9;
+      |                             ^~~~~~~~~
+In function ‘constexpr _Tp* std::construct_at(_Tp*, _Args&& ...) [with _Tp = Simplify::Triangle; _Args = {const Simplify::Triangle&}]’,
+    inlined from ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = Simplify::Triangle; _Args = {const Simplify::Triangle&}; _Tp = Simplify::Triangle]’ at /usr/include/c++/16/bits/alloc_traits.h:716:21,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = Simplify::Triangle; _Alloc = std::allocator<Simplify::Triangle>]’ at /usr/include/c++/16/bits/stl_vector.h:1411:30,
+    inlined from ‘PyObject* __pyx_f_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(__Pyx_memviewslice, __Pyx_memviewslice, int, int, __pyx_opt_args_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify*)’ at src/utils/libsimplify/simplify_mesh.cpp:3002:36,
+    inlined from ‘PyObject* __pyx_pf_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(PyObject*, __Pyx_memviewslice, __Pyx_memviewslice, int, double)’ at src/utils/libsimplify/simplify_mesh.cpp:3523:80,
+    inlined from ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’ at src/utils/libsimplify/simplify_mesh.cpp:3501:77:
+/usr/include/c++/16/bits/stl_construct.h:110:16: warning: ‘__pyx_t_9.Simplify::Triangle::dirty’ may be used uninitialized [-Wmaybe-uninitialized]
+  110 |         return ::new(__loc) _Tp(std::forward<_Args>(__args)...);
+      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’:
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: note: ‘__pyx_t_9.Simplify::Triangle::dirty’ was declared here
+ 2767 |   struct Simplify::Triangle __pyx_t_9;
+      |                             ^~~~~~~~~
+In function ‘constexpr _Tp* std::construct_at(_Tp*, _Args&& ...) [with _Tp = Simplify::Triangle; _Args = {const Simplify::Triangle&}]’,
+    inlined from ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = Simplify::Triangle; _Args = {const Simplify::Triangle&}; _Tp = Simplify::Triangle]’ at /usr/include/c++/16/bits/alloc_traits.h:716:21,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = Simplify::Triangle; _Alloc = std::allocator<Simplify::Triangle>]’ at /usr/include/c++/16/bits/stl_vector.h:1411:30,
+    inlined from ‘PyObject* __pyx_f_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(__Pyx_memviewslice, __Pyx_memviewslice, int, int, __pyx_opt_args_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify*)’ at src/utils/libsimplify/simplify_mesh.cpp:3002:36,
+    inlined from ‘PyObject* __pyx_pf_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(PyObject*, __Pyx_memviewslice, __Pyx_memviewslice, int, double)’ at src/utils/libsimplify/simplify_mesh.cpp:3523:80,
+    inlined from ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’ at src/utils/libsimplify/simplify_mesh.cpp:3501:77:
+/usr/include/c++/16/bits/stl_construct.h:110:16: warning: ‘__pyx_t_9.Simplify::Triangle::attr’ may be used uninitialized [-Wmaybe-uninitialized]
+  110 |         return ::new(__loc) _Tp(std::forward<_Args>(__args)...);
+      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’:
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: note: ‘__pyx_t_9.Simplify::Triangle::attr’ was declared here
+ 2767 |   struct Simplify::Triangle __pyx_t_9;
+      |                             ^~~~~~~~~
+In function ‘constexpr _Tp* std::construct_at(_Tp*, _Args&& ...) [with _Tp = Simplify::Triangle; _Args = {const Simplify::Triangle&}]’,
+    inlined from ‘static constexpr void std::allocator_traits<std::allocator<_CharT> >::construct(allocator_type&, _Up*, _Args&& ...) [with _Up = Simplify::Triangle; _Args = {const Simplify::Triangle&}; _Tp = Simplify::Triangle]’ at /usr/include/c++/16/bits/alloc_traits.h:716:21,
+    inlined from ‘constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = Simplify::Triangle; _Alloc = std::allocator<Simplify::Triangle>]’ at /usr/include/c++/16/bits/stl_vector.h:1411:30,
+    inlined from ‘PyObject* __pyx_f_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(__Pyx_memviewslice, __Pyx_memviewslice, int, int, __pyx_opt_args_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify*)’ at src/utils/libsimplify/simplify_mesh.cpp:3002:36,
+    inlined from ‘PyObject* __pyx_pf_3src_5utils_11libsimplify_13simplify_mesh_mesh_simplify(PyObject*, __Pyx_memviewslice, __Pyx_memviewslice, int, double)’ at src/utils/libsimplify/simplify_mesh.cpp:3523:80,
+    inlined from ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’ at src/utils/libsimplify/simplify_mesh.cpp:3501:77:
+/usr/include/c++/16/bits/stl_construct.h:110:16: warning: ‘__pyx_t_9.Simplify::Triangle::material’ may be used uninitialized [-Wmaybe-uninitialized]
+  110 |         return ::new(__loc) _Tp(std::forward<_Args>(__args)...);
+      |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/utils/libsimplify/simplify_mesh.cpp: In function ‘PyObject* __pyx_pw_3src_5utils_11libsimplify_13simplify_mesh_1mesh_simplify(PyObject*, PyObject*, PyObject*)’:
+src/utils/libsimplify/simplify_mesh.cpp:2767:29: note: ‘__pyx_t_9.Simplify::Triangle::material’ was declared here
+ 2767 |   struct Simplify::Triangle __pyx_t_9;
+      |                             ^~~~~~~~~
+creating build/lib.linux-x86_64-cpython-312/src/utils/libsimplify
+c++ -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -shared -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--build-id=sha1 -Wl,--exclude-libs,ALL build/temp.linux-x86_64-cpython-312/src/utils/libsimplify/simplify_mesh.o -L/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/lib -o build/lib.linux-x86_64-cpython-312/src/utils/libsimplify/simplify_mesh.cpython-312-x86_64-linux-gnu.so
+building 'src.utils.libvoxelize.voxelize' extension
+creating build/temp.linux-x86_64-cpython-312/src/utils/libvoxelize
+cc -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -Isrc/utils/libvoxelize -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libvoxelize/voxelize.c -o build/temp.linux-x86_64-cpython-312/src/utils/libvoxelize/voxelize.o -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=voxelize -std=c++20
+cc1: warning: command-line option ‘-std=c++20’ is valid for C++/ObjC++ but not for C
+src/utils/libvoxelize/voxelize.c:2846:12: warning: ‘__pyx_f_3src_5utils_11libvoxelize_8voxelize_test_triangle_aabb’ defined but not used [-Wunused-function]
+ 2846 | static int __pyx_f_3src_5utils_11libvoxelize_8voxelize_test_triangle_aabb(__Pyx_memviewslice __pyx_v_boxcenter, __Pyx_memviewslice __pyx_v_boxhalfsize, __Pyx_memviewslice __pyx_v_triverts) {
+      |            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+creating build/lib.linux-x86_64-cpython-312/src/utils/libvoxelize
+cc -pthread -shared -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--build-id=sha1 -Wl,--exclude-libs,ALL build/temp.linux-x86_64-cpython-312/src/utils/libvoxelize/voxelize.o -L/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/lib -lm -o build/lib.linux-x86_64-cpython-312/src/utils/libvoxelize/voxelize.cpython-312-x86_64-linux-gnu.so
+copying build/lib.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree/kdtree.cpython-312-x86_64-linux-gnu.so -> src/utils/libkdtree/pykdtree
+copying build/lib.linux-x86_64-cpython-312/src/utils/libmcubes/mcubes.cpython-312-x86_64-linux-gnu.so -> src/utils/libmcubes
+copying build/lib.linux-x86_64-cpython-312/src/utils/libmesh/triangle_hash.cpython-312-x86_64-linux-gnu.so -> src/utils/libmesh
+copying build/lib.linux-x86_64-cpython-312/src/utils/libmise/mise.cpython-312-x86_64-linux-gnu.so -> src/utils/libmise
+copying build/lib.linux-x86_64-cpython-312/src/utils/libsimplify/simplify_mesh.cpython-312-x86_64-linux-gnu.so -> src/utils/libsimplify
+copying build/lib.linux-x86_64-cpython-312/src/utils/libvoxelize/voxelize.cpython-312-x86_64-linux-gnu.so -> src/utils/libvoxelize
