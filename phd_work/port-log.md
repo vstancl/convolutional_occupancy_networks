@@ -81,3 +81,7 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 
 - macOS: `pykdtree` is compiled with `-fopenmp`, which Apple clang does not support → Mac build will need handling (Mac is read/debug only for now).
 - Later upgrades, each with parity test: native `scatter_reduce_` instead of `torch_scatter` → torch 2.14 → numpy 2 → Cython 3.
+
+- OK. All 6 extensions built: kdtree, mcubes, triangle_hash, mise, simplify_mesh, voxelize.
+- New warning: `-std=c++20 is valid for C++ but not for C` on C sources; torch `BuildExtension`
+  adds the flag to every extension. Harmless (gcc ignores it for C).
