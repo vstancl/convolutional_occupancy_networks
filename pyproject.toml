@@ -44,3 +44,6 @@ explicit = true
 torch = [{ index = "pytorch-cu130", marker = "sys_platform == 'linux'" }]
 torchvision = [{ index = "pytorch-cu130", marker = "sys_platform == 'linux'" }]
 torch-scatter = [{ index = "pyg-pt212-cu130", marker = "sys_platform == 'linux'" }]
+
+[tool.setuptools]
+packages = []    # explicitní (prázdný) seznam vypne auto-discovery; rozšíření jsou v setup.py
