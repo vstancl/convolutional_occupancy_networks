@@ -1,0 +1,40 @@
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libmcubes/mcubes.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libmesh/triangle_hash.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libmise/mise.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+warning: src/utils/libmise/mise.pyx:65:33: Not all members given for struct 'Voxel'
+warning: src/utils/libmise/mise.pyx:65:33: Not all members given for struct 'Voxel'
+warning: src/utils/libmise/mise.pyx:259:33: Not all members given for struct 'Voxel'
+warning: src/utils/libmise/mise.pyx:259:33: Not all members given for struct 'Voxel'
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libsimplify/simplify_mesh.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+warning: src/utils/libsimplify/simplify_mesh.pyx:42:18: Not all members given for struct 'Vertex'
+warning: src/utils/libsimplify/simplify_mesh.pyx:42:18: Not all members given for struct 'Vertex'
+warning: src/utils/libsimplify/simplify_mesh.pyx:50:20: Not all members given for struct 'Triangle'
+warning: src/utils/libsimplify/simplify_mesh.pyx:50:20: Not all members given for struct 'Triangle'
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/Cython/Compiler/Main.py:369: FutureWarning: Cython directive 'language_level' not set, using 2 for now (Py2). This will change in a later release! File: /home/wish/PhD/convonet/src/utils/libvoxelize/voxelize.pyx
+  tree = Parsing.p_module(s, pxd, full_module_name)
+Compiling src/utils/libmcubes/mcubes.pyx because it changed.
+Compiling src/utils/libmesh/triangle_hash.pyx because it changed.
+Compiling src/utils/libmise/mise.pyx because it changed.
+Compiling src/utils/libsimplify/simplify_mesh.pyx because it changed.
+Compiling src/utils/libvoxelize/voxelize.pyx because it changed.
+[1/5] Cythonizing src/utils/libmcubes/mcubes.pyx
+[2/5] Cythonizing src/utils/libmesh/triangle_hash.pyx
+[3/5] Cythonizing src/utils/libmise/mise.pyx
+[4/5] Cythonizing src/utils/libsimplify/simplify_mesh.pyx
+[5/5] Cythonizing src/utils/libvoxelize/voxelize.pyx
+running build_ext
+W1018 20:08:56.679000 54594 .venv/lib/python3.12/site-packages/torch/utils/cpp_extension.py:680] Attempted to use ninja as the BuildExtension backend but we could not find ninja.. Falling back to using the slow distutils backend.
+W1018 20:08:56.684000 54594 .venv/lib/python3.12/site-packages/torch/utils/cpp_extension.py:489]                                !! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Your compiler (c++) is not compatible with the compiler Pytorch wasbuilt with for this platform, which is g++ on linux. Pleaseuse g++ to compile your extension. Alternatively, you maycompile PyTorch from source using c++, and then you can also usec++ to compile your extension.See https://github.com/pytorch/pytorch/blob/master/CONTRIBUTING.md for helpwith compiling PyTorch from source.!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!                              !! WARNING !!
+building 'src.utils.libkdtree.pykdtree.kdtree' extension
+creating build/temp.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree
+cc -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -I/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libkdtree/pykdtree/_kdtree_core.c -o build/temp.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree/_kdtree_core.o -std=c99 -O3 -fopenmp -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=kdtree
+cc -pthread -fno-strict-overflow -Wsign-compare -Wunreachable-code -DNDEBUG -g -O3 -Wall -O3 -fstack-protector -fstack-clash-protection -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -fno-omit-frame-pointer -mno-omit-leaf-frame-pointer -fPIC -fPIC -I/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/numpy/core/include -I/home/wish/PhD/convonet/.venv/include -I/home/wish/.local/share/uv/python/cpython-3.12.15-linux-x86_64-gnu/include/python3.12 -c src/utils/libkdtree/pykdtree/kdtree.c -o build/temp.linux-x86_64-cpython-312/src/utils/libkdtree/pykdtree/kdtree.o -std=c99 -O3 -fopenmp -DTORCH_API_INCLUDE_EXTENSION_H -DTORCH_EXTENSION_NAME=kdtree
+src/utils/libkdtree/pykdtree/kdtree.c:181:12: fatal error: longintrepr.h: No such file or directory
+  181 |   #include "longintrepr.h"
+      |            ^~~~~~~~~~~~~~~
+compilation terminated.
+error: command '/usr/bin/cc' failed with exit code 1
