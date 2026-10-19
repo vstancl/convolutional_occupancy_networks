@@ -79,6 +79,15 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 - **Model impact:** none, no parity test needed. The removed aliases were the builtins themselves
   (`np.bool is bool`, `np.int is int`), so the resulting dtypes are bit-identical.
 
+## 2026-10-19 — #8 `smoke.py`: `yaml.load()` needs `Loader` (upstream code)
+
+- **Symptom:** `TypeError: load() missing 1 required positional argument: 'Loader'` at `src/config.py:22` (`cfg_special = yaml.load(f)`), raised from `config.load_config`.
+- **Cause:** PyYAML 6.0 made `Loader` a required argument of `yaml.load`. Upstream code predates that.
+- **Fix:** `yaml.load(f)` → `yaml.load(f, Loader=yaml.Loader)` at all 3 sites: `src/config.py` (2×, lines 22 and 33),
+  `src/data/core.py` (1×, line 71). `yaml.Loader` is the default PyYAML 3.13 used when `Loader` was omitted
+  (deliberately not `safe_load`, which would accept fewer tags). Commit `[port] yaml: pass Loader=yaml.Loader explicitly`.
+- **Model impact:** none, no parity test needed. Making the old implicit default explicit gives identical parsing.
+
 ## Warnings kept on purpose
 
 - **Cython `language_level not set, using 2`:** kept. Upstream was built with Py2 semantics
