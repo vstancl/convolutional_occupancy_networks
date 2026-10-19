@@ -27,8 +27,4 @@ build
 /src/utils/libkdtree/pykdtree/kdtree.c
 
 # phd_work
-data/
-out/
 .venv/
-*.so
-build/
