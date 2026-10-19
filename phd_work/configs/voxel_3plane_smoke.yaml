@@ -1,0 +1,5 @@
+inherit_from: configs/voxel/pretrained/shapenet_3plane.yaml
+data:
+  test_split: test_smoke
+training:
+  out_dir: out/phd_smoke
