@@ -68,6 +68,17 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 
 ---
 
+## 2026-10-19 — #7 `smoke.py`: `np.int` removed in numpy 1.26 (upstream code)
+
+- **Symptom:** `AttributeError: module 'numpy' has no attribute 'int'` at `src/utils/binvox_rw.py:206`
+  (`def dense_to_sparse(voxel_data, dtype=np.int):`), raised on `from src import config` → `src.data` → `src.data.fields` → `src.utils.binvox_rw`.
+- **Cause:** `np.int` was removed in NumPy 1.24; upstream code predates that. Pinned numpy is 1.26.4 (`numpy<2` pin).
+- **Fix:** replaced `np.bool` → `bool` and `np.int` → `int` (word-bounded, so `np.bool_`, `np.int32`, `np.intp`
+  untouched) in all upstream `.py` files: `src/utils/binvox_rw.py` (9 sites incl. `np.int` at line 206),
+  `src/utils/libmesh/inside_mesh.py` (2), `src/utils/voxels.py` (2). Commit `[port] numpy: replace removed aliases`.
+- **Model impact:** none, no parity test needed. The removed aliases were the builtins themselves
+  (`np.bool is bool`, `np.int is int`), so the resulting dtypes are bit-identical.
+
 ## Warnings kept on purpose
 
 - **Cython `language_level not set, using 2`:** kept. Upstream was built with Py2 semantics
