@@ -99,6 +99,21 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 - **Model impact:** none, no parity test needed. The `method` key only selects the module;
   `conv_onet` is the only implementation in `method_dict`.
 
+## 2026-10-19 — #10 `generate.py`: `TypeError: dtype 'str' does not support operation 'mean'` (upstream code)
+
+- **Symptom:** after all 26 smoke objects were generated, `generate.py:210`
+  (`time_df.groupby(by=['class name']).mean()`) raised `TypeError: dtype 'str' does not support operation 'mean'`.
+- **Cause:** `time_df` has a non-numeric column (`name`); pandas ≥ 2.0 no longer silently drops non-numeric
+  columns in `groupby().mean()` (default `numeric_only=False`). Installed pandas 3.0.6. Upstream predates this.
+- **Impact:** only the final timing summary. Meshes and `time_generation_full.pkl` were written before the crash.
+  `time_generation.pkl` (per-class) was not.
+- **Fix:** `.groupby(by=['class name']).mean()` → `.mean(numeric_only=True)` in `generate.py:210` and `eval_meshes.py:160`
+  (`eval_meshes.py` has the same pattern on a frame with string columns). The follow-up `time_df_class.mean()` /
+  `eval_df_class.mean()` calls need no change: after the groupby the frames are purely numeric.
+  Commit `[port] pandas: numeric_only=True in groupby/mean summaries`.
+- **Model impact:** none, no parity test needed. Post-processing of timings/metrics only; `numeric_only=True`
+  reproduces pandas<2 behaviour (non-numeric columns dropped), so the printed tables have the same columns.
+
 ## Warnings kept on purpose
 
 - **Cython `language_level not set, using 2`:** kept. Upstream was built with Py2 semantics
@@ -116,3 +131,9 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 - OK. All 6 extensions built: kdtree, mcubes, triangle_hash, mise, simplify_mesh, voxelize.
 - New warning: `-std=c++20 is valid for C++ but not for C` on C sources; torch `BuildExtension`
   adds the flag to every extension. Harmless (gcc ignores it for C).
+
+## 2026-10-19 — Dataset
+- dataset_small_v1.1.zip, 73 419 791 657 B, `unzip -tq` OK; extracted 80 GB to ~/PhD/data/onet/ShapeNet,
+  symlinked as `data` in repo root (ignored by upstream `/data`).
+- 13 classes, 8751 test objects (`wc -l` shows 8738: test.lst files lack a trailing newline).
+- Object dir: model.binvox, points.npz, pointcloud.npz, img_choy2016/.
