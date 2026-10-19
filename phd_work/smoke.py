@@ -42,7 +42,11 @@ print('parameter count:', n_params)
 # 4. Checkpoint
 checkpoint_io = CheckpointIO(cfg['training']['out_dir'], model=model)
 scalars = checkpoint_io.load(cfg['test']['model_file'])
-print('checkpoint scalars:', scalars)
+# load() returns every non-module entry, including the (huge) optimizer state;
+# print only true scalars and summarize the rest.
+print('checkpoint scalars:',
+      {k: v for k, v in scalars.items() if not isinstance(v, (dict, list))})
+print('checkpoint other keys:', [k for k, v in scalars.items() if isinstance(v, (dict, list))])
 
 # 5. Forward pass on random data
 model.eval()
