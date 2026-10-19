@@ -5,4 +5,5 @@
 - Edits to upstream files: minimal, one logical change per commit, prefix [port]/[fix]/[cfg].
 - All new code goes into `phd_work/` (prefix [phd]). Do not refactor upstream code.
 - Log every encountered error and its fix in phd_work/port-log.md.
+- Reference numbers come only from phd_work/paper_reference.md.
 - Python env: uv, Python 3.12, versions pinned in uv.lock.
