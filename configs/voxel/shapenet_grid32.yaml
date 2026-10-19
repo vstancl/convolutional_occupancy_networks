@@ -1,4 +1,4 @@
-method: onet
+method: conv_onet
 data:
   classes: null
   input_type: voxels

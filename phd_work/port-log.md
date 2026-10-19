@@ -88,6 +88,17 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
   (deliberately not `safe_load`, which would accept fewer tags). Commit `[port] yaml: pass Loader=yaml.Loader explicitly`.
 - **Model impact:** none, no parity test needed. Making the old implicit default explicit gives identical parsing.
 
+## 2026-10-19 — #9 `smoke.py`: `KeyError: 'onet'` in `config.get_model` (upstream config)
+
+- **Symptom:** `KeyError: 'onet'` at `src/config.py:70` (`method_dict[method]`); `method_dict` only has `'conv_onet'`.
+- **Cause:** `configs/voxel/shapenet_3plane.yaml` (inherited by `configs/voxel/pretrained/shapenet_3plane.yaml`)
+  sets `method: onet`, overriding `conv_onet` from `configs/default.yaml`. Configs are identical to upstream
+  (`git diff upstream-838bea5 -- configs` is empty), so this is an upstream bug. 3 of 16 configs have `method: onet`.
+- **Fix:** `method: onet` → `method: conv_onet` in the 3 affected voxel configs only
+  (`configs/voxel/shapenet_1plane.yaml`, `shapenet_grid32.yaml`, `shapenet_3plane.yaml`). Commit `[cfg] voxel configs: method onet -> conv_onet`.
+- **Model impact:** none, no parity test needed. The `method` key only selects the module;
+  `conv_onet` is the only implementation in `method_dict`.
+
 ## Warnings kept on purpose
 
 - **Cython `language_level not set, using 2`:** kept. Upstream was built with Py2 semantics
