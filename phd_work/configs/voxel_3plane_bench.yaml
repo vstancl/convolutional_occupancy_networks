@@ -1,0 +1,3 @@
+inherit_from: configs/voxel/shapenet_3plane.yaml
+training:
+  out_dir: out/phd_bench
