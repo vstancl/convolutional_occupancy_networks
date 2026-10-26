@@ -137,3 +137,20 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
   symlinked as `data` in repo root (ignored by upstream `/data`).
 - 13 classes, 8751 test objects (`wc -l` shows 8738: test.lst files lack a trailing newline).
 - Object dir: model.binvox, points.npz, pointcloud.npz, img_choy2016/.
+
+## Full test-set eval (2026-10-19)
+- 8751/8751 meshes generated and evaluated, 0 missing.
+- 2× upstream warning `contains1 != contains2` (benign).
+- Class-mean results vs `paper_reference.md` (Table 2, Ours-2D 3×64²):
+
+  | Metric              | Ours   | Paper |
+  | ------------------- | ------ | ----- |
+  | IoU                 | 0.7522 | 0.752 |
+  | Chamfer-L1 (raw)    | 0.0086 | 0.0092 (paper ×10 = 0.092) |
+  | Chamfer-L1 (×10)    | 0.086  | 0.092 |
+  | Normal C.           | 0.9086 | 0.905 |
+  | F-Score             | 0.7299 | 0.735 |
+
+- **Known deviation:** Chamfer-L1 is 7% lower than the paper; cause unknown. Candidates: trimesh 4.x surface
+  sampling; paper evaluation run vs released checkpoint.
+- **Decisive test deferred:** evaluate the same meshes in the legacy env. Not needed for relative comparisons.
