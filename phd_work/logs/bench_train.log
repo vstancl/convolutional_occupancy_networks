@@ -1,0 +1,57 @@
+Current best validation metric (iou): -inf
+Total number of parameters: 1951873
+output path:  out/phd_bench
+[Epoch 01] it=100, loss=70.3423, time: 69.13s, 16:05
+[Epoch 01] it=200, loss=46.0426, time: 79.96s, 16:05
+[Epoch 01] it=300, loss=41.2601, time: 90.71s, 16:05
+[Epoch 01] it=400, loss=51.3330, time: 101.46s, 16:05
+[Epoch 02] it=500, loss=41.6965, time: 112.54s, 16:06
+[Epoch 02] it=600, loss=34.0388, time: 122.91s, 16:06
+[Epoch 02] it=700, loss=39.7474, time: 133.21s, 16:06
+[Epoch 02] it=800, loss=34.3625, time: 143.48s, 16:06
+[Epoch 02] it=900, loss=34.5109, time: 153.80s, 16:06
+[Epoch 03] it=1000, loss=30.0253, time: 164.51s, 16:07
+[Epoch 03] it=1100, loss=33.8079, time: 175.15s, 16:07
+[Epoch 03] it=1200, loss=36.2389, time: 186.46s, 16:07
+[Epoch 03] it=1300, loss=35.5648, time: 197.75s, 16:07
+[Epoch 03] it=1400, loss=38.9849, time: 208.83s, 16:07
+[Epoch 04] it=1500, loss=33.7726, time: 219.87s, 16:07
+[Epoch 04] it=1600, loss=37.0195, time: 230.29s, 16:08
+[Epoch 04] it=1700, loss=32.0654, time: 240.55s, 16:08
+[Epoch 04] it=1800, loss=32.9975, time: 250.96s, 16:08
+[Epoch 04] it=1900, loss=35.5219, time: 261.37s, 16:08
+[Epoch 05] it=2000, loss=30.0462, time: 272.19s, 16:08
+Saving checkpoint
+[Epoch 05] it=2100, loss=33.8261, time: 282.56s, 16:08
+[Epoch 05] it=2200, loss=46.5230, time: 292.75s, 16:09
+[Epoch 05] it=2300, loss=33.7083, time: 303.00s, 16:09
+[Epoch 05] it=2400, loss=18.0901, time: 313.19s, 16:09
+[Epoch 06] it=2500, loss=30.7788, time: 324.00s, 16:09
+[Epoch 06] it=2600, loss=35.4123, time: 334.20s, 16:09
+[Epoch 06] it=2700, loss=30.7009, time: 344.50s, 16:10
+[Epoch 06] it=2800, loss=28.4284, time: 354.77s, 16:10
+[Epoch 07] it=2900, loss=33.9386, time: 365.47s, 16:10
+[Epoch 07] it=3000, loss=30.7263, time: 375.79s, 16:10
+[Epoch 07] it=3100, loss=32.0007, time: 386.14s, 16:10
+[Epoch 07] it=3200, loss=31.4798, time: 396.43s, 16:10
+[Epoch 07] it=3300, loss=25.3831, time: 406.72s, 16:11
+[Epoch 08] it=3400, loss=26.2560, time: 417.56s, 16:11
+[Epoch 08] it=3500, loss=28.5616, time: 428.05s, 16:11
+[Epoch 08] it=3600, loss=26.3671, time: 438.52s, 16:11
+[Epoch 08] it=3700, loss=27.4728, time: 448.77s, 16:11
+[Epoch 08] it=3800, loss=25.4613, time: 459.41s, 16:11
+[Epoch 09] it=3900, loss=31.6903, time: 470.33s, 16:12
+[Epoch 09] it=4000, loss=33.1541, time: 480.99s, 16:12
+Saving checkpoint
+[Epoch 09] it=4100, loss=34.2006, time: 491.57s, 16:12
+[Epoch 09] it=4200, loss=30.3281, time: 502.09s, 16:12
+[Epoch 09] it=4300, loss=27.4054, time: 512.64s, 16:12
+[Epoch 10] it=4400, loss=38.6316, time: 523.67s, 16:12
+[Epoch 10] it=4500, loss=25.1894, time: 534.20s, 16:13
+[Epoch 10] it=4600, loss=32.5786, time: 544.74s, 16:13
+[Epoch 10] it=4700, loss=31.6885, time: 555.26s, 16:13
+[Epoch 10] it=4800, loss=49.0943, time: 565.66s, 16:13
+[Epoch 11] it=4900, loss=25.7560, time: 576.75s, 16:13
+[Epoch 11] it=5000, loss=26.3271, time: 587.27s, 16:14
+[Epoch 11] it=5100, loss=25.7988, time: 597.80s, 16:14
+Time limit reached. Exiting.

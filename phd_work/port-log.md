@@ -154,3 +154,11 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 - **Known deviation:** Chamfer-L1 is 7% lower than the paper; cause unknown. Candidates: trimesh 4.x surface
   sampling; paper evaluation run vs released checkpoint.
 - **Decisive test deferred:** evaluate the same meshes in the legacy env. Not needed for relative comparisons.
+
+## Training step benchmark (2026-10-26)
+- Config: `phd_work/configs/voxel_3plane_bench.yaml`; `train.py --exit-after 600`; RTX 4070; batch 64 × 1024 points.
+- 5100 iterations in 600 s.
+- Median 0.1052 s/it (49 intervals from it=300, range 0.102–0.113); includes data loading.
+- GPU memory (`nvidia-smi`): peak 5835 MiB, idle 2348 MiB, delta ~3.49 GB. Upper bound: includes CUDA context and
+  allocator cache.
+- Training path ran with no new port errors.
