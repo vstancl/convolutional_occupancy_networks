@@ -311,4 +311,10 @@ Cause: `evaluate` takes `np.mean` of float32 values, so the result is float32. T
 (a numpy scalar global, rejected by `weights_only=True`), so the fix covers it; the dtype in the brief was wrong.
 The fix was not changed.
 
+**Correction of the brief's float64 claim:** the brief said `loss_val_best` would be `float64`. That was wrong: `np.mean` over
+`numpy.float32` values returns `numpy.float32`. The float32 result was accepted; no float64 test was run.
+**Any numpy scalar triggers the same rejection.** Checked with default `torch.load` (weights_only=True) on a saved dict
+containing one scalar each: `np.float32`, `np.float64` and `np.int64` all raise `UnpicklingError`. So the fix covers any numpy scalar
+that train.py saves, not only the dtype seen here.
+
 **Timings:** run 1 ≈ 6 min, of which the 2 validations cost roughly 65 s each (it=500: checkpoint at 147 s, next print at 213 s).
