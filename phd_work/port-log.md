@@ -345,3 +345,15 @@ Log: `phd_work/logs/3cls_smoke.log`. Started 17:14:30, exited with `Time limit r
 - Validation at it=2000: `Validation metric (iou): 0.6152`, `New best model (loss 0.6152)`. Validation pass: 24 s (`1758/1758 [00:24, 71.80it/s]`).
 - Losses ranged 32–55 over it=100–3500, with no divergence.
 - Checkpoints in the smoke run: `out/phd_3cls` was deleted after the run, as the brief asks.
+
+## 2026-10-31 — Full 3-class run started (`3cls_run1`)
+
+- Command: `uv run python train.py phd_work/configs/voxel_3plane_3cls.yaml --exit-after 12600`, with `PYTHONUNBUFFERED=1`,
+  stdout and stderr tee'd to `phd_work/logs/3cls_run1.log`. Started 2026-10-31 17:25:15 CET under `nohup` (not tmux).
+  `--exit-after` is in seconds (12600 s = 3.5 h).
+- Expected end: about 20:55 CET.
+- Check progress: `tail -f phd_work/logs/3cls_run1.log` (or `grep -a "Validation metric" phd_work/logs/3cls_run1.log`).
+- Stop early: `pkill -f "train.py phd_work/configs/voxel_3plane_3cls.yaml"` (the run saves `out/phd_3cls/model.pt` on a clean
+  exit only; a kill may leave the last checkpoint at the previous `checkpoint_every` multiple).
+- Parser: `phd_work/val_curve.py <log>` writes `<log>`-named CSV (it, iou) and PNG and prints the best IoU, its
+  iteration, and the gain over the last 20k iterations. Tested on the smoke log (1 validation, it=2000, IoU 0.6152).
