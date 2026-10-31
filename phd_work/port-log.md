@@ -334,3 +334,14 @@ so these are the sizes it will use. `wc -l` gives one less, because the last lin
 | **3 classes** | **12328** | **1758** | **3519** | **17605** | |
 
 Each class's split total equals its folder count, so no object is missing from the lists.
+
+## 2026-10-31 — 3-class smoke run (`voxel_3plane_3cls.yaml`, `--exit-after 600`)
+
+Log: `phd_work/logs/3cls_smoke.log`. Started 17:14:30, exited with `Time limit reached. Exiting.` at it=3500 (time 594.26 s in the log, exit code 0).
+
+- Classes: 3 (`03001627`, `04379243`, `03636649`). The validation set has 1758 objects, which matches the 3-class val total in the counts entry above.
+  The upstream `train.py` does not print dataset sizes, so the 1758 comes from the validation progress bar.
+- Throughput: about 6.5 it/s (it=100 at 39 s, it=3500 at 594 s).
+- Validation at it=2000: `Validation metric (iou): 0.6152`, `New best model (loss 0.6152)`. Validation pass: 24 s (`1758/1758 [00:24, 71.80it/s]`).
+- Losses ranged 32–55 over it=100–3500, with no divergence.
+- Checkpoints in the smoke run: `out/phd_3cls` was deleted after the run, as the brief asks.
