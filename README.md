@@ -1,3 +1,6 @@
+> **This is a port of ConvONet** to Python 3.12, PyTorch 2.12, NumPy 1.26 (baseline: upstream tag `upstream-838bea5`).
+> Reproduction, status and known limitations: [phd_work/README.md](phd_work/README.md).
+> Every change to an upstream file: [phd_work/CHANGES.md](phd_work/CHANGES.md).
 # Convolutional Occupancy Networks
 [**Paper**](https://arxiv.org/pdf/2003.04618.pdf) | [**Supplementary**](http://www.cvlibs.net/publications/Peng2020ECCV_supplementary.pdf) | [**Video**](https://www.youtube.com/watch?v=EmauovgrDSM) | [**Teaser Video**](https://youtu.be/k0monzIcjUo) | [**Project Page**](https://pengsongyou.github.io/conv_onet) | [**Blog Post**](https://autonomousvision.github.io/convolutional-occupancy-networks/) <br>
 

@@ -64,7 +64,9 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 
 ## 2026-10-18 — #6 `build_ext` result
 
-- TODO: OK / next error; list of built `.so` files.
+- OK. All 6 extensions built: kdtree, mcubes, triangle_hash, mise, simplify_mesh, voxelize.
+- New warning: `-std=c++20 is valid for C++ but not for C` on C sources; torch `BuildExtension`
+  adds the flag to every extension. Harmless (gcc ignores it for C).
 
 ---
 
@@ -126,11 +128,13 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 ## Open items
 
 - macOS: `pykdtree` is compiled with `-fopenmp`, which Apple clang does not support → Mac build will need handling (Mac is read/debug only for now).
-- Later upgrades, each with parity test: native `scatter_reduce_` instead of `torch_scatter` → torch 2.14 → numpy 2 → Cython 3.
-
-- OK. All 6 extensions built: kdtree, mcubes, triangle_hash, mise, simplify_mesh, voxelize.
-- New warning: `-std=c++20 is valid for C++ but not for C` on C sources; torch `BuildExtension`
-  adds the flag to every extension. Harmless (gcc ignores it for C).
+- `torch_scatter` is still required: `src/encoder/__init__.py` imports `pointnet` unconditionally, and `pointnet.py`
+  imports `torch_scatter` at module level, so `import src` fails without it (on Mac too). The voxel encoder no longer uses
+  it. Porting `pointnet.py` needs its own parity reference. Not done.
+- Later upgrades, each with parity test: torch 2.14 → numpy 2 → Cython 3. (Native `scatter_reduce_` is done for the voxel path, see the swap entry.)
+- **Known gap: GPU backward of `scatter_reduce_` is not parity-tested.** The gradient check runs on CPU (CPU gradients
+  match the old code exactly). CUDA backward of `grid_sampler_2d` has no deterministic implementation, so it cannot be
+  compared exactly under deterministic mode.
 
 ## 2026-10-19 — Dataset
 - dataset_small_v1.1.zip, 73 419 791 657 B, `unzip -tq` OK; extracted 80 GB to ~/PhD/data/onet/ShapeNet,
@@ -151,8 +155,9 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
   | Normal C.           | 0.9086 | 0.905 |
   | F-Score             | 0.7299 | 0.735 |
 
-- **Known deviation:** Chamfer-L1 is 7% lower than the paper; cause unknown. Candidates: trimesh 4.x surface
-  sampling; paper evaluation run vs released checkpoint.
+- **Known deviation:** Chamfer-L1 is about 6.5% lower than the paper (0.0086 vs 0.0092 raw; the 7% in earlier notes was a
+  rounding of this). Cause unknown. Candidates: trimesh surface sampling (the locked and installed trimesh is 5.1.1; the earlier "trimesh 4.x" note
+  was wrong; the eval-time version was not recorded); paper evaluation run vs released checkpoint.
 - **Decisive test deferred:** evaluate the same meshes in the legacy env. Not needed for relative comparisons.
 
 ## Training step benchmark (2026-10-26)
