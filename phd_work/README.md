@@ -53,7 +53,7 @@ Tested environment (port-log, "Environment"):
 - GCC 16.2.1. Python 3.12.15 (installed by uv; `.python-version` pins 3.12).
 - Packages, exact pins in `uv.lock`: torch 2.12.0+cu130, torchvision 0.27.0+cu130, torch-scatter 2.1.2+pt212cu130,
   numpy 1.26.4, Cython 0.29.37, pandas 3.0.6, trimesh 5.1.1.
-- `uv` (any recent version). Disk: about 73 GB for the dataset zip, about 80 GB extracted.
+- `uv` (tested with 0.13.0). Disk: about 73 GB for the dataset zip, about 80 GB extracted.
 - A CUDA GPU for generation, evaluation of the GPU path, training and the parity GPU check. The CPU parity check
   (`--grad`) runs without a GPU.
 - Platform: Linux x86_64. macOS (arm64) is read-only; see limitations.
