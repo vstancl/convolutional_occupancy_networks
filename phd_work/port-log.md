@@ -162,3 +162,22 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 - GPU memory (`nvidia-smi`): peak 5835 MiB, idle 2348 MiB, delta ~3.49 GB. Upper bound: includes CUDA context and
   allocator cache.
 - Training path ran with no new port errors.
+
+## 2026-10-31 — Parity harness: GPU results not reproducible by default
+
+- **Symptom:** `phd_work/parity.py compare` on unchanged code failed: encoder `xz`/`yz` and logits differed by
+  ~0.02 between two identical runs on the RTX 4070 (`xy` identical).
+- **Cause:** non-deterministic GPU kernels in the voxel encoder path (scatter-add via atomics in `torch_scatter`,
+  and/or cuDNN algorithm choice). Fixed by `torch.use_deterministic_algorithms(True)`, `cudnn.deterministic=True`,
+  `cudnn.benchmark=False`, `CUBLAS_WORKSPACE_CONFIG=:4096:8`. With these, repeated GPU runs are bit-identical;
+  CPU runs are bit-identical too.
+- **Fix:** set in `phd_work/parity.py` (new, `[phd]`). Reference captured in that mode; `.gitignore` excludes
+  `phd_work/parity/` (the reference tensors are regenerated, not committed).
+- **Cross-device:** CUDA vs CPU outputs differ by 0.026 in logits for the same weights and inputs (floating point
+  summation order and different kernels). References are therefore device-specific; `compare` refuses a device mismatch.
+- **Model impact:** none. This is a test-harness issue. But it means any GPU run is only reproducible to ~1e-2 in
+  encoder features *unless* deterministic mode is on. Relevant when reading small metric differences, e.g. the
+  Chamfer-L1 deviation above (not yet checked against this noise).
+- **Reference:** `phd_work/parity/ref_voxel3plane.pt`, sha256 `40fca362a48ef195ed1f42bc5504478a017a532b1c57f8a74876c1683a812f7e`,
+  CUDA, torch 2.12.0, seed 0, 2 synthetic inputs (32³ occupancy, 20000 query points). Scope: `voxel_simple_local`
+  encoder + `simple_local` decoder only (the path used by the pretrained 3-plane model).

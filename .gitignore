@@ -28,3 +28,4 @@ build
 
 # phd_work
 .venv/
+phd_work/parity/
