@@ -254,3 +254,40 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 - **Dataset:** size check passed (73419791657 B); full `unzip -tq dataset_small_v1.1.zip` passed (`No errors detected`, exit 0).
 - **Not re-run:** download of the dataset zip, extraction, and the full
   generate/eval (outputs are from the port).
+
+## 2026-10-31 — Resume from a local checkpoint crashes: `torch.load` rejects numpy.float64 (upstream code)
+
+- **Symptom:** resuming from `model.pt` or `model_best.pt` written after a validation pass fails with
+  `_pickle.UnpicklingError: Weights only load failed` (`torch.load` with `weights_only=True`).
+  Reproduced with a minimal script: `torch.save({'loss_val_best': np.mean([...])})` loads with
+  `weights_only=False` and fails with the default.
+- **Cause:** `BaseTrainer.evaluate` returns `np.mean(...)` (numpy.float64). `train.py` stores it as `loss_val_best`
+  after the first validation. torch ≥ 2.6 defaults `torch.load` to `weights_only=True`, which does not allow numpy
+  globals. `train.py` only catches `FileExistsError` around `checkpoint_io.load`, so the resume crashes.
+- **Why the other tests did not show it:**
+  - The pretrained URL load (`load_url`, `model_zoo`) is a different path and the pretrained file contains only tensors.
+  - The 10-min benchmark checkpoint (`out/phd_bench`, it = 5121) was written before the first validation
+    (`validate_every: 10000`), so `loss_val_best` is still the Python float `-inf`.
+- **Fix:** `torch.load(filename)` → `torch.load(filename, weights_only=False)` in `src/checkpoints.py` `load_file`
+  (one line, commit `94ab38b`, `[fix]`). `map_location` and `train.py` unchanged.
+- **Model impact:** none, no parity run. `weights_only=False` is the behaviour of torch < 2.6, which this file was
+  written for. The loaded objects are the same; only the unpickler's allowed-globals check is disabled.
+  The checkpoints are our own local files, not untrusted input.
+- **Alternatives rejected:**
+  - `float(metric_val_best)` in `train.py`: fixes this one scalar, but `train.py` is kept byte-identical to upstream,
+    and the next numpy scalar saved would break the same way.
+  - `torch.serialization.add_safe_globals([np.core.multiarray.scalar, np.dtype, ...])`: needs an exact list of numpy
+    internals that depends on the numpy version. Fragile.
+- **Still open:** `load_file` has no `map_location`, so a CUDA-saved local file still needs a GPU to load (latent, see the
+  earlier entry).
+
+## 2026-10-31 — Resume check: `phd_work/resume_check.py` and the resume config
+
+- `phd_work/configs/voxel_3plane_resume.yaml` inherits `configs/voxel/shapenet_3plane.yaml`, sets `out/phd_resume`,
+  `print_every: 20`, `validate_every: 500`, `checkpoint_every: 500`, `visualize_every: 0`.
+- `phd_work/resume_check.py <ckpt> [--min-it N]`: loads through `CheckpointIO` with no modules registered (returns all
+  entries), prints scalars and the type of `loss_val_best`, and checks that every Adam per-parameter `step` equals `it`.
+  This holds after a resume only if the optimizer state was restored. `--min-it N` requires `it > N`.
+- Check on the existing benchmark checkpoint (`out/phd_bench/model.pt`, it = 5121): `PASS`, Adam step = 5121.
+- Missing file: `FAIL`, exit 1.
+- The result of the two-run resume test is in the next entry.

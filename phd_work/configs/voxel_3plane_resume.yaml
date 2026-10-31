@@ -1,0 +1,7 @@
+inherit_from: configs/voxel/shapenet_3plane.yaml
+training:
+  out_dir: out/phd_resume
+  print_every: 20
+  validate_every: 500
+  checkpoint_every: 500
+  visualize_every: 0
