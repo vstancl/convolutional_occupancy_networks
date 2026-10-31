@@ -318,3 +318,19 @@ containing one scalar each: `np.float32`, `np.float64` and `np.int64` all raise 
 that train.py saves, not only the dtype seen here.
 
 **Timings:** run 1 ≈ 6 min, of which the 2 validations cost roughly 65 s each (it=500: checkpoint at 147 s, next print at 213 s).
+
+## 2026-10-31 — 3-class voxel baseline: class IDs and object counts
+
+Synset check (`data/ShapeNet/metadata.yaml`): `03001627` = chair, `04379243` = table, `03636649` = lamp. All three folders exist.
+
+Object counts per split. Source: non-empty lines of `<synset>/{train,val,test}.lst` (`grep -c .`). The loader reads these files,
+so these are the sizes it will use. `wc -l` gives one less, because the last line has no trailing newline.
+
+| Class | train | val | test | total | object folders on disk |
+| ----- | ----- | --- | ---- | ----- | ---------------------- |
+| chair (03001627) | 4746 | 677 | 1355 | 6778 | 6778 |
+| table (04379243) | 5958 | 850 | 1701 | 8509 | 8509 |
+| lamp (03636649)  | 1624 | 231 | 463  | 2318 | 2318 |
+| **3 classes** | **12328** | **1758** | **3519** | **17605** | |
+
+Each class's split total equals its folder count, so no object is missing from the lists.
