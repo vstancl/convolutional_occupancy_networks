@@ -39,10 +39,11 @@ Run: `train.py phd_work/configs/voxel_3plane_bench.yaml --exit-after 600`, RTX 4
 
 - 5100 iterations in 600 s.
 - Median 0.1052 s/iteration (49 intervals from iteration 300, range 0.102–0.113 s). Includes data loading.
-- GPU memory (`nvidia-smi`): peak 5835 MiB, idle 2348 MiB, so about 3.49 GB. This is an upper bound: it includes
-  the CUDA context and allocator cache.
+- GPU memory (`nvidia-smi`): peak 5835 MiB, idle 2348 MiB, so about 3.49 GB (~3.5 GB). This is an upper bound: it
+  includes the CUDA context and allocator cache.
 
-No paper memory figure is recorded in `paper_reference.md`, so this is not compared with the paper.
+The paper reports 4.0 GB GPU memory for Ours-2D (`paper_reference.md`, Table 2). The paper does not say how memory was
+measured, so compare only the order of magnitude: ~3.5 GB here versus 4.0 GB in the paper.
 The benchmark is a speed and memory measurement, not a training-quality result.
 
 ## Requirements

@@ -3,11 +3,14 @@
 Source: Peng et al., *Convolutional Occupancy Networks*, ECCV 2020, arXiv:2003.04618, Table 2
 (voxel super-resolution, 32³ input; Choy et al. split, same preprocessed data).
 
-| Method                 | IoU   | Chamfer-L1 (paper, ×10) | Normal C. | F-Score |
-| ---------------------- | ----- | ----------------------- | --------- | ------- |
-| Ours-2D (3×64²)        | 0.752 | 0.092                   | 0.905     | 0.735   |
+| Method                 | IoU   | Chamfer-L1 (paper, ×10) | Normal C. | F-Score | GPU Memory |
+| ---------------------- | ----- | ----------------------- | --------- | ------- | ---------- |
+| Ours-2D (3×64²)        | 0.752 | 0.092                   | 0.905     | 0.735   | 4.0 GB     |
 
 Notes:
+- GPU Memory (Table 2, column "GPU Memory"): the paper does not say how memory was measured. Our figure (~3.5 GB,
+  `nvidia-smi` delta, see `port-log.md`, "Training step benchmark") is an upper bound measured differently, so compare
+  only the order of magnitude.
 - `eval_meshes.py` reports **raw** Chamfer-L1; the paper multiplies by 10. Paper 0.092 ⇒ 0.0092 raw.
 - The `mean` row printed by `eval_meshes.py` is the mean over classes (not over objects), as in the paper.
 
