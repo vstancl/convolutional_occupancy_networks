@@ -1,0 +1,9 @@
+inherit_from: configs/voxel/shapenet_3plane.yaml
+data:
+  classes: ['03001627', '04379243', '03636649']  # chair, table, lamp
+training:
+  out_dir: out/phd_3cls
+  validate_every: 2000
+  checkpoint_every: 2000
+  backup_every: 20000
+  visualize_every: 0
