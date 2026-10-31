@@ -17,6 +17,7 @@ Behaviour impact:
 | `src/utils/binvox_rw.py`, `src/utils/libmesh/inside_mesh.py`, `src/utils/voxels.py` | `np.bool` → `bool`, `np.int` → `int` | NumPy ≥ 1.24 removed the aliases | 95eba60 | identical (the aliases were the builtins themselves) |
 | `setup.py` | pykdtree extension built from `kdtree.pyx` instead of `kdtree.c` | Upstream's Cython 0.27 C output does not compile on Python ≥ 3.11 (`longintrepr.h`) | 10e384a | build only |
 | `src/utils/libkdtree/pykdtree/kdtree.c` | file removed from git (Cython-generated) | Regenerated from `kdtree.pyx` at build time | 2cf37e0 | build only |
+| `src/checkpoints.py` | `model_zoo.load_url(url, progress=True)` → `…, map_location='cpu'` | The pretrained checkpoint was saved from CUDA; loading failed on a machine without CUDA | 1fc3353 | parity-verified: weights are copied into the module by `load_state_dict`, so values are unchanged; GPU and CPU parity checks bit-identical, including with the GPU hidden |
 | `src/encoder/voxels.py` | `torch_scatter.scatter_mean` → local `scatter_mean` using `scatter_reduce_(..., reduce='mean', include_self=False)` | Removes `torch_scatter` from the voxel encoder path | ca728fb | parity-verified: forward (CUDA) and gradients (CPU) bit-identical to the old code; GPU backward not verified |
 | `generate.py`, `eval_meshes.py` | `.groupby(...).mean()` → `.mean(numeric_only=True)` in summary tables | pandas ≥ 2 raises on string columns | 969976e | build or summary only (post-processing, no model output) |
 | `.gitignore` | adds rules for `src/utils/libkdtree/pykdtree/kdtree.c` (generated), `.venv/`, `phd_work/parity/` | Generated and local files | 60da320, 69736aa, 0dda9cb, d4789b2 | none (repository hygiene) |
@@ -34,4 +35,4 @@ Note on `phd_work/parity/`: this rule ignores the parity reference files. They a
 
 ## Not changed
 
-Model code (`src/conv_onet`, `src/encoder/pointnet.py`, `src/encoder/unet*.py`, decoders), the training loop, and the checkpoint loader are byte-identical to upstream. `src/encoder/pointnet.py` still imports `torch_scatter` (see `phd_work/README.md`, known limitations).
+Model code (`src/conv_onet`, `src/encoder/pointnet.py`, `src/encoder/unet*.py`, decoders) and the training loop (`train.py`) are byte-identical to upstream. The checkpoint loader changed in one line (see above); `CheckpointIO.load_file` (local files) is still upstream and has the same CUDA-placement issue, which is not used by the documented workflow. `src/encoder/pointnet.py` still imports `torch_scatter` (see `phd_work/README.md`, known limitations).

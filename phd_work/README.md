@@ -91,9 +91,12 @@ uv sync
 uv run python setup.py build_ext --inplace
 ```
 
-Expected: six extensions built (kdtree, mcubes, triangle_hash, mise, simplify_mesh, voxelize). Warnings
-`ninja not found`, `compiler (c++) not compatible`, `Not all members given for struct`, and
-`language_level not set` are expected (port-log, "Warnings kept on purpose").
+Expected: six extensions built (`src/utils/*/…cpython-312-x86_64-linux-gnu.so`: kdtree, mcubes, triangle_hash,
+mise, simplify_mesh, voxelize). The log is long (about 100 warnings) and the exit code is 0. Warnings seen in the
+fresh build, all harmless: `Attempted to use ninja … could not find ninja` (torch falls back to distutils),
+`Not all members given for struct`, `language_level not set, using 2`, comparisons of signed and unsigned integers,
+the NumPy deprecated-API `#warning`, and narrowing conversions in the Cython output of `simplify_mesh` and `mise`.
+See port-log, "Warnings kept on purpose".
 
 ### 4. Dataset
 
@@ -146,6 +149,7 @@ the output.
 ```bash
 uv run python phd_work/parity.py compare --device cuda        # encoder features and logits, GPU
 uv run python phd_work/parity.py compare --grad --device cpu  # plus gradients of encoder.conv_in and decoder.fc_p, CPU
+CUDA_VISIBLE_DEVICES= uv run python phd_work/parity.py compare --grad --device cpu  # same, with the GPU hidden (no GPU needed)
 ```
 
 Each prints `max|diff|` per tensor and `PARITY OK` or `PARITY FAIL`. The exit code is 0 or 1.

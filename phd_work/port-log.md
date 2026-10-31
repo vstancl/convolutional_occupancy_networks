@@ -225,3 +225,31 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
   voxel encoder no longer uses it, but the dependency stays until `pointnet.py` is ported. Not done here, and it needs its
   own parity reference.
 - **Not run:** full test-set evaluation (not needed for this check).
+
+## 2026-10-31 — Fresh-clone check: pretrained checkpoint does not load without CUDA (upstream code)
+
+- **Symptom:** `phd_work/parity.py compare --grad --device cpu` with the GPU hidden (`CUDA_VISIBLE_DEVICES=`) fails in
+  model loading: `Attempting to deserialize object on a CUDA device but torch.cuda.is_available() is False`.
+- **Cause:** the pretrained checkpoint was saved from CUDA tensors. `src/checkpoints.py` `load_url` calls
+  `model_zoo.load_url(url, progress=True)` without `map_location`, so the tensors are restored on CUDA.
+- **Fix:** `map_location='cpu'` in `load_url`. Commit `1fc3353` (`[port]`, one line).
+- **Model impact:** identical. `load_state_dict` copies the values into the module, so the weights do not change; only the
+  intermediate storage device changes. Verified: `parity.py compare` (CUDA) and `compare --grad --device cpu` pass with
+  max|diff| = 0 on every tensor, both with and without a visible GPU.
+- **Not fixed (latent):** `CheckpointIO.load_file` (local files) calls `torch.load(filename)` without `map_location`; the same
+  problem would occur for a CUDA-saved local file. Not on the documented path, so left unchanged.
+- **Also found:** the README claimed the `--grad` check runs without a GPU; it did not, until this fix.
+
+## 2026-10-31 — Fresh-clone check of the reproduction README
+
+- Steps run literally from a fresh clone of the committed repository: `uv sync` (exit 0, versions as documented);
+  `setup.py build_ext --inplace` (exit 0, six `.so` files); `ln -s` of the existing dataset to `data`; `phd_work/smoke.py`
+  (`OK: all logits finite`); `parity.py compare --device cuda` and `compare --grad --device cpu` (`PARITY OK`);
+  quick generate and eval on the 26-object smoke set (both exit 0).
+- **README errors found and fixed:**
+  - Build warnings list named `ninja not found`, `compiler (c++) not compatible` and `-std=c++20`. The fresh build did not
+    print the last two; it printed the ninja fallback message plus signed/unsigned comparisons, NumPy deprecated-API
+    `#warning` and narrowing conversions, which were missing. List corrected.
+  - "Runs without a GPU" for the `--grad` check: false until the checkpoint fix above; now verified.
+- **Not re-run:** download of the dataset zip (size checked, `unzip -tq` run on the existing zip), extraction, and the full
+  generate/eval (outputs are from the port).
