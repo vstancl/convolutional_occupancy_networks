@@ -196,3 +196,27 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 - **Unit check:** on random data (incl. empty bins, shapes of plane and grid), native vs torch_scatter differ by ≤ 2.4e-7
   (float32 summation order). The model forward was bit-identical, which is within that tolerance.
 - **Model impact:** none expected; verified by parity above.
+
+## 2026-10-31 — Parity: provenance, reference from the old code, gradients
+
+- **References captured from d4789b2** (last commit before the swap, still `torch_scatter`), in a temporary
+  `git worktree` at `../convonet-ref` with the updated `parity.py` copied in. Compared on `ca728fb` (native scatter).
+  The worktree was built with the same compiled extensions (`.so`) copied from `main`; `src/utils` sources are unchanged
+  between the two commits.
+- **Provenance:** each reference stores the commit, a dirty flag for `src/` and `configs/`, the harness sha256, torch
+  version and device. `capture` refuses to run when model code has uncommitted changes.
+- **Forward, CUDA** (`ref_voxel3plane.pt`, sha256 `f936ca836ff64ef5367e31b65df7023c06360dffd81da0e94a47501ada2307cb`):
+  max|diff| = 0 for `xz`, `xy`, `yz` and logits (max|ref| ≈ 31).
+- **Gradients, CPU** (`ref_voxel3plane_grad_cpu.pt`, sha256 `922c722f46afec35d16ae4a15905baebf5e2f9c67b3d7d48152018175d2ae049`):
+  loss 4.07933664 (diff 0); max|diff| = 0 for `encoder.conv_in.weight` (max|ref| 2.4e-1), `encoder.conv_in.bias` (4.1e-1),
+  `decoder.fc_p.weight` (9.2e-3), `decoder.fc_p.bias` (3.6e-1). Loss is BCE-with-logits against fixed seeded random
+  targets, one backward, model in eval mode.
+- **Sensitivity:** the wrong variant (`include_self=True`) moves the gradients by 3.9e-4 to 4.8e-2, so the gradient
+  check detects a real change.
+- **Gradient mode is CPU-only:** `grid_sampler_2d_backward_cuda` has no deterministic implementation; with
+  `use_deterministic_algorithms(True)` torch raises on backward. So gradients are compared on CPU, which is deterministic.
+- **Still required: `torch_scatter`.** `src/encoder/__init__.py` imports `pointnet` unconditionally, and `pointnet.py`
+  imports `torch_scatter` at module level. So importing `src` fails without `torch_scatter`, including on Mac. The
+  voxel encoder no longer uses it, but the dependency stays until `pointnet.py` is ported. Not done here, and it needs its
+  own parity reference.
+- **Not run:** full test-set evaluation (not needed for this check).
