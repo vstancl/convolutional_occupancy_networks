@@ -251,5 +251,6 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
     print the last two; it printed the ninja fallback message plus signed/unsigned comparisons, NumPy deprecated-API
     `#warning` and narrowing conversions, which were missing. List corrected.
   - "Runs without a GPU" for the `--grad` check: false until the checkpoint fix above; now verified.
-- **Not re-run:** download of the dataset zip (size checked, `unzip -tq` run on the existing zip), extraction, and the full
+- **Dataset:** size check passed (73419791657 B); full `unzip -tq dataset_small_v1.1.zip` passed (`No errors detected`, exit 0).
+- **Not re-run:** download of the dataset zip, extraction, and the full
   generate/eval (outputs are from the port).

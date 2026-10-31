@@ -63,7 +63,7 @@ Tested environment (port-log, "Environment"):
 All commands are run from the repository root.
 
 Verification status (see the port-log for details): steps 1–3, 5 and 6 were run from a fresh clone of the committed
-repository. Step 4 was checked by size and archive listing only; the dataset was not downloaded again. Steps 7 and 8 were
+repository. Step 4 was checked by size, a full `unzip -tq` (no errors) and archive listing; the dataset was not downloaded again and not re-extracted. Steps 7 and 8 were
 run during the port; their outputs are in `phd_work/logs/` and `phd_work/results/`, and were not re-run for this document.
 
 ### 1. Clone
