@@ -205,14 +205,18 @@ Writes to `out/phd_bench/`. Logs from the reference run: `phd_work/logs/bench_tr
 - **Warnings kept.** Cython `language_level` (upstream was built with Python 2 semantics), and the upstream
   `contains1 != contains2` warning in evaluation (benign, seen twice in the full run).
 
+## Licence
+
+- **Upstream code** (everything outside `phd_work/`: `src/`, root scripts, configs): MIT, Copyright (c) 2020 Songyou Peng,
+  Michael Niemeyer, Lars Mescheder, Marc Pollefeys, Andreas Geiger (root `LICENSE`). It remains under its original MIT licence.
+- **Port code** (`phd_work/`): MIT, Copyright (c) 2026 Vit Stancl (`phd_work/LICENSE`). The root `LICENSE` is not modified.
+
 ## Data license
 
-- **Upstream code:** MIT, Copyright (c) 2020 Songyou Peng, Michael Niemeyer, Lars Mescheder, Marc Pollefeys, Andreas Geiger
-  (`LICENSE`).
-- **Port code in `phd_work/`:** licence as stated by the author in the previous version of this file (MIT). Confirm before
-  relying on it; no `LICENSE` file covers this directory.
-- **Data:** ShapeNet is distributed under its own terms of use (shapenet.org). The preprocessed dataset used here is the
-  one published by the Occupancy Networks project. This repository does not include any data. Read the current
-  ShapeNet terms before use or redistribution; this README does not summarise them.
+- **Data:** ShapeNet is distributed under its own terms of use ([shapenet.org](https://shapenet.org)). ShapeNet may be used
+  for non-commercial research only; every user must accept the ShapeNet terms of use themselves (shapenet.org) before
+  downloading the data, including the preprocessed ONet version. The preprocessed dataset used here is the one published by
+  the Occupancy Networks project. This repository does not include any data. Read the current ShapeNet terms before use or
+  redistribution; this README does not summarise them.
 - **Pretrained model:** the checkpoint URL in `configs/voxel/pretrained/shapenet_3plane.yaml` is the upstream
   release. Its licence is not stated in the repository.
