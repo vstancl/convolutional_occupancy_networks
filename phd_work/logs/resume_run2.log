@@ -1,0 +1,32 @@
+out/phd_resume/model.pt
+=> Loading checkpoint from local file...
+Current best validation metric (iou): 0.59862119
+Total number of parameters: 1951873
+output path:  out/phd_resume
+[Epoch 04] it=1020, loss=31.9023, time: 55.34s, 15:07
+[Epoch 04] it=1040, loss=32.8113, time: 58.48s, 15:07
+[Epoch 04] it=1060, loss=36.2445, time: 61.62s, 15:07
+[Epoch 04] it=1080, loss=35.1741, time: 64.78s, 15:07
+[Epoch 04] it=1100, loss=33.0859, time: 67.93s, 15:07
+[Epoch 04] it=1120, loss=35.7105, time: 71.19s, 15:07
+[Epoch 04] it=1140, loss=47.8923, time: 74.49s, 15:07
+[Epoch 04] it=1160, loss=37.9071, time: 77.73s, 15:07
+[Epoch 04] it=1180, loss=39.9127, time: 80.96s, 15:07
+[Epoch 04] it=1200, loss=32.9267, time: 84.19s, 15:07
+[Epoch 04] it=1220, loss=27.4974, time: 87.43s, 15:07
+[Epoch 04] it=1240, loss=38.2458, time: 90.71s, 15:07
+[Epoch 04] it=1260, loss=36.9947, time: 94.00s, 15:07
+[Epoch 04] it=1280, loss=40.2877, time: 97.29s, 15:07
+[Epoch 04] it=1300, loss=39.7106, time: 100.53s, 15:07
+[Epoch 04] it=1320, loss=26.7500, time: 103.65s, 15:07
+[Epoch 04] it=1340, loss=33.0700, time: 106.73s, 15:07
+[Epoch 04] it=1360, loss=39.4471, time: 109.83s, 15:08
+[Epoch 04] it=1380, loss=30.1728, time: 112.91s, 15:08
+[Epoch 04] it=1400, loss=30.0328, time: 115.99s, 15:08
+[Epoch 04] it=1420, loss=38.1004, time: 119.07s, 15:08
+Time limit reached. Exiting.
+
+real	2m3.436s
+user	8m39.814s
+sys	0m10.768s
+exit=3

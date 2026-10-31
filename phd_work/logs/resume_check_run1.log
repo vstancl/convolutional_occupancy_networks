@@ -1,0 +1,11 @@
+/home/wish/PhD/convonet/out/phd_resume/model.pt
+=> Loading checkpoint from local file...
+checkpoint: /home/wish/PhD/convonet/out/phd_resume/model.pt
+entries: ['epoch_it', 'it', 'loss_val_best', 'model', 'optimizer']
+  epoch_it = 3
+  it = 1000
+  loss_val_best type: float32
+it = 1000, epoch_it = 3
+Adam per-parameter step values: [1000.0]
+PASS
+exit=0

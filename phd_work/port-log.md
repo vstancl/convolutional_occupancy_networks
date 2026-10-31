@@ -291,3 +291,24 @@ Plan: run the original code with `torch_scatter` first (reference), then replace
 - Check on the existing benchmark checkpoint (`out/phd_bench/model.pt`, it = 5121): `PASS`, Adam step = 5121.
 - Missing file: `FAIL`, exit 1.
 - The result of the two-run resume test is in the next entry.
+
+## 2026-10-31 — Resume test result (two runs, GPU, `configs/voxel_3plane_resume.yaml`)
+
+Logs: `phd_work/logs/resume_run1.log`, `resume_check_run1.log`, `resume_run2.log`, `resume_check_run2.log`.
+
+- **Run 1** (`--exit-after 300`, fresh `out/phd_resume`): exit 3, wall 5m58.96s (user CPU 17m35s; GPU utilisation not sampled).
+  Validations: it=500 `Validation metric (iou): 0.5943`, `New best`; it=1000 `0.5986`, `New best`, then `Time limit reached. Exiting.`
+  Last printed loss it=1000: 41.4415 (it=980: 30.5736; it=20: 514.6266).
+- **Checkpoint after run 1:** `resume_check` PASS, `it = 1000`, `epoch_it = 3`, Adam step = 1000 for all parameters.
+  `loss_val_best` = 0.5986212 (saved as `numpy.float32`, see deviation below).
+- **Run 2** (`--exit-after 120`, resumed from `out/phd_resume/model.pt`, no `UnpicklingError`): exit 3, wall 2m03.44s.
+  First line: `Current best validation metric (iou): 0.59862119` (= run 1's last `New best`, 0.5986 at 4 decimals).
+  First printed loss it=1020: 31.9023 (continues from ~30–42 range of run 1; no jump back toward 514). Run 2 exited at it=1427.
+- **Resume check after run 2:** `resume_check --min-it 1000` PASS, `it = 1427`, Adam step = 1427 for all parameters.
+
+**Deviation from the test brief (criterion a):** the brief expected `loss_val_best` to be `float64`. It is `numpy.float32`.
+Cause: `evaluate` takes `np.mean` of float32 values, so the result is float32. The unpickling mechanism is the same
+(a numpy scalar global, rejected by `weights_only=True`), so the fix covers it; the dtype in the brief was wrong.
+The fix was not changed.
+
+**Timings:** run 1 ≈ 6 min, of which the 2 validations cost roughly 65 s each (it=500: checkpoint at 147 s, next print at 213 s).
