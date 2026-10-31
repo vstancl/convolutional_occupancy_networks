@@ -1,10 +1,18 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch_scatter import scatter_mean
 from src.encoder.unet import UNet
 from src.encoder.unet3d import UNet3D
 from src.common import coordinate2index, normalize_coordinate, normalize_3d_coordinate
+
+
+def scatter_mean(src, index, out):
+    ''' Native replacement for torch_scatter.scatter_mean(src, index, out=out) (dim=-1).
+
+    Only valid for a zero-initialised `out`, which is how both call sites use it:
+    empty bins stay 0, matching torch_scatter's clamp of the count to 1.
+    '''
+    return out.scatter_reduce_(-1, index.expand_as(src), src, reduce='mean', include_self=False)
 
 
 class LocalVoxelEncoder(nn.Module):
