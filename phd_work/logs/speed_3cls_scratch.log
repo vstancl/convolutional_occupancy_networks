@@ -1,0 +1,21 @@
+Current best validation metric (iou): -inf
+Total number of parameters: 1951873
+output path:  /home/wish/PhD/convonet/out/phd_speed3cls_scratch
+[Epoch 01] it=100, loss=101.4208, time: 35.53s, 11:51
+[Epoch 02] it=200, loss=47.5263, time: 51.42s, 11:51
+[Epoch 02] it=300, loss=48.6994, time: 66.80s, 11:52
+[Epoch 03] it=400, loss=46.8404, time: 82.71s, 11:52
+[Epoch 03] it=500, loss=49.8076, time: 98.08s, 11:52
+[Epoch 04] it=600, loss=34.8755, time: 113.97s, 11:52
+[Epoch 04] it=700, loss=49.0315, time: 129.33s, 11:53
+[Epoch 05] it=800, loss=41.4768, time: 145.23s, 11:53
+[Epoch 05] it=900, loss=44.1449, time: 160.60s, 11:53
+[Epoch 06] it=1000, loss=33.6559, time: 176.49s, 11:54
+[Epoch 06] it=1100, loss=40.1433, time: 191.87s, 11:54
+[Epoch 07] it=1200, loss=38.2847, time: 207.77s, 11:54
+[Epoch 07] it=1300, loss=38.6866, time: 223.07s, 11:54
+[Epoch 08] it=1400, loss=35.3305, time: 238.82s, 11:55
+[Epoch 08] it=1500, loss=42.3289, time: 254.07s, 11:55
+[Epoch 09] it=1600, loss=38.5402, time: 269.83s, 11:55
+[Epoch 09] it=1700, loss=40.0456, time: 285.08s, 11:55
+Time limit reached. Exiting.

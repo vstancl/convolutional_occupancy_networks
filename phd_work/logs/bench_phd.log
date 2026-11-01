@@ -1,0 +1,23 @@
+out/phd_bench/model.pt
+=> Loading checkpoint from local file...
+Current best validation metric (iou): -inf
+Total number of parameters: 1951873
+output path:  out/phd_bench
+[Epoch 12] it=5200, loss=28.0721, time: 67.09s, 11:46
+[Epoch 12] it=5300, loss=43.5815, time: 82.47s, 11:47
+[Epoch 12] it=5400, loss=37.6218, time: 97.85s, 11:47
+[Epoch 12] it=5500, loss=26.8405, time: 113.25s, 11:47
+[Epoch 12] it=5600, loss=30.8491, time: 128.63s, 11:47
+[Epoch 13] it=5700, loss=25.4526, time: 144.51s, 11:48
+[Epoch 13] it=5800, loss=29.2315, time: 159.87s, 11:48
+[Epoch 13] it=5900, loss=36.1957, time: 175.23s, 11:48
+[Epoch 13] it=6000, loss=25.5486, time: 190.59s, 11:48
+Saving checkpoint
+[Epoch 14] it=6100, loss=22.3057, time: 206.46s, 11:49
+[Epoch 14] it=6200, loss=24.5287, time: 221.82s, 11:49
+[Epoch 14] it=6300, loss=26.1399, time: 237.32s, 11:49
+[Epoch 14] it=6400, loss=23.4361, time: 252.68s, 11:49
+[Epoch 14] it=6500, loss=22.8730, time: 268.06s, 11:50
+[Epoch 15] it=6600, loss=27.3482, time: 283.89s, 11:50
+[Epoch 15] it=6700, loss=24.1338, time: 299.26s, 11:50
+Time limit reached. Exiting.
