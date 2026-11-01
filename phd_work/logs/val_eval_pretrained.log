@@ -1,0 +1,10 @@
+https://s3.eu-central-1.amazonaws.com/avg-projects/convolutional_occupancy_networks/models/voxel/voxel_shapenet_3plane.pt
+=> Loading checkpoint from url...
+config: phd_work/configs/voxel_3plane_3cls.yaml
+weights: https://s3.eu-central-1.amazonaws.com/avg-projects/convolutional_occupancy_networks/models/voxel/voxel_shapenet_3plane.pt
+val samples: 1758
+
+iou: 0.690104
+iou_voxels: 0.732813
+Validation metric (iou): 0.6901
+Validation metric exact (iou): 0.6901043653488159

@@ -1,0 +1,10 @@
+out/phd_3cls/model_best.pt
+=> Loading checkpoint from local file...
+config: phd_work/configs/voxel_3plane_3cls.yaml
+weights: out/phd_3cls/model_best.pt
+val samples: 1758
+
+iou: 0.686806
+iou_voxels: 0.729516
+Validation metric (iou): 0.6868
+Validation metric exact (iou): 0.686806321144104
