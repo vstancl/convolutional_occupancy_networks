@@ -357,3 +357,68 @@ Log: `phd_work/logs/3cls_smoke.log`. Started 17:14:30, exited with `Time limit r
   exit only; a kill may leave the last checkpoint at the previous `checkpoint_every` multiple).
 - Parser: `phd_work/val_curve.py <log>` writes `<log>`-named CSV (it, iou) and PNG and prints the best IoU, its
   iteration, and the gain over the last 20k iterations. Tested on the smoke log (1 validation, it=2000, IoU 0.6152).
+
+## 2026-11-01 — 3-class run1 result, evaluation, speed check, stopping rule
+
+**Status:** steps 1–3 done. Step 4 (resume to +50k in tmux) **not started**: the resume point differs from the brief (see Finding A).
+
+### Run1 outcome
+
+- `phd_work/logs/3cls_run1.log`: 37 validations, it=2000..74000. Best val IoU **0.6868 at it=70000** (`out/phd_3cls/model_best.pt`).
+- The log's last validation is at it=74000 (0.6849). The run exited with `Time limit reached` after 38 more iterations (see A).
+- Spike: 0.6822 at it=38000 (the old-rule baseline).
+
+### Reference values on the 3-class validation set (1758 objects)
+
+Command: `uv run python phd_work/val_eval.py phd_work/configs/voxel_3plane_3cls.yaml [--model URL]`. Logs: `phd_work/logs/val_eval_pretrained.log`, `phd_work/logs/val_eval_3cls_best.log`.
+
+| Weights | IoU | iou_voxels |
+| ------- | --- | ---------- |
+| Pretrained, `voxel_shapenet_3plane.pt` (URL from `configs/voxel/pretrained/shapenet_3plane.yaml`; 13-class model) | 0.690104 | 0.732813 |
+| `out/phd_3cls/model_best.pt` (it=70000) | 0.686806 | 0.729516 |
+
+- The 3cls model_best value reproduces the logged 0.6868 with a diff of 6e-6, within the 4-decimal rounding of the log. Only one evaluation run was made, so run-to-run nondeterminism was not measured.
+- These are **not** paper-reference numbers. The paper's IoU 0.752 (`phd_work/paper_reference.md`) is for the 13-class test set. The pretrained model is trained on all classes and scores 0.6901 here on the 3-class val split.
+
+### Speed check
+
+Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exit-after 300` (log `phd_work/logs/bench_phd.log`) and the same 300 s with `out_dir` set to a scratch dir (config in the session scratchpad, which inherits `phd_work/configs/voxel_3plane_3cls.yaml`; log `phd_work/logs/speed_3cls_scratch.log`). GPU logged with `nvidia-smi --query-gpu=utilization.gpu,clocks.sm,temperature.gpu,memory.used --format=csv -l 5` (`phd_work/logs/gpu_bench_phd.csv`, `phd_work/logs/gpu_speed_3cls_scratch.csv`).
+
+| Run | Start it | Windows used | Median s/it | Mean s/it | Mean GPU util | Peak GPU mem |
+| --- | -------- | ------------ | ----------- | --------- | ------------- | ------------ |
+| bench (13 classes) | 5200 (resumed) | it 5200–6700 | 0.1538 | 0.1548 | 77% | 4.1 GB |
+| 3cls scratch | 0 | it 300–1700 | 0.1556 | 0.1559 | 81% | 4.1 GB |
+
+- Each window is one 100-iteration print interval, so the median is over 15 (bench) and 14 (3cls) windows.
+- Discrepancy, explained: the bench did **not** start fresh. `out/phd_bench/model.pt` was left over from an earlier bench run, so it resumed at it=5200 and its 300 s covered it 5200–6700. The "exclude the first 300 it" rule therefore did not apply the way it would on a fresh run. The 3cls scratch run was fresh.
+- Run1 average check: 12565 s at it=74000 includes 37 validations of about 27 s each (about 1000 s), so (12565 − 1000) / 74000 ≈ 0.156 s/it, in line with the medians.
+- Other GPU users: the only processes on the GPU during the runs were desktop graphics processes (`kwin_wayland`, `plasmashell`, `firefox`, …, type G). No other compute process appeared. This is noted from the process list, not from a sampled per-process trace.
+- `out/phd_bench` was removed with `rm -rf` after the bench, as the brief asked. `out/phd_speed3cls_scratch` (the 3cls scratch run) is kept, not deleted.
+
+### Stopping rule: changed
+
+- **Old rule:** stop when the best IoU in the last 20k iterations exceeds the best at or before (last − 20k) by ≤ 0.005. On run1 this is best 0.6868 (it=70000) against best 0.6822 (it≤38000): gain 0.0046, which would have stopped the run. The 38k spike sets the baseline, so the statistic depends on one validation point.
+- **New rule** (`phd_work/val_curve.py`): least-squares slope of val IoU over the validations with it ≥ last − 20k, in IoU per 20k iterations. Continue if slope ≥ 0.005 per 20k.
+- Run1 result: slope **+0.00904 IoU per 20k** (n = 11 validations, it 54000–74000), residual SD 0.00291. The standard error of the slope is about 0.0028 (residual SD / √Sxx with Sxx = 1.1 in 20k units; hand-calculated, not printed by the script). The rule says continue.
+- The slope is driven by the final validations, so a single new peak would move it. It is still above the threshold.
+
+### Finding A: the resume point is 74038, not 74000
+
+- `out/phd_3cls/model.pt` (written on exit) has `it = 74038` (`resume_check.py`: `it = 74038`, Adam step 74038). The log's last validation is at it=74000.
+- Cause: the validation at it=74000 took about 27 s after the 12565 s print, which put the time just under `--exit-after 12600`. The exit check then fired 38 iterations later, at it=74038. No `it=` print occurs between 74000 and 74038 because prints are every 100 iterations.
+- Consequence: a resume will start at 74038 and report `Current best` 0.6868. The brief expected it=74000.
+- Decision: not resumed. The brief says to stop and report on any difference. Run2 is one command away, once the resume point is accepted.
+
+### Errors and fixes
+
+- `pkill -f "nvidia-smi --query-gpu"` matched the shell that was running it, which killed the command (exit 144). Fix: stop the logger by PID (`kill $GPID`) instead of matching the command line. The bench itself had already finished (exit 3 = `Time limit reached`).
+- `bench` resumed from a leftover checkpoint (see Speed check). Fix: remove `out/phd_bench` after each bench run, and start a bench from an empty out dir.
+
+### Commands run
+
+- `uv run python phd_work/val_curve.py phd_work/logs/3cls_run1.log --out-prefix phd_work/logs/3cls_run1_val`
+- `uv run python phd_work/val_eval.py phd_work/configs/voxel_3plane_3cls.yaml --model https://s3.eu-central-1.amazonaws.com/avg-projects/convolutional_occupancy_networks/models/voxel/voxel_shapenet_3plane.pt`
+- `uv run python phd_work/val_eval.py phd_work/configs/voxel_3plane_3cls.yaml`
+- `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exit-after 300`
+- `uv run python train.py <scratch>/speed_3cls.yaml --exit-after 300` (`out_dir: out/phd_speed3cls_scratch`)
+- `uv run python phd_work/resume_check.py out/phd_3cls/model.pt` → `it = 74038`
