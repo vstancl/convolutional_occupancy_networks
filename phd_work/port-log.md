@@ -422,3 +422,9 @@ Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exi
 - `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exit-after 300`
 - `uv run python train.py <scratch>/speed_3cls.yaml --exit-after 300` (`out_dir: out/phd_speed3cls_scratch`)
 - `uv run python phd_work/resume_check.py out/phd_3cls/model.pt` → `it = 74038`
+
+## 2026-11-01 — Run2 started (resume from it=74038, +9000 s)
+
+- Commit `36b2e7b` (`[phd] logs: ...`) also added `phd_work/val_curve.py` and `phd_work/logs/3cls_run1_val.csv`. Its message does not mention them. History was not rewritten.
+- Run2: `tmux new-session -d -s phd_3cls_run2 "... train.py phd_work/configs/voxel_3plane_3cls.yaml --exit-after 9000 > phd_work/logs/3cls_run2.log 2>&1"`, started 13:32:18 CET.
+- Start check: `Loading checkpoint from local file`, `Current best validation metric (iou): 0.68680882`, first print `it=74100`. The resume point is 74038 (see the entry above).
