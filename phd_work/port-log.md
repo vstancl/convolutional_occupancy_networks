@@ -435,7 +435,7 @@ Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exi
 
 - Run2 ended at `Time limit reached. Exiting.` (`--exit-after 9000`), last print it=125100, last validation it=124000. Combined curve (run1 + run2, 62 validations, it 2000..124000): `phd_work/logs/3cls_combined.csv`, `.png`.
 - Command: `uv run python phd_work/val_curve.py phd_work/logs/3cls_run1.log phd_work/logs/3cls_run2.log --out-prefix phd_work/logs/3cls_combined`.
-- Best val IoU **0.6899 at it=106000** (run1 wrote the same value at 106k; it was not the 0.6868 resume value).
+- Best val IoU **0.6899 at it=106000** (run2 territory; run1 ended at 74k with best 0.6868).
 - Slope over it ≥ 104000 (n=11 validations): **−0.00006 IoU per 20k** (printed to 5 decimals; −0.0001 at 4 decimals), residual SD 0.00227, SE of slope 0.0022. Threshold for continuing is ≥ 0.005 per 20k, so the rule says **stop**.
 - Other segments (hand-computed from the CSV with `fit_line`, SE = residual SD / √Sxx in 20k units):
   - 54k–74k: +0.0090 per 20k, SE 0.0028 (n=11)
