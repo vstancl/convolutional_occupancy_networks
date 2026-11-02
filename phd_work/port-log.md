@@ -428,3 +428,37 @@ Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exi
 - Commit `36b2e7b` (`[phd] logs: ...`) also added `phd_work/val_curve.py` and `phd_work/logs/3cls_run1_val.csv`. Its message does not mention them. History was not rewritten.
 - Run2: `tmux new-session -d -s phd_3cls_run2 "... train.py phd_work/configs/voxel_3plane_3cls.yaml --exit-after 9000 > phd_work/logs/3cls_run2.log 2>&1"`, started 13:32:18 CET.
 - Start check: `Loading checkpoint from local file`, `Current best validation metric (iou): 0.68680882`, first print `it=74100`. The resume point is 74038 (see the entry above).
+
+## 2026-11-02 — Run2 finished; plateau check; `max_it` option; test-set eval and variance run
+
+### Run2 result and stopping decision
+
+- Run2 ended at `Time limit reached. Exiting.` (`--exit-after 9000`), last print it=125100, last validation it=124000. Combined curve (run1 + run2, 62 validations, it 2000..124000): `phd_work/logs/3cls_combined.csv`, `.png`.
+- Command: `uv run python phd_work/val_curve.py phd_work/logs/3cls_run1.log phd_work/logs/3cls_run2.log --out-prefix phd_work/logs/3cls_combined`.
+- Best val IoU **0.6899 at it=106000** (run1 wrote the same value at 106k; it was not the 0.6868 resume value).
+- Slope over it ≥ 104000 (n=11 validations): **−0.00006 IoU per 20k** (printed to 5 decimals; −0.0001 at 4 decimals), residual SD 0.00227, SE of slope 0.0022. Threshold for continuing is ≥ 0.005 per 20k, so the rule says **stop**.
+- Other segments (hand-computed from the CSV with `fit_line`, SE = residual SD / √Sxx in 20k units):
+  - 54k–74k: +0.0090 per 20k, SE 0.0028 (n=11)
+  - 76k–124k: +0.0027 per 20k, SE 0.0006 (n=25)
+- Mean and SD (ddof=1) of the last 10 validations (it 106k–124k): **0.6859, SD 0.0022**. The brief expected ~0.6855. This differs by 0.0004 (about half an SE). The number logged here is the computed one.
+- Old max-gain statistic (for comparison only): 0.0022 (best 0.6899 at 106k vs 0.6877 at ≤102k). It is driven by the single peak at 106k.
+- Pretrained reference (validation, `phd_work/logs/val_eval_pretrained.log`): 0.6901. Our plateau sits about 0.0045 below it.
+- **Possible post-resume dip, unproven:** mean 76k–90k = 0.6812 (n=8) vs 64k–74k = 0.6846 (n=6), difference −0.0034. The Welch z is about −3.4 (SE 0.0010) when the two windows are treated as independent. The windows were chosen after looking at the data, and consecutive validations are correlated, so this z overstates the evidence. The brief's "~2σ" estimate does not match this calculation. Treat the dip as a hypothesis for the variance run (step below) to test, not as a finding.
+- Plateau level: the last-10 mean (0.6859) is the number to quote, with SD 0.0022 as the noise scale.
+
+### `val_curve.py`: last-10 statistics
+
+- Added to the stdout report: mean and SD (ddof=1) of the last 10 validations. Commit `e5fbdce`.
+
+### `max_it` option in `train.py` ([cfg], commit `5836842`)
+
+- New line: `max_it = cfg['training'].get('max_it', -1)`. After the validation block and before the `exit_after` check: if `max_it > 0 and it >= max_it`, print `Max iterations reached. Exiting.`, save `model.pt` with the same fields as the `exit_after` exit (`epoch_it`, `it`, `loss_val_best`), and `exit(3)`.
+- Why no parity run: with `max_it` unset, `max_it = -1` and the branch is never entered. No tensor operation, RNG call or ordering changes. CLAUDE.md allows this without parity; the row is in `phd_work/CHANGES.md`.
+- Test: `phd_work/logs/maxit_test.log`, scratch config (`$SCRATCHPAD/maxit_test.yaml`, `out_dir: out/phd_maxit_test`, `max_it: 300`, `validate_every: 300`). Validation at it=300 ran (`Validation metric (iou): 0.5210`), then `Max iterations reached. Exiting.`, exit code 3. `resume_check.py out/phd_maxit_test/model.pt`: `it = 300`, Adam step 300, PASS.
+
+### Test-set evaluation of the 3-class baseline (step 3) and variance run (step 4)
+
+- Configs: `phd_work/configs/voxel_3plane_3cls_test.yaml` (inherits `voxel_3plane_3cls.yaml`, `generation_dir: generation_3cls_best`, `test.model_file: model_best.pt`) and `phd_work/configs/voxel_3plane_3cls_s2.yaml` (`out_dir: out/phd_3cls_s2`, `max_it: 120000`).
+- `model_file` is relative to `out_dir` (`src/checkpoints.py` `load_file` joins it to `checkpoint_dir`). The brief's `out/phd_3cls/model_best.pt` would resolve to `out/phd_3cls/out/phd_3cls/model_best.pt`, so the config uses `model_best.pt`, which is the same file.
+- Launched in tmux session `phd_3cls_test` (script `chain.sh` in the scratchpad, log of the chain `phd_work/logs/chain_3cls_test.log`): generate → eval_meshes → train s2. Logs: `generate_3cls_best.log`, `eval_3cls_best.log`, `3cls_s2.log`. Exit codes and wall times are in the chain log.
+- Results of step 3: pending (filled in below when the eval finishes).

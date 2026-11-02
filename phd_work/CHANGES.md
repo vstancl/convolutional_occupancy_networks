@@ -22,6 +22,7 @@ Behaviour impact:
 | `generate.py`, `eval_meshes.py` | `.groupby(...).mean()` → `.mean(numeric_only=True)` in summary tables | pandas ≥ 2 raises on string columns | 969976e | build or summary only (post-processing, no model output) |
 | `src/checkpoints.py` | `torch.load(filename)` → `torch.load(filename, weights_only=False)` in `load_file` | torch ≥ 2.6 defaults to `weights_only=True`, which rejects the `numpy.float64` `loss_val_best` saved by `train.py`; resume crashed | 94ab38b | identical (the torch < 2.6 default; no parity run, see port-log) |
 | `.gitignore` | adds rules for `src/utils/libkdtree/pykdtree/kdtree.c` (generated), `.venv/`, `phd_work/parity/` | Generated and local files | 60da320, 69736aa, 0dda9cb, d4789b2 | none (repository hygiene) |
+| `train.py` | reads `cfg['training'].get('max_it', -1)`; after the validation block, if `max_it > 0 and it >= max_it`, saves `model.pt` and exits with code 3 | Fixed-iteration stop (`phd_work/configs/voxel_3plane_3cls_s2.yaml`); the `exit_after` check cannot give a fixed count | 5836842 | identical when `max_it` is unset: `max_it = -1`, so the new branch is never taken and no computation changes. No parity run (see port-log); scratch test with `max_it: 300` passed |
 
 Note on `phd_work/parity/`: this rule ignores the parity reference files. They are tracked anyway, added with `git add -f`.
 
