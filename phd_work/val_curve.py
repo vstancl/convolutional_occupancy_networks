@@ -18,6 +18,7 @@ Stdout reports:
   - best IoU and its iteration;
   - the old stopping statistic: best-IoU gain over the last --window iterations
     (kept for comparison; it is sensitive to single spikes, see port-log);
+  - mean and SD (ddof=1) of the last 10 validations, to read off a plateau level;
   - the least-squares slope of IoU over the last --slope-window iterations, in IoU per
     20k iterations, with the residual SD (ddof=2). The window is it >= last_it - slope_window.
 """
@@ -152,6 +153,11 @@ def main():
     else:
         print('slope over it >= %d (n=%d validations): %+.5f IoU per 20k iterations; residual SD %.5f'
               % (last_it - args.slope_window, len(win_pts), slope, sd))
+    last10 = [p[1] for p in points[-10:]]
+    m10 = sum(last10) / len(last10)
+    sd10 = math.sqrt(sum((v - m10) ** 2 for v in last10) / (len(last10) - 1)) if len(last10) > 1 else float('nan')
+    print('last %d validations (it %d..%d): mean %.4f, SD %.4f (ddof=1)'
+          % (len(last10), points[-len(last10)][0], last_it, m10, sd10))
     print('wrote %s.csv and %s.png' % (prefix, prefix))
 
 
