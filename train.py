@@ -122,6 +122,7 @@ logger = SummaryWriter(os.path.join(out_dir, 'logs'))
 print_every = cfg['training']['print_every']
 checkpoint_every = cfg['training']['checkpoint_every']
 validate_every = cfg['training']['validate_every']
+max_it = cfg['training'].get('max_it', -1)
 visualize_every = cfg['training']['visualize_every']
 
 # Print model
@@ -187,6 +188,13 @@ while True:
                 print('New best model (loss %.4f)' % metric_val_best)
                 checkpoint_io.save('model_best.pt', epoch_it=epoch_it, it=it,
                                    loss_val_best=metric_val_best)
+
+        # Exit at a fixed iteration count (cfg['training']['max_it'], unset or <= 0: disabled)
+        if max_it > 0 and it >= max_it:
+            print('Max iterations reached. Exiting.')
+            checkpoint_io.save('model.pt', epoch_it=epoch_it, it=it,
+                               loss_val_best=metric_val_best)
+            exit(3)
 
         # Exit if necessary
         if exit_after > 0 and (time.time() - t0) >= exit_after:
