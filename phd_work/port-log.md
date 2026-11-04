@@ -461,4 +461,37 @@ Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exi
 - Configs: `phd_work/configs/voxel_3plane_3cls_test.yaml` (inherits `voxel_3plane_3cls.yaml`, `generation_dir: generation_3cls_best`, `test.model_file: model_best.pt`) and `phd_work/configs/voxel_3plane_3cls_s2.yaml` (`out_dir: out/phd_3cls_s2`, `max_it: 120000`).
 - `model_file` is relative to `out_dir` (`src/checkpoints.py` `load_file` joins it to `checkpoint_dir`). The brief's `out/phd_3cls/model_best.pt` would resolve to `out/phd_3cls/out/phd_3cls/model_best.pt`, so the config uses `model_best.pt`, which is the same file.
 - Launched in tmux session `phd_3cls_test` (script `chain.sh` in the scratchpad, log of the chain `phd_work/logs/chain_3cls_test.log`): generate → eval_meshes → train s2. Logs: `generate_3cls_best.log`, `eval_3cls_best.log`, `3cls_s2.log`. Exit codes and wall times are in the chain log.
-- Results of step 3: pending (filled in below when the eval finishes).
+- Chain outcome (`phd_work/logs/chain_3cls_test.log`): generate rc=0, 1189 s (19.8 min). eval_meshes rc=0; the chain's `t=2777` is cumulative from chain start, so eval alone was 2777 − 1189 = 1588 s (26.5 min, matches the progress bar). s2 rc=3 (the `max_it` exit code, `train.py` commit `5836842`), wall 20077 s (5.6 h); the log ends with `Max iterations reached. Exiting.` after the it=120000 validation.
+
+### Results of step 3: test-set eval of the 3-class baseline
+
+- Checkpoint: `model_best.pt` of run1+run2 (best validation IoU 0.6899 at it=106000, see the run2 section). The `it` of the saved file was not read from the checkpoint; it is inferred from the validation curve.
+- Mesh CSV: `out/phd_3cls/generation_3cls_best/eval_meshes.csv`, copied to `phd_work/results/voxel_3plane_3cls_best.csv`.
+- Reference: chair, table and lamp rows of `phd_work/results/voxel_3plane_pretrained_full.csv`. That file has no mean row, so the reference class mean is the mean of these three rows (computed here, not read from a file). The 3-class eval CSV also has no mean row; its mean is the same calculation.
+- Columns: completeness and accuracy (mesh), NC = `normals (mesh)`, Chamfer-L1 = `chamfer-L1 (mesh)` ×10, F-Score = `f-score (mesh)`, IoU = `iou (mesh)`.
+
+| class | source | completeness | accuracy | NC | Chamfer-L1 ×10 | F-Score | IoU |
+|---|---|---|---|---|---|---|---|
+| chair | 3cls_best | 0.0091 | 0.0086 | 0.9091 | 0.0883 | 0.7064 | 0.7299 |
+| chair | pretrained_full | 0.0088 | 0.0086 | 0.9084 | 0.0874 | 0.7094 | 0.7304 |
+| lamp | 3cls_best | 0.0139 | 0.0100 | 0.8565 | 0.1196 | 0.6705 | 0.6237 |
+| lamp | pretrained_full | 0.0124 | 0.0098 | 0.8601 | 0.1108 | 0.6837 | 0.6311 |
+| table | 3cls_best | 0.0089 | 0.0085 | 0.9293 | 0.0868 | 0.7059 | 0.6778 |
+| table | pretrained_full | 0.0087 | 0.0085 | 0.9283 | 0.0860 | 0.7100 | 0.6786 |
+| class mean (3) | 3cls_best | 0.0106 | 0.0090 | 0.8983 | 0.0982 | 0.6942 | 0.6771 |
+| class mean (3) | pretrained_full | 0.0100 | 0.0090 | 0.8990 | 0.0947 | 0.7010 | 0.6800 |
+
+- The 3-class mean IoU (0.6771) matches the `mean` row in `eval_3cls_best.log`, and the mean completeness (0.010621) and accuracy (0.009027) match too. That log's `mean` row reports `f-score-20` (0.9269), a different column from the `f-score (mesh)` used in the table, so it is not comparable with the F-Score column above.
+- The eval log contains `Warning: contains1 != contains2 for some points.` lines. This warning is not in "Warnings kept on purpose" and its cause was not investigated in this step; it is recorded here so it can be checked.
+- Reading: the 3-class model is slightly below the 13-class pretrained model on the three classes (mean IoU 0.6771 vs 0.6800), mostly in lamp (−0.007 IoU) and in Chamfer-L1 (lamp 0.120 vs 0.111). Chair is equal within 0.001 and table within 0.001. This is one checkpoint on one eval, with no seed spread.
+
+### s2: second 3-class run from scratch (variance check), it=120000
+
+- Config: `phd_work/configs/voxel_3plane_3cls_s2.yaml` (`out_dir: out/phd_3cls_s2`, `max_it: 120000`), otherwise the same as `voxel_3plane_3cls.yaml`. The run starts fresh (`Current best validation metric (iou): -inf`, empty out dir), not a resume. Whether the seed differs from run1 was not checked in the config.
+- Exit: rc=3 at it=120000, the expected `max_it` exit. Validations every 2000 iterations: 60 points, it 2000–120000 (`phd_work/logs/3cls_s2.csv`, `3cls_s2.png`).
+- `val_curve.py` on `3cls_s2.log`:
+  - best val IoU **0.6893 at it=118000**;
+  - mean and SD (ddof=1) of the last 10 validations (it 102000–120000): **0.6844, SD 0.0032**;
+  - least-squares slope over it ≥ 100000 (11 validations): −0.00175 IoU per 20k, residual SD 0.0034.
+- run1+run2 for comparison (`phd_work/logs/3cls_combined.csv`, same script): best 0.6899 at it=106000; last 10 (it 106000–124000): 0.6859, SD 0.0022; slope over it ≥ 104000: −0.00006 per 20k, residual SD 0.0023.
+- Reading: the s2 plateau is 0.0015 below run1+run2 (0.6844 vs 0.6859). Its SD is 0.003 and the windows differ by 2–4k iterations, so the gap is about 1.4 SE and is not separable from run-to-run noise at this level. The s2 slope is still slightly negative over its last 20k, which is not seen in run1+run2. Two runs are not enough to say whether the 3-class plateau is seed-stable; a third run or a test-set eval of s2 would be needed.
