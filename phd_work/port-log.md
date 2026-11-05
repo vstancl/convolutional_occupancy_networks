@@ -545,3 +545,21 @@ Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exi
 - Timing (100 real train models, binvox loading excluded, `time.perf_counter`, all three planes): L=32: 3.26 ms/object; L=4: 1.09 ms/object.
 - Error: pytest was not installed (`ModuleNotFoundError`). Fix: `uv add --dev pytest` (pytest 9.2.0; the lock diff adds only pytest, iniconfig, pluggy, pygments; no existing pin changed). `pyproject.toml` gained a `[dependency-groups] dev` entry.
 - Error: first test run failed on my own test, which reconstructed from an L=1 array. The function correctly rejects odd L. Fix: the empty-grid test runs the reconstruction only for even L.
+
+## 2026-11-05 — Dexel encoder module (`phd_work/dexel_encoder.py`, step D2, CPU only)
+
+- `DexelEncoder(LocalVoxelEncoder)`: `__init__(L, c_dim=32, hidden_dim=64, **kwargs)` calls the parent with the same kwargs, deletes the parent's `conv_in` (Conv3d), and sets `ray_encoder = Conv2d(2L, hidden, 1) → ReLU → Conv2d(hidden, c_dim, 1)`, shared across the three planes. `forward` applies `self.actvn` after the ray encoder, as the parent does after `conv_in`.
+- `forward(slots)` with slots `(B, 3, 2L, 32, 32)`: for each plane in `plane_type`, the ray features `(B, c_dim, 32, 32)` become one point per ray, `ray_points(plane)`. Image coordinates are the voxel centres of (u, v) in the plane's two axes, and the ray-axis coordinate is 0 (mapping from `dexels.RAY_AXIS`). `generate_plane_features` of the parent is called unchanged. Returns the same dict as the parent.
+- Added beyond the spec, both raise `ValueError`: `plane_type` containing `'grid'` or no xz/xy/yz (the forward would otherwise skip it silently), and a slots shape that does not match `L`.
+- Config kwargs in the tests come from `phd_work/configs/voxel_3plane_3cls.yaml` (inherits `configs/voxel/shapenet_3plane.yaml`), loaded with `load_config` from the repo root. The 3-class config is the one where `c_dim` = 32, `plane_resolution` = 64, U-Net depth 4 and `start_filts` 32 were checked.
+- Tests: `phd_work/tests/test_dexel_encoder.py`, 10 tests, all pass. They cover output keys and shapes against `LocalVoxelEncoder`, placement (all 1024 rays in distinct cells, each cell equal to the cells of its voxel column in `LocalVoxelEncoder`'s point set, for all three planes), a single ray feature landing only in its own cell with the U-Net off, backward giving non-zero ray-encoder gradients, an end-to-end run from voxels, parameter counts, and the two validation errors. Full suite: 33 passed.
+- Parameter counts (c_dim 32; shapenet_3plane kwargs):
+
+| encoder | conv_in / ray encoder | U-Net | total |
+|---|---|---|---|
+| LocalVoxelEncoder | conv_in 896 | 1,934,976 | 1,935,872 |
+| DexelEncoder, L=4 | ray encoder 2,656 | 1,934,976 | 1,937,632 |
+| DexelEncoder, L=32 | ray encoder 6,240 | 1,934,976 | 1,941,216 |
+
+  The ray encoder counts are (8·64+64) + (64·32+32) = 2656 for L=4, and (64·64+64) + (64·32+32) = 6240 for L=32.
+- Error: my test helper indexed `coordinate2index(...)[0]`. That function returns `(B, 1, N)`, so the index had to be `[0, 0]`. The encoder was not at fault. Fixed in the test; logged here.
