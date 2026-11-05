@@ -623,3 +623,49 @@ GPU: NVIDIA GeForce RTX 4070 (12282 MiB). Before the run, the GPU already had 21
 **Step 3: L2 smoke, `--exit-after 300`**
 - Exit code 3: the `--exit-after` branch also calls `exit(3)` (`train.py` line 204), although its help text says exit code 2. Log `phd_work/logs/dexel_L2_smoke.log` ("Time limit reached. Exiting."); GPU log `phd_work/logs/gpu_dexel_L2_smoke.csv`.
 - Median s/it, it ≥ 300: **0.0902** (28 intervals, last it 3100 at 294 s).
+
+## 2026-11-05 — Full dexel runs and test evals (step D4, chain `phd_dexel_runs`)
+
+Chain log: `phd_work/logs/chain_dexel_runs.log` (rc and wall time of every step). Chain start 10:31, end 19:33, all rc as expected.
+
+**Same-session speed reference** (`--exit-after 300`, validation and checkpoints off, median s/it from it ≥ 300 with `phd_work/speed_stats.py`):
+- voxel 3cls: **0.1608** s/it (14 intervals, `phd_work/logs/speed_voxel_same_session.log`)
+- dexel L32: **0.1068** s/it (23 intervals, `phd_work/logs/speed_dexel_L32_same_session.log`)
+- The scratch out_dirs were removed. The earlier voxel value 0.1556 (`speed_3cls_scratch.log`) and the dexel smoke value 0.1072 are consistent with these.
+
+**Full runs** (`max_it` 120000, uninterrupted, exit 3 = `max_it` branch):
+- L32: wall 14084 s (3.9 h). Median s/it 0.1057 (1197 intervals). Logs `dexel_L32_run.log`, `gpu_dexel_L32_run.csv` (30 s samples, 470 rows; mean utilization 73%; memory.used between 2079 and 4645 MiB, the low value being the desktop baseline).
+- L2: wall 12034 s (3.3 h). Median s/it 0.0888. Logs `dexel_L2_run.log`, `gpu_dexel_L2_run.csv` (402 rows; mean utilization 82%; memory.used 1942–4504 MiB).
+
+Validation (`val_curve.py`, 60 validations, it 2000–120000; CSV/PNG in `phd_work/logs/dexel_L{32,2}_run.{csv,png}`):
+
+| | best val IoU (it) | last 10 validations, mean ± SD (it) | slope over it ≥ 100k, per 20k |
+|---|---|---|---|
+| dexel L32 | 0.6929 (102000) | 0.6874 ± 0.0028 (102k–120k) | −0.00134 |
+| dexel L2 | 0.6683 (116000) | 0.6643 ± 0.0022 (102k–120k) | −0.00045 |
+| voxel 3cls run1+2 (for reference) | 0.6899 (106000) | 0.6859 ± 0.0022 (106k–124k) | −0.00006 |
+
+The evals use `model_best.pt`, which is the best-validation checkpoint: it=102000 for L32 and it=116000 for L2 (read with `CheckpointIO`), not the final iteration.
+
+**Test-set evals** (`generation_best`, test split, 3519 meshes per run; configs `dexel_3plane_3cls_L{32,2}_test.yaml`):
+- generate L32 rc 0 (1238 s); eval L32 rc 0 (1704 s); generate L2 rc 0 (1270 s); eval L2 rc 0 (1620 s).
+- CSVs copied to `phd_work/results/dexel_3plane_3cls_L32_best.csv` and `..._L2_best.csv` (3 class rows each).
+- No `contains1 != contains2` lines in either eval log (the voxel 3cls eval has 5).
+
+| model | class | IoU | Chamfer-L1 ×10 | F-Score | NC |
+|---|---|---|---|---|---|
+| dexel L32 | chair | 0.7338 | 0.0860 | 0.7128 | 0.9097 |
+| dexel L32 | lamp | 0.6346 | 0.1090 | 0.6832 | 0.8574 |
+| dexel L32 | table | 0.6776 | 0.0860 | 0.7049 | 0.9293 |
+
+Class-mean (chair/table/lamp, computed as in the earlier steps; the CSVs have no mean row):
+
+| model | completeness | accuracy | NC | Chamfer-L1 ×10 | F-Score | IoU |
+|---|---|---|---|---|---|---|
+| dexel L32 | 0.0100 | 0.0088 | 0.8988 | 0.0938 | 0.7003 | **0.6820** |
+| dexel L2 | 0.0111 | 0.0099 | 0.8894 | 0.1051 | 0.6697 | 0.6557 |
+| voxel 3cls run1+2 best (`voxel_3plane_3cls_best.csv`) | 0.0106 | 0.0090 | 0.8983 | 0.0982 | 0.6942 | 0.6771 |
+| voxel 3cls s2 best (`voxel_3plane_3cls_s2_best.csv`) | 0.0104 | 0.0087 | 0.8970 | 0.0955 | 0.7026 | 0.6776 |
+| pretrained 13-class model, chair/table/lamp rows (`voxel_3plane_pretrained_full.csv`) | 0.0100 | 0.0090 | 0.8990 | 0.0947 | 0.7010 | 0.6800 |
+
+Single runs, one checkpoint each, no seed spread. The L32 class-mean IoU (0.6820) is above the voxel 3cls runs (0.6771 and 0.6776) and the pretrained model (0.6800), by 0.002–0.005. Per-class, L32's lamp IoU (0.6346) is the main difference. Differences this size are within the run-to-run spread seen in the voxel runs (val-curve SD 0.002–0.003), so this should not be read as a confirmed gain.

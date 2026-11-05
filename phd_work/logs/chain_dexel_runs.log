@@ -1,0 +1,14 @@
+start 2026-11-05T10:31:08+01:00
+speed_voxel rc=3 expected=3 wall=304s end=2026-11-05T10:36:12+01:00
+speed_dexel_L32 rc=3 expected=3 wall=304s end=2026-11-05T10:41:16+01:00
+phd_work/logs/speed_voxel_same_session.log: intervals=14 median s/it=0.1608 last (it, time)=(1700, 291.76)
+phd_work/logs/speed_dexel_L32_same_session.log: intervals=23 median s/it=0.1068 last (it, time)=(2600, 294.91)
+speed scratch out_dirs removed
+train_L32 rc=3 expected=3 wall=14084s end=2026-11-05T14:36:00+01:00
+train_L2 rc=3 expected=3 wall=12034s end=2026-11-05T17:56:34+01:00
+generate_L32 rc=0 expected=0 wall=1238s end=2026-11-05T18:17:12+01:00
+eval_L32 rc=0 expected=0 wall=1704s end=2026-11-05T18:45:36+01:00
+generate_L2 rc=0 expected=0 wall=1270s end=2026-11-05T19:06:46+01:00
+eval_L2 rc=0 expected=0 wall=1620s end=2026-11-05T19:33:46+01:00
+copy_csv rc=0 end=2026-11-05T19:33:46+01:00
+CHAIN DONE 2026-11-05T19:33:46+01:00
