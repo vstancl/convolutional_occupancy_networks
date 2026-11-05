@@ -1,0 +1,13 @@
+out/phd_dexel_L32_smoke/model_best.pt
+=> Loading checkpoint from local file...
+Warning: generator does not support pointcloud generation.
+  0%|          | 0/6 [00:00<?, ?it/s] 17%|█▋        | 1/6 [00:00<00:04,  1.10it/s] 33%|███▎      | 2/6 [00:01<00:02,  1.44it/s] 50%|█████     | 3/6 [00:01<00:01,  1.85it/s] 67%|██████▋   | 4/6 [00:02<00:00,  2.43it/s] 83%|████████▎ | 5/6 [00:02<00:00,  2.80it/s]100%|██████████| 6/6 [00:02<00:00,  2.75it/s]100%|██████████| 6/6 [00:02<00:00,  2.26it/s]
+Timings [s]:
+                mesh  ...  time (marching cubes)
+class name            ...                       
+chair       0.595516  ...               0.085902
+lamp        0.227114  ...               0.086334
+table       0.213892  ...               0.084607
+mean        0.345507  ...               0.085614
+
+[4 rows x 4 columns]

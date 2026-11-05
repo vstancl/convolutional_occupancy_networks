@@ -589,3 +589,37 @@ Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exi
 
 - The dexel loader is about 30 ms per batch slower (about 1.6×). Each dexel batch is 64 × 3 × 64 × 32 × 32 float32, about 50 MB, against about 8 MB for the voxel batch. Most of the extra time is probably the conversion in the workers and collating the larger batch; this was not profiled.
 - The run-to-run spread is about ±5 ms per batch.
+
+## 2026-11-05 — Correction to D3a: `copy_input` and `generate.py`
+
+- The D3a entry and my reply said that with `input_type: dexels`, `generate.py` skips the input copy. That was wrong. `generate.py` (about line 185) has `elif input_type == 'pointcloud' or 'partial_pointcloud':`, which is always true, an upstream bug. With `copy_input: true`, dexel slots would be exported as a point cloud. `generation.copy_input: false` in the dexel configs is what prevents it. The bug is not fixed here (upstream code). Checked in D3b: `out/phd_dexel_L32_smoke/generation/input` is empty.
+
+## 2026-11-05 — Dexel smoke runs on GPU (step D3b)
+
+Scratch configs (in the session scratchpad, not committed; they are the values listed here):
+- `dexel_L32_smoke.yaml`: inherits `dexel_3plane_3cls_L32.yaml`; `out_dir: out/phd_dexel_L32_smoke`, `max_it: 4000`, `validate_every: 2000`, `checkpoint_every: 2000`.
+- `dexel_L32_smoke_eval.yaml`: inherits the smoke config; `data.test_split: test_smoke`, `test.model_file: model_best.pt`.
+- `dexel_L2_smoke.yaml`: inherits `dexel_3plane_3cls_L2.yaml`; `out_dir: out/phd_dexel_L2_smoke`, `validate_every` and `checkpoint_every` at 100000 (no validation needed for the 300 s run; this is my choice).
+
+GPU: NVIDIA GeForce RTX 4070 (12282 MiB). Before the run, the GPU already had 2110 MiB in use from desktop processes (kwin, Claude desktop), so the memory numbers below include that baseline.
+
+**Step 1: L32 smoke, `phd_work/run.py train.py`**
+- Exit code 3, the `max_it` branch of `train.py` (`exit(3)`, commit `5836842`). Wall 503 s. Log `phd_work/logs/dexel_L32_smoke.log`; GPU log `phd_work/logs/gpu_dexel_L32_smoke.csv` (5 s samples, 101 rows).
+- Median s/it, intervals with it ≥ 300 (`phd_work/speed_stats.py`): **0.1072** (37 intervals, last it 4000). Voxel 3cls scratch reference, same method on `phd_work/logs/speed_3cls_scratch.log`: 0.1556 (matches the value given). The two runs were not measured under the same conditions (different sessions, and the desktop GPU load is not recorded for the voxel run), so this is not a like-for-like speed comparison.
+- GPU peak `memory.used`: 4234 MiB total, i.e. about 2124 MiB above the 2110 MiB baseline. Mean utilization over the run: 65% (median 82%, max 86%). The port-log table value "4.1 GB" for the voxel scratch run was measured in a way not recorded here, so it is not compared.
+- Validation (`val_curve.py`, validations at it 2000 and 4000 as configured):
+
+| it | dexel L32 | voxel run1 (`3cls_run1_val.csv`) |
+|---|---|---|
+| 2000 | 0.6001 | 0.6013 |
+| 4000 | 0.6235 | 0.6146 |
+
+  Best 0.6235 at it 4000. Two points only; not a result.
+
+**Step 2: end-to-end on `test_smoke`** (`phd_work/run.py generate.py` and `eval_meshes.py` with `dexel_L32_smoke_eval.yaml`)
+- `generate.py`: exit 0, log `phd_work/logs/generate_dexel_L32_smoke.log`. 6 meshes (`.off`) under `out/phd_dexel_L32_smoke/generation/meshes`; no `.ply`; `generation/input` is empty (confirms `copy_input: false`).
+- `eval_meshes.py`: exit 0, log `phd_work/logs/eval_dexel_L32_smoke.log`. 3 class rows (chair, lamp, table) in `eval_meshes.csv`. Mean IoU over the class rows 0.6298 (chair 0.6515, lamp 0.5483, table 0.6895). Pipeline check only; the smoke split is not a result, and the model is at 4000 iterations.
+
+**Step 3: L2 smoke, `--exit-after 300`**
+- Exit code 3: the `--exit-after` branch also calls `exit(3)` (`train.py` line 204), although its help text says exit code 2. Log `phd_work/logs/dexel_L2_smoke.log` ("Time limit reached. Exiting."); GPU log `phd_work/logs/gpu_dexel_L2_smoke.csv`.
+- Median s/it, it ≥ 300: **0.0902** (28 intervals, last it 3100 at 294 s).
