@@ -1,0 +1,13 @@
+inherit_from: phd_work/configs/voxel_3plane_3cls.yaml
+data:
+  input_type: dexels
+model:
+  encoder: dexel_local
+  encoder_kwargs:
+    L: 2
+    hidden_dim: 64
+training:
+  out_dir: out/phd_dexel_L2
+  max_it: 120000
+generation:
+  copy_input: false

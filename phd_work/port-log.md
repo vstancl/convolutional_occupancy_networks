@@ -563,3 +563,29 @@ Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exi
 
   The ray encoder counts are (8·64+64) + (64·32+32) = 2656 for L=4, and (64·64+64) + (64·32+32) = 6240 for L=32.
 - Error: my test helper indexed `coordinate2index(...)[0]`. That function returns `(B, 1, N)`, so the index had to be `[0, 0]`. The encoder was not at fault. Fixed in the test; logged here.
+
+## 2026-11-05 — Dexel encoder wired in without editing upstream (step D3a, CPU only, no training)
+
+- `phd_work/dexel_register.py`: `register()` adds `'dexel_local': DexelEncoder` to `src.encoder.encoder_dict` in place, and replaces `src.config.get_inputs_field` with a wrapper. The wrapper returns `DexelSlotsField(voxels_file, L=encoder_kwargs.L)` for `input_type == 'dexels'` and calls the original otherwise. `DexelSlotsField(VoxelsField)` reads the binvox as `VoxelsField` does, applies the transform if any, and returns `voxels_to_dexel_slots(vox, L)`. `unregister()` restores the original state (used by the transparency test).
+- `phd_work/run.py <script> [args]`: calls `register()`, then `runpy.run_path(script, run_name='__main__')` with `sys.argv = [script, *args]`. It puts the repo root first on `sys.path`.
+- Configs `phd_work/configs/dexel_3plane_3cls_L32.yaml` and `..._L2.yaml` inherit `voxel_3plane_3cls.yaml` and set `data.input_type: dexels`, `model.encoder: dexel_local`, `encoder_kwargs.L` (32 / 2) and `hidden_dim: 64`, `training.out_dir: out/phd_dexel_L32` / `out/phd_dexel_L2`, `training.max_it: 120000`, `generation.copy_input: false`. The merged `encoder_kwargs` keeps the inherited `plane_resolution` 64, `plane_type` xz/xy/yz, and `unet` with depth 4 and start_filts 32. `c_dim` stays at 32.
+- Upstream files: none edited (`git status` shows only new files under `phd_work/`).
+- Tests `phd_work/tests/test_dexel_register.py`, 8 tests, all pass:
+  - the registration adds the encoder and the wrapper, and voxel configs still get `VoxelsField`;
+  - a train dataset item from the L32 config has inputs `(3, 64, 32, 32)` float32 and equals `voxels_to_dexel_slots` of that object's `model.binvox` (exact equality);
+  - `get_model` on L32 and L2 gives a `DexelEncoder` with the expected L; ray encoder params are 6240 (L=32) and 2400 (L=2), and the encoder total is ray + U-Net;
+  - a dexel model forward on a dataset item gives finite logits of the right shape;
+  - transparency on `voxel_3plane_3cls.yaml`: with and without `register()`, the inputs field type (`VoxelsField`), model class and parameter count are identical, and the forward output on one fixed batch (fixed seed) has max |diff| = 0;
+  - `unregister()` restores the original function and removes the encoder entry;
+  - `run.py` runs a probe script with the registration active and passes `sys.argv` through.
+- Notes on the tests: `model(p, inputs)` returns a Bernoulli distribution, so the tests compare `.logits`. Test 1 failed on my first run for that reason, and the unregister test failed because an earlier test had already registered; both were test-side fixes.
+
+### Loader timing (`phd_work/bench_loader.py`, train loader as in `train.py`: batch 64, n_workers 8, shuffle, 5 warm-up + 50 timed batches, 24-core CPU)
+
+| config | run 1 | run 2 | run 3 |
+|---|---|---|---|
+| `dexel_3plane_3cls_L32.yaml` (inputs (64, 3, 64, 32, 32)) | 87.2 ms/batch | 79.3 ms/batch | 76.1 ms/batch |
+| `voxel_3plane_3cls.yaml` (inputs (64, 32, 32, 32)) | 54.2 ms/batch | 48.0 ms/batch | 46.9 ms/batch |
+
+- The dexel loader is about 30 ms per batch slower (about 1.6×). Each dexel batch is 64 × 3 × 64 × 32 × 32 float32, about 50 MB, against about 8 MB for the voxel batch. Most of the extra time is probably the conversion in the workers and collating the larger batch; this was not profiled.
+- The run-to-run spread is about ±5 ms per batch.
