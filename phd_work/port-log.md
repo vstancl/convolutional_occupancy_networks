@@ -527,3 +527,10 @@ Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exi
 - Per-class IoU, run1+run2 vs s2: chair 0.7299 vs 0.7301, lamp 0.6237 vs 0.6257, table 0.6778 vs 0.6771. The class-mean IoU is 0.6771 vs 0.6776, a difference of 0.0005.
 - The class-mean IoU of both 3-class models is below the pretrained 13-class model's 0.6800 by about 0.002–0.003. Chamfer-L1 and F-Score differ more between the 3-class runs than IoU does: F-Score mean 0.6942 (run1+run2) vs 0.7026 (s2).
 - These are single checkpoints on the same test split, with no seed spread. The two runs agree to within 0.001 on mean IoU, which is the same level as the earlier val-curve gap of 0.0015 (not separable from noise).
+
+## 2026-11-05 — Dexel hits per ray (`phd_work/dexel_hits_hist.py`, CPU only)
+
+- Ran on `voxel_3plane_3cls.yaml` for train, val and test (12328 / 1758 / 3519 objects). Output: `phd_work/results/dexel_hits_3cls.txt`. Run time 3.9 s total.
+- Split list counts: `wc -l` on the `.lst` files gives 1 less per file, because the files have no trailing newline. The script parses them the way `Shapes3dDataset` does, which gives 3519 for test, matching `eval_3cls_best.log`.
+- Hits are 2 × runs of consecutive occupied voxels per 32-voxel ray. Max possible is 32. Observed max is 26 (train), 26 (val), 24 (test) over all axes.
+- Error: `git add` of `phd_work/results/dexel_hits_3cls.txt` was refused, because `.gitignore:23` ignores `*.txt`. Fix: force-added that one file with `git add -f`; `.gitignore` is unchanged. Other `results/` files are CSVs and are not affected by this rule.
