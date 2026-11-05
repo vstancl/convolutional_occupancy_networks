@@ -47,3 +47,8 @@ torch-scatter = [{ index = "pyg-pt212-cu130", marker = "sys_platform == 'linux'"
 
 [tool.setuptools]
 packages = []    # explicitní (prázdný) seznam vypne auto-discovery; rozšíření jsou v setup.py
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]

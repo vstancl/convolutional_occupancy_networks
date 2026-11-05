@@ -534,3 +534,14 @@ Commands: `uv run python train.py phd_work/configs/voxel_3plane_bench.yaml --exi
 - Split list counts: `wc -l` on the `.lst` files gives 1 less per file, because the files have no trailing newline. The script parses them the way `Shapes3dDataset` does, which gives 3519 for test, matching `eval_3cls_best.log`.
 - Hits are 2 × runs of consecutive occupied voxels per 32-voxel ray. Max possible is 32. Observed max is 26 (train), 26 (val), 24 (test) over all axes.
 - Error: `git add` of `phd_work/results/dexel_hits_3cls.txt` was refused, because `.gitignore:23` ignores `*.txt`. Fix: force-added that one file with `git add -f`; `.gitignore` is unchanged. Other `results/` files are CSVs and are not affected by this rule.
+
+## 2026-11-05 — Dexel slot conversion (`phd_work/dexels.py`, step D1, CPU only)
+
+- `voxels_to_dexel_slots(vox, L)` → float32 `(3, 2L, 32, 32)`; `dexel_slots_to_voxels(slots, plane=0)` → bool `(32, 32, 32)`. The spec gave the reconstruction signature without `plane`; I added `plane` (default 0, as specified) so that the round-trip test can check all three planes.
+- Plane mapping: plane 0 'xz' rays along voxel axis 1 (image = axes 0, 2); plane 1 'xy' along axis 2 (image = axes 0, 1); plane 2 'yz' along axis 0 (image = axes 1, 2). Checked on an asymmetric voxel `(3, 7, 11)` in `test_single_voxel_axis_mapping_asymmetric`. Voxel centres and `h = 1/31` follow `src/encoder/voxels.py` (`torch.linspace(-0.5, 0.5, ...)`).
+- Truncation: if a ray has more than L hits, keep the first ceil(L/2) and the last floor(L/2) (L=1: first only). Tested for L=2, 4 and 1 on two runs and on the alternating column.
+- Reconstruction pairs slots (2j, 2j+1) as (entry, exit). It is exact only with L = 32. It raises for odd L.
+- Tests: `phd_work/tests/test_dexels.py`, 23 tests, all pass (`uv run pytest phd_work/tests -q`). They cover the cases in the spec: empty grid, single voxel, full column, two runs (L=4 and L=2), alternating column (L=32, 4, 1), axis mapping, random grids, and round trip on 100 real train models (seed 0, sampled from the three train lists). Round trip is exact on all three planes for all 100 models.
+- Timing (100 real train models, binvox loading excluded, `time.perf_counter`, all three planes): L=32: 3.26 ms/object; L=4: 1.09 ms/object.
+- Error: pytest was not installed (`ModuleNotFoundError`). Fix: `uv add --dev pytest` (pytest 9.2.0; the lock diff adds only pytest, iniconfig, pluggy, pygments; no existing pin changed). `pyproject.toml` gained a `[dependency-groups] dev` entry.
+- Error: first test run failed on my own test, which reconstructed from an L=1 array. The function correctly rejects odd L. Fix: the empty-grid test runs the reconstruction only for even L.
