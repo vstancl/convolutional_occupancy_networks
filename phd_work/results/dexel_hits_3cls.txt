@@ -1,0 +1,488 @@
+config: phd_work/configs/voxel_3plane_3cls.yaml
+dataset: data/ShapeNet
+classes: ['03001627', '04379243', '03636649']
+voxels_file: model.binvox
+resolution: 32
+
+======================================================================
+split: train   objects: 12328   time: 2.8 s (0.2 ms/object)
+
+axis 0 (rays along dim 0)
+  rays=12623872 objects=12328
+  max hits = 26
+  p99 = 4
+  p99.9 = 8
+  p99.99 = 12
+  histogram, all rays (N=12623872):
+    hits= 0  count=     8657215  frac=0.685781
+    hits= 2  count=     3120723  frac=0.247208
+    hits= 4  count=      750607  frac=0.059459
+    hits= 6  count=       71818  frac=0.005689
+    hits= 8  count=       17123  frac=0.001356
+    hits=10  count=        4306  frac=0.000341
+    hits=12  count=        1192  frac=0.000094
+    hits=14  count=         627  frac=0.000050
+    hits=16  count=         184  frac=0.000015
+    hits=18  count=          59  frac=0.000005
+    hits=20  count=           8  frac=0.000001
+    hits=24  count=           4  frac=0.000000
+    hits=26  count=           6  frac=0.000000
+  histogram, rays with >= 1 hit (N=3966657):
+    hits= 2  count=     3120723  frac=0.786739
+    hits= 4  count=      750607  frac=0.189229
+    hits= 6  count=       71818  frac=0.018105
+    hits= 8  count=       17123  frac=0.004317
+    hits=10  count=        4306  frac=0.001086
+    hits=12  count=        1192  frac=0.000301
+    hits=14  count=         627  frac=0.000158
+    hits=16  count=         184  frac=0.000046
+    hits=18  count=          59  frac=0.000015
+    hits=20  count=           8  frac=0.000002
+    hits=24  count=           4  frac=0.000001
+    hits=26  count=           6  frac=0.000002
+  L= 2: frac rays hits>L = 0.067011   frac objects with >=1 ray hits>L = 0.886843
+  L= 4: frac rays hits>L = 0.007551   frac objects with >=1 ray hits>L = 0.330711
+  L= 6: frac rays hits>L = 0.001862   frac objects with >=1 ray hits>L = 0.128326
+  L= 8: frac rays hits>L = 0.000506   frac objects with >=1 ray hits>L = 0.040315
+  L=12: frac rays hits>L = 0.000070   frac objects with >=1 ray hits>L = 0.006733
+  L=16: frac rays hits>L = 0.000006   frac objects with >=1 ray hits>L = 0.000973
+
+axis 1 (rays along dim 1)
+  rays=12623872 objects=12328
+  max hits = 20
+  p99 = 6
+  p99.9 = 8
+  p99.99 = 12
+  histogram, all rays (N=12623872):
+    hits= 0  count=     6299521  frac=0.499017
+    hits= 2  count=     5193517  frac=0.411404
+    hits= 4  count=      978938  frac=0.077547
+    hits= 6  count=      130457  frac=0.010334
+    hits= 8  count=       17556  frac=0.001391
+    hits=10  count=        2440  frac=0.000193
+    hits=12  count=        1153  frac=0.000091
+    hits=14  count=         208  frac=0.000016
+    hits=16  count=          47  frac=0.000004
+    hits=18  count=          18  frac=0.000001
+    hits=20  count=          17  frac=0.000001
+  histogram, rays with >= 1 hit (N=6324351):
+    hits= 2  count=     5193517  frac=0.821194
+    hits= 4  count=      978938  frac=0.154789
+    hits= 6  count=      130457  frac=0.020628
+    hits= 8  count=       17556  frac=0.002776
+    hits=10  count=        2440  frac=0.000386
+    hits=12  count=        1153  frac=0.000182
+    hits=14  count=         208  frac=0.000033
+    hits=16  count=          47  frac=0.000007
+    hits=18  count=          18  frac=0.000003
+    hits=20  count=          17  frac=0.000003
+  L= 2: frac rays hits>L = 0.089579   frac objects with >=1 ray hits>L = 0.774254
+  L= 4: frac rays hits>L = 0.012032   frac objects with >=1 ray hits>L = 0.372729
+  L= 6: frac rays hits>L = 0.001698   frac objects with >=1 ray hits>L = 0.118186
+  L= 8: frac rays hits>L = 0.000308   frac objects with >=1 ray hits>L = 0.031554
+  L=12: frac rays hits>L = 0.000023   frac objects with >=1 ray hits>L = 0.002839
+  L=16: frac rays hits>L = 0.000003   frac objects with >=1 ray hits>L = 0.000406
+
+axis 2 (rays along dim 2)
+  rays=12623872 objects=12328
+  max hits = 26
+  p99 = 6
+  p99.9 = 8
+  p99.99 = 14
+  histogram, all rays (N=12623872):
+    hits= 0  count=     9828429  frac=0.778559
+    hits= 2  count=     1546228  frac=0.122484
+    hits= 4  count=     1094421  frac=0.086695
+    hits= 6  count=      106261  frac=0.008417
+    hits= 8  count=       35929  frac=0.002846
+    hits=10  count=        7902  frac=0.000626
+    hits=12  count=        2773  frac=0.000220
+    hits=14  count=        1112  frac=0.000088
+    hits=16  count=         506  frac=0.000040
+    hits=18  count=         164  frac=0.000013
+    hits=20  count=          67  frac=0.000005
+    hits=22  count=          46  frac=0.000004
+    hits=24  count=          12  frac=0.000001
+    hits=26  count=          22  frac=0.000002
+  histogram, rays with >= 1 hit (N=2795443):
+    hits= 2  count=     1546228  frac=0.553124
+    hits= 4  count=     1094421  frac=0.391502
+    hits= 6  count=      106261  frac=0.038012
+    hits= 8  count=       35929  frac=0.012853
+    hits=10  count=        7902  frac=0.002827
+    hits=12  count=        2773  frac=0.000992
+    hits=14  count=        1112  frac=0.000398
+    hits=16  count=         506  frac=0.000181
+    hits=18  count=         164  frac=0.000059
+    hits=20  count=          67  frac=0.000024
+    hits=22  count=          46  frac=0.000016
+    hits=24  count=          12  frac=0.000004
+    hits=26  count=          22  frac=0.000008
+  L= 2: frac rays hits>L = 0.098957   frac objects with >=1 ray hits>L = 0.943138
+  L= 4: frac rays hits>L = 0.012262   frac objects with >=1 ray hits>L = 0.525876
+  L= 6: frac rays hits>L = 0.003845   frac objects with >=1 ray hits>L = 0.283420
+  L= 8: frac rays hits>L = 0.000998   frac objects with >=1 ray hits>L = 0.119646
+  L=12: frac rays hits>L = 0.000153   frac objects with >=1 ray hits>L = 0.024578
+  L=16: frac rays hits>L = 0.000025   frac objects with >=1 ray hits>L = 0.006165
+
+all axes
+  rays=37871616 objects=12328
+  max hits = 26
+  p99 = 6
+  p99.9 = 8
+  p99.99 = 12
+  histogram, all rays (N=37871616):
+    hits= 0  count=    24785165  frac=0.654452
+    hits= 2  count=     9860468  frac=0.260366
+    hits= 4  count=     2823966  frac=0.074567
+    hits= 6  count=      308536  frac=0.008147
+    hits= 8  count=       70608  frac=0.001864
+    hits=10  count=       14648  frac=0.000387
+    hits=12  count=        5118  frac=0.000135
+    hits=14  count=        1947  frac=0.000051
+    hits=16  count=         737  frac=0.000019
+    hits=18  count=         241  frac=0.000006
+    hits=20  count=          92  frac=0.000002
+    hits=22  count=          46  frac=0.000001
+    hits=24  count=          16  frac=0.000000
+    hits=26  count=          28  frac=0.000001
+  histogram, rays with >= 1 hit (N=13086451):
+    hits= 2  count=     9860468  frac=0.753487
+    hits= 4  count=     2823966  frac=0.215793
+    hits= 6  count=      308536  frac=0.023577
+    hits= 8  count=       70608  frac=0.005396
+    hits=10  count=       14648  frac=0.001119
+    hits=12  count=        5118  frac=0.000391
+    hits=14  count=        1947  frac=0.000149
+    hits=16  count=         737  frac=0.000056
+    hits=18  count=         241  frac=0.000018
+    hits=20  count=          92  frac=0.000007
+    hits=22  count=          46  frac=0.000004
+    hits=24  count=          16  frac=0.000001
+    hits=26  count=          28  frac=0.000002
+  L= 2: frac rays hits>L = 0.085182   frac objects with >=1 ray hits>L = 0.989212
+  L= 4: frac rays hits>L = 0.010615   frac objects with >=1 ray hits>L = 0.664179
+  L= 6: frac rays hits>L = 0.002468   frac objects with >=1 ray hits>L = 0.381165
+  L= 8: frac rays hits>L = 0.000604   frac objects with >=1 ray hits>L = 0.159961
+  L=12: frac rays hits>L = 0.000082   frac objects with >=1 ray hits>L = 0.031554
+  L=16: frac rays hits>L = 0.000011   frac objects with >=1 ray hits>L = 0.007300
+
+======================================================================
+split: val   objects: 1758   time: 0.4 s (0.2 ms/object)
+
+axis 0 (rays along dim 0)
+  rays=1800192 objects=1758
+  max hits = 22
+  p99 = 4
+  p99.9 = 8
+  p99.99 = 10
+  histogram, all rays (N=1800192):
+    hits= 0  count=     1246828  frac=0.692608
+    hits= 2  count=      435602  frac=0.241975
+    hits= 4  count=      104726  frac=0.058175
+    hits= 6  count=       10341  frac=0.005744
+    hits= 8  count=        2165  frac=0.001203
+    hits=10  count=         389  frac=0.000216
+    hits=12  count=          94  frac=0.000052
+    hits=14  count=          39  frac=0.000022
+    hits=16  count=           2  frac=0.000001
+    hits=18  count=           4  frac=0.000002
+    hits=22  count=           2  frac=0.000001
+  histogram, rays with >= 1 hit (N=553364):
+    hits= 2  count=      435602  frac=0.787189
+    hits= 4  count=      104726  frac=0.189253
+    hits= 6  count=       10341  frac=0.018688
+    hits= 8  count=        2165  frac=0.003912
+    hits=10  count=         389  frac=0.000703
+    hits=12  count=          94  frac=0.000170
+    hits=14  count=          39  frac=0.000070
+    hits=16  count=           2  frac=0.000004
+    hits=18  count=           4  frac=0.000007
+    hits=22  count=           2  frac=0.000004
+  L= 2: frac rays hits>L = 0.065416   frac objects with >=1 ray hits>L = 0.881684
+  L= 4: frac rays hits>L = 0.007241   frac objects with >=1 ray hits>L = 0.318544
+  L= 6: frac rays hits>L = 0.001497   frac objects with >=1 ray hits>L = 0.118885
+  L= 8: frac rays hits>L = 0.000294   frac objects with >=1 ray hits>L = 0.039249
+  L=12: frac rays hits>L = 0.000026   frac objects with >=1 ray hits>L = 0.005119
+  L=16: frac rays hits>L = 0.000003   frac objects with >=1 ray hits>L = 0.001138
+
+axis 1 (rays along dim 1)
+  rays=1800192 objects=1758
+  max hits = 24
+  p99 = 6
+  p99.9 = 8
+  p99.99 = 10
+  histogram, all rays (N=1800192):
+    hits= 0  count=      911754  frac=0.506476
+    hits= 2  count=      724220  frac=0.402302
+    hits= 4  count=      140925  frac=0.078283
+    hits= 6  count=       20277  frac=0.011264
+    hits= 8  count=        2701  frac=0.001500
+    hits=10  count=         246  frac=0.000137
+    hits=12  count=          46  frac=0.000026
+    hits=14  count=          17  frac=0.000009
+    hits=18  count=           1  frac=0.000001
+    hits=20  count=           3  frac=0.000002
+    hits=22  count=           1  frac=0.000001
+    hits=24  count=           1  frac=0.000001
+  histogram, rays with >= 1 hit (N=888438):
+    hits= 2  count=      724220  frac=0.815161
+    hits= 4  count=      140925  frac=0.158621
+    hits= 6  count=       20277  frac=0.022823
+    hits= 8  count=        2701  frac=0.003040
+    hits=10  count=         246  frac=0.000277
+    hits=12  count=          46  frac=0.000052
+    hits=14  count=          17  frac=0.000019
+    hits=18  count=           1  frac=0.000001
+    hits=20  count=           3  frac=0.000003
+    hits=22  count=           1  frac=0.000001
+    hits=24  count=           1  frac=0.000001
+  L= 2: frac rays hits>L = 0.091222   frac objects with >=1 ray hits>L = 0.758817
+  L= 4: frac rays hits>L = 0.012939   frac objects with >=1 ray hits>L = 0.363481
+  L= 6: frac rays hits>L = 0.001675   frac objects with >=1 ray hits>L = 0.117747
+  L= 8: frac rays hits>L = 0.000175   frac objects with >=1 ray hits>L = 0.029010
+  L=12: frac rays hits>L = 0.000013   frac objects with >=1 ray hits>L = 0.002844
+  L=16: frac rays hits>L = 0.000003   frac objects with >=1 ray hits>L = 0.001138
+
+axis 2 (rays along dim 2)
+  rays=1800192 objects=1758
+  max hits = 26
+  p99 = 6
+  p99.9 = 8
+  p99.99 = 14
+  histogram, all rays (N=1800192):
+    hits= 0  count=     1407019  frac=0.781594
+    hits= 2  count=      215740  frac=0.119843
+    hits= 4  count=      156156  frac=0.086744
+    hits= 6  count=       15184  frac=0.008435
+    hits= 8  count=        4655  frac=0.002586
+    hits=10  count=         999  frac=0.000555
+    hits=12  count=         247  frac=0.000137
+    hits=14  count=         111  frac=0.000062
+    hits=16  count=          55  frac=0.000031
+    hits=18  count=          15  frac=0.000008
+    hits=20  count=           6  frac=0.000003
+    hits=22  count=           1  frac=0.000001
+    hits=24  count=           2  frac=0.000001
+    hits=26  count=           2  frac=0.000001
+  histogram, rays with >= 1 hit (N=393173):
+    hits= 2  count=      215740  frac=0.548715
+    hits= 4  count=      156156  frac=0.397169
+    hits= 6  count=       15184  frac=0.038619
+    hits= 8  count=        4655  frac=0.011840
+    hits=10  count=         999  frac=0.002541
+    hits=12  count=         247  frac=0.000628
+    hits=14  count=         111  frac=0.000282
+    hits=16  count=          55  frac=0.000140
+    hits=18  count=          15  frac=0.000038
+    hits=20  count=           6  frac=0.000015
+    hits=22  count=           1  frac=0.000003
+    hits=24  count=           2  frac=0.000005
+    hits=26  count=           2  frac=0.000005
+  L= 2: frac rays hits>L = 0.098563   frac objects with >=1 ray hits>L = 0.941980
+  L= 4: frac rays hits>L = 0.011819   frac objects with >=1 ray hits>L = 0.501138
+  L= 6: frac rays hits>L = 0.003385   frac objects with >=1 ray hits>L = 0.271900
+  L= 8: frac rays hits>L = 0.000799   frac objects with >=1 ray hits>L = 0.122867
+  L=12: frac rays hits>L = 0.000107   frac objects with >=1 ray hits>L = 0.024460
+  L=16: frac rays hits>L = 0.000014   frac objects with >=1 ray hits>L = 0.005119
+
+all axes
+  rays=5400576 objects=1758
+  max hits = 26
+  p99 = 6
+  p99.9 = 8
+  p99.99 = 12
+  histogram, all rays (N=5400576):
+    hits= 0  count=     3565601  frac=0.660226
+    hits= 2  count=     1375562  frac=0.254707
+    hits= 4  count=      401807  frac=0.074401
+    hits= 6  count=       45802  frac=0.008481
+    hits= 8  count=        9521  frac=0.001763
+    hits=10  count=        1634  frac=0.000303
+    hits=12  count=         387  frac=0.000072
+    hits=14  count=         167  frac=0.000031
+    hits=16  count=          57  frac=0.000011
+    hits=18  count=          20  frac=0.000004
+    hits=20  count=           9  frac=0.000002
+    hits=22  count=           4  frac=0.000001
+    hits=24  count=           3  frac=0.000001
+    hits=26  count=           2  frac=0.000000
+  histogram, rays with >= 1 hit (N=1834975):
+    hits= 2  count=     1375562  frac=0.749635
+    hits= 4  count=      401807  frac=0.218971
+    hits= 6  count=       45802  frac=0.024961
+    hits= 8  count=        9521  frac=0.005189
+    hits=10  count=        1634  frac=0.000890
+    hits=12  count=         387  frac=0.000211
+    hits=14  count=         167  frac=0.000091
+    hits=16  count=          57  frac=0.000031
+    hits=18  count=          20  frac=0.000011
+    hits=20  count=           9  frac=0.000005
+    hits=22  count=           4  frac=0.000002
+    hits=24  count=           3  frac=0.000002
+    hits=26  count=           2  frac=0.000001
+  L= 2: frac rays hits>L = 0.085067   frac objects with >=1 ray hits>L = 0.985779
+  L= 4: frac rays hits>L = 0.010667   frac objects with >=1 ray hits>L = 0.634812
+  L= 6: frac rays hits>L = 0.002186   frac objects with >=1 ray hits>L = 0.373151
+  L= 8: frac rays hits>L = 0.000423   frac objects with >=1 ray hits>L = 0.159272
+  L=12: frac rays hits>L = 0.000049   frac objects with >=1 ray hits>L = 0.030148
+  L=16: frac rays hits>L = 0.000007   frac objects with >=1 ray hits>L = 0.007395
+
+======================================================================
+split: test   objects: 3519   time: 0.7 s (0.2 ms/object)
+
+axis 0 (rays along dim 0)
+  rays=3603456 objects=3519
+  max hits = 22
+  p99 = 4
+  p99.9 = 8
+  p99.99 = 22
+  histogram, all rays (N=3603456):
+    hits= 0  count=     2479649  frac=0.688131
+    hits= 2  count=      884486  frac=0.245455
+    hits= 4  count=      211938  frac=0.058815
+    hits= 6  count=       19242  frac=0.005340
+    hits= 8  count=        5636  frac=0.001564
+    hits=10  count=        1615  frac=0.000448
+    hits=12  count=         255  frac=0.000071
+    hits=14  count=         167  frac=0.000046
+    hits=16  count=          29  frac=0.000008
+    hits=18  count=          37  frac=0.000010
+    hits=20  count=           6  frac=0.000002
+    hits=22  count=         396  frac=0.000110
+  histogram, rays with >= 1 hit (N=1123807):
+    hits= 2  count=      884486  frac=0.787044
+    hits= 4  count=      211938  frac=0.188589
+    hits= 6  count=       19242  frac=0.017122
+    hits= 8  count=        5636  frac=0.005015
+    hits=10  count=        1615  frac=0.001437
+    hits=12  count=         255  frac=0.000227
+    hits=14  count=         167  frac=0.000149
+    hits=16  count=          29  frac=0.000026
+    hits=18  count=          37  frac=0.000033
+    hits=20  count=           6  frac=0.000005
+    hits=22  count=         396  frac=0.000352
+  L= 2: frac rays hits>L = 0.066414   frac objects with >=1 ray hits>L = 0.886047
+  L= 4: frac rays hits>L = 0.007599   frac objects with >=1 ray hits>L = 0.329355
+  L= 6: frac rays hits>L = 0.002259   frac objects with >=1 ray hits>L = 0.127309
+  L= 8: frac rays hits>L = 0.000695   frac objects with >=1 ray hits>L = 0.043194
+  L=12: frac rays hits>L = 0.000176   frac objects with >=1 ray hits>L = 0.006820
+  L=16: frac rays hits>L = 0.000122   frac objects with >=1 ray hits>L = 0.001989
+
+axis 1 (rays along dim 1)
+  rays=3603456 objects=3519
+  max hits = 22
+  p99 = 6
+  p99.9 = 8
+  p99.99 = 10
+  histogram, all rays (N=3603456):
+    hits= 0  count=     1805368  frac=0.501010
+    hits= 2  count=     1475537  frac=0.409478
+    hits= 4  count=      281333  frac=0.078073
+    hits= 6  count=       34979  frac=0.009707
+    hits= 8  count=        4943  frac=0.001372
+    hits=10  count=        1093  frac=0.000303
+    hits=12  count=         165  frac=0.000046
+    hits=14  count=          31  frac=0.000009
+    hits=16  count=           2  frac=0.000001
+    hits=18  count=           1  frac=0.000000
+    hits=22  count=           4  frac=0.000001
+  histogram, rays with >= 1 hit (N=1798088):
+    hits= 2  count=     1475537  frac=0.820614
+    hits= 4  count=      281333  frac=0.156462
+    hits= 6  count=       34979  frac=0.019453
+    hits= 8  count=        4943  frac=0.002749
+    hits=10  count=        1093  frac=0.000608
+    hits=12  count=         165  frac=0.000092
+    hits=14  count=          31  frac=0.000017
+    hits=16  count=           2  frac=0.000001
+    hits=18  count=           1  frac=0.000001
+    hits=22  count=           4  frac=0.000002
+  L= 2: frac rays hits>L = 0.089512   frac objects with >=1 ray hits>L = 0.766979
+  L= 4: frac rays hits>L = 0.011438   frac objects with >=1 ray hits>L = 0.370276
+  L= 6: frac rays hits>L = 0.001731   frac objects with >=1 ray hits>L = 0.121625
+  L= 8: frac rays hits>L = 0.000360   frac objects with >=1 ray hits>L = 0.032964
+  L=12: frac rays hits>L = 0.000011   frac objects with >=1 ray hits>L = 0.001705
+  L=16: frac rays hits>L = 0.000001   frac objects with >=1 ray hits>L = 0.000568
+
+axis 2 (rays along dim 2)
+  rays=3603456 objects=3519
+  max hits = 24
+  p99 = 6
+  p99.9 = 10
+  p99.99 = 22
+  histogram, all rays (N=3603456):
+    hits= 0  count=     2801727  frac=0.777511
+    hits= 2  count=      444418  frac=0.123331
+    hits= 4  count=      310762  frac=0.086240
+    hits= 6  count=       30848  frac=0.008561
+    hits= 8  count=       11103  frac=0.003081
+    hits=10  count=        2674  frac=0.000742
+    hits=12  count=         968  frac=0.000269
+    hits=14  count=         365  frac=0.000101
+    hits=16  count=         101  frac=0.000028
+    hits=18  count=          37  frac=0.000010
+    hits=20  count=          40  frac=0.000011
+    hits=22  count=         406  frac=0.000113
+    hits=24  count=           7  frac=0.000002
+  histogram, rays with >= 1 hit (N=801729):
+    hits= 2  count=      444418  frac=0.554324
+    hits= 4  count=      310762  frac=0.387615
+    hits= 6  count=       30848  frac=0.038477
+    hits= 8  count=       11103  frac=0.013849
+    hits=10  count=        2674  frac=0.003335
+    hits=12  count=         968  frac=0.001207
+    hits=14  count=         365  frac=0.000455
+    hits=16  count=         101  frac=0.000126
+    hits=18  count=          37  frac=0.000046
+    hits=20  count=          40  frac=0.000050
+    hits=22  count=         406  frac=0.000506
+    hits=24  count=           7  frac=0.000009
+  L= 2: frac rays hits>L = 0.099158   frac objects with >=1 ray hits>L = 0.945155
+  L= 4: frac rays hits>L = 0.012918   frac objects with >=1 ray hits>L = 0.526854
+  L= 6: frac rays hits>L = 0.004357   frac objects with >=1 ray hits>L = 0.285592
+  L= 8: frac rays hits>L = 0.001276   frac objects with >=1 ray hits>L = 0.128446
+  L=12: frac rays hits>L = 0.000265   frac objects with >=1 ray hits>L = 0.023018
+  L=16: frac rays hits>L = 0.000136   frac objects with >=1 ray hits>L = 0.006252
+
+all axes
+  rays=10810368 objects=3519
+  max hits = 24
+  p99 = 6
+  p99.9 = 8
+  p99.99 = 14
+  histogram, all rays (N=10810368):
+    hits= 0  count=     7086744  frac=0.655551
+    hits= 2  count=     2804441  frac=0.259421
+    hits= 4  count=      804033  frac=0.074376
+    hits= 6  count=       85069  frac=0.007869
+    hits= 8  count=       21682  frac=0.002006
+    hits=10  count=        5382  frac=0.000498
+    hits=12  count=        1388  frac=0.000128
+    hits=14  count=         563  frac=0.000052
+    hits=16  count=         132  frac=0.000012
+    hits=18  count=          75  frac=0.000007
+    hits=20  count=          46  frac=0.000004
+    hits=22  count=         806  frac=0.000075
+    hits=24  count=           7  frac=0.000001
+  histogram, rays with >= 1 hit (N=3723624):
+    hits= 2  count=     2804441  frac=0.753148
+    hits= 4  count=      804033  frac=0.215928
+    hits= 6  count=       85069  frac=0.022846
+    hits= 8  count=       21682  frac=0.005823
+    hits=10  count=        5382  frac=0.001445
+    hits=12  count=        1388  frac=0.000373
+    hits=14  count=         563  frac=0.000151
+    hits=16  count=         132  frac=0.000035
+    hits=18  count=          75  frac=0.000020
+    hits=20  count=          46  frac=0.000012
+    hits=22  count=         806  frac=0.000216
+    hits=24  count=           7  frac=0.000002
+  L= 2: frac rays hits>L = 0.085028   frac objects with >=1 ray hits>L = 0.987781
+  L= 4: frac rays hits>L = 0.010652   frac objects with >=1 ray hits>L = 0.662404
+  L= 6: frac rays hits>L = 0.002783   frac objects with >=1 ray hits>L = 0.384200
+  L= 8: frac rays hits>L = 0.000777   frac objects with >=1 ray hits>L = 0.169366
+  L=12: frac rays hits>L = 0.000151   frac objects with >=1 ray hits>L = 0.028133
+  L=16: frac rays hits>L = 0.000086   frac objects with >=1 ray hits>L = 0.007957
+
+total time: 3.9 s
