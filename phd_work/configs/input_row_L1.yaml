@@ -1,0 +1,5 @@
+inherit_from: phd_work/configs/voxel_3plane_3cls.yaml
+training:
+  out_dir: out/phd_input_L1
+generation:
+  generation_dir: generation

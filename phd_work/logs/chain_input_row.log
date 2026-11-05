@@ -1,0 +1,10 @@
+start 2026-11-05T21:08:29+01:00
+input_row L=32 rc=0 wall=59s
+eval L=32 rc=0 wall=772s
+input_row L=1 rc=0 wall=33s
+eval L=1 rc=0 wall=777s
+input_row L=2 rc=0 wall=33s
+eval L=2 rc=0 wall=783s
+input_row L=4 rc=0 wall=35s
+eval L=4 rc=0 wall=772s
+CHAIN DONE 2026-11-05T22:02:53+01:00

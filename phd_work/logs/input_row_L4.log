@@ -1,0 +1,6 @@
+L=4 split=test objects=3519 out_dir=/home/wish/PhD/convonet/out/phd_input_L4
+superset check (occ contains original voxels): failures=0
+mean extra-voxel fraction (extra / original occupied): 0.0000
+mean superset time per object: 2.62 ms (voxel conversion + plane supersets, excl. meshing)
+total time: 32.3 s
+CHECKS PASS

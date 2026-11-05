@@ -669,3 +669,34 @@ Class-mean (chair/table/lamp, computed as in the earlier steps; the CSVs have no
 | pretrained 13-class model, chair/table/lamp rows (`voxel_3plane_pretrained_full.csv`) | 0.0100 | 0.0090 | 0.8990 | 0.0947 | 0.7010 | 0.6800 |
 
 Single runs, one checkpoint each, no seed spread. The L32 class-mean IoU (0.6820) is above the voxel 3cls runs (0.6771 and 0.6776) and the pretrained model (0.6800), by 0.002–0.005. Per-class, L32's lamp IoU (0.6346) is the main difference. Differences this size are within the run-to-run spread seen in the voxel runs (val-curve SD 0.002–0.003), so this should not be read as a confirmed gain.
+
+## 2026-11-05 — Input row for the dexel variants (step P1)
+
+Script: `phd_work/input_row.py --L <L> --split test` (occupancy superset from L slots, AND over the three planes, mesh via `VoxelGrid(occ).to_mesh()` into `out/phd_input_L{L}/generation/meshes/<class>/<model>.off`). Configs `phd_work/configs/input_row_L{1,2,4,32}.yaml` (inherit the 3-class voxel config, `out_dir out/phd_input_L{L}`, `generation_dir generation`). Chain: `phd_work/logs/chain_input_row.log` (all steps rc 0; superset 33–59 s per L; eval about 775 s per L). Tests: `phd_work/tests/test_input_row.py` (8 tests, pass).
+
+**Rule per plane and ray** (hit count n from the voxel grid, see decision below):
+- n ≤ L: union of the [entry, exit] intervals.
+- n > L: kept intervals that are entry–exit pairs in the real hit sequence, plus the dropped middle (the gap between the last kept hit of the first half and the first kept hit of the second half). Empty space between kept runs is not filled. The parity of the real index decides which kept intervals are pairs; with n even, a second-half interval k is a pair iff (L/2 + k) is even.
+- L = 1: from the first hit to the far end.
+
+**Decision:** the slots cannot tell n == L from n > L (both have all L masks set), so the truncation flag is taken from the voxel grid (the same hit count as `dexel_hits_hist.py`). This is one bit per ray, not voxel information. Flagged for review; a slot-only rule would need another definition.
+
+**Checks** (test split, 3519 objects, all L):
+- Superset (occupancy contains the original voxels): 0 failures for L = 1, 2, 4, 32.
+- L = 32 exact (occupancy equals the original voxels): 0 failures. This holds by construction: for n ≤ 32 each plane's exact union is the occupied set, so the check guards implementation bugs only.
+- Mean extra-voxel fraction, extra / original occupied: L=1 **0.1012**; L=2 **0.0000** (exact mean 1.9e-5; 3 of 3519 objects have any extra voxel, max 0.062); L=4 and L=32 **0.0000**.
+
+**Results** (`phd_work/results/input_row_L{L}.csv`; the CSVs have no mean row, so the class means are the averages of chair, lamp and table; Chamfer-L1 ×10):
+
+| model | chair IoU | lamp IoU | table IoU | class-mean IoU | Chamfer-L1 ×10 (mean) | NC (mean) | F-Score (mean) |
+|---|---|---|---|---|---|---|---|
+| input L1 | 0.5429 | 0.4762 | 0.5731 | 0.5307 | 0.1613 | 0.7827 | 0.4279 |
+| input L2 | 0.6216 | 0.4969 | 0.5816 | 0.5667 | 0.1330 | 0.7907 | 0.4528 |
+| input L4 | 0.6216 | 0.4969 | 0.5816 | 0.5667 | 0.1330 | 0.7908 | 0.4528 |
+| input L32 | 0.6216 | 0.4968 | 0.5816 | 0.5667 | 0.1330 | 0.7907 | 0.4528 |
+| dexel L32 model (`dexel_3plane_3cls_L32_best.csv`) | 0.7338 | 0.6346 | 0.6776 | 0.6820 | 0.0938 | 0.8988 | 0.7003 |
+| dexel L2 model (`dexel_3plane_3cls_L2_best.csv`) | 0.7079 | 0.6057 | 0.6536 | 0.6557 | 0.1051 | 0.8894 | 0.6697 |
+
+Per-class Chamfer-L1 ×10, NC and F-Score for each row are in the CSVs. Completeness and accuracy class means are in the same files.
+
+**Reading:** the input rows are the ceiling a mesh made only from the 32³ occupancy can reach (no model). The L=32 model's class-mean IoU of 0.6820 is above the L=32 input row (0.5667) because the model predicts an occupancy surface finer than the 32³ voxel input. L=2 and L=4 rows are equal to L=32 within 1e-4 on IoU, so the dexel slot tail (L beyond 2) adds nothing to the input-only superset at this resolution. The L=1 row is much worse; its occupancy has 10% extra voxels on average.
