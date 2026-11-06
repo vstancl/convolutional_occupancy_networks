@@ -757,3 +757,31 @@ Script: `phd_work/report_plots.py` (variants in dicts at the top; add weekend ru
 Summary (`phd_work/report/summary.md`) gives test IoU, Chamfer-L1 ×10, NC and F-Score (class means), val last-10 mean and SD, s/it median (it ≥ 300), and wall time for each run. The s/it values (0.1057 and 0.0888) and wall times match the earlier port-log entries.
 
 Error and fix: plot 2 initially plotted seconds on an axis labelled hours. Fixed by dividing by 3600 before plotting; the summary already used hours.
+
+## 2026-11-06 — Profile of one training step, voxel vs dexel (step P4)
+
+Script: `phd_work/profile_step.py <config>`; output `phd_work/results/profile_step.txt` (force-added past the `*.txt` rule), with driver 615.78.08 (RTX 4070), torch 2.12.0+cu130, CUDA 13.0, cuDNN 92000 at the top. Chrome traces (≈180 MB each) in `out/profile_step/` (gitignored, not committed). One real train batch on the GPU, reused; 20 warm-up and 50 timed steps; medians.
+
+**Median ms per part** (`torch.cuda.Event` pairs; the step is re-assembled from the same modules `compute_loss` uses):
+
+| part | voxel 3-plane | dexel L=32 | dexel L=2 |
+|---|---|---|---|
+| a first layer (conv_in / ray_encoder) | 3.44 | 0.63 | 0.44 |
+| b scatter to planes (3 planes) | 35.14 | 3.63 | 3.62 |
+| c U-Net (3 planes) | 20.64 | 20.64 | 20.63 |
+| d decoder | 2.59 | 2.58 | 2.61 |
+| e loss | 0.09 | 0.08 | 0.08 |
+| f backward | 88.59 | 52.05 | 51.95 |
+| g optimizer | 0.15 | 0.18 | 0.18 |
+| sum of parts | 150.63 | 79.79 | 79.51 |
+| total step (zero_grad to step end) | **150.74** | **79.95** | **79.73** |
+
+- Peak GPU memory for one step (`max_memory_allocated`): voxel 2272 MiB (368 MiB allocated before the step, transient +1904 MiB); dexel L=32 2061 MiB (390 MiB before, +1671 MiB); dexel L=2 2016 MiB (343 MiB before, +1672 MiB).
+- DataLoader only (`bench_loader.py`, 50 batches after 5 warm-up, 8 workers): voxel 45.1 ms/batch; dexel L=32 74.2 ms/batch; dexel L=2 52.6 ms/batch.
+
+**torch.profiler** (50 real `trainer.train_step` calls, CPU + CUDA): the top 20 CUDA kernels by self CUDA time are in the results file. The voxel run is dominated by scatter kernels (`_scatter_gather_elementwise_kernel`, several variants, about 33% of CUDA time together) plus cuDNN convolutions. The dexel runs are dominated by cuDNN conv and `wgrad` kernels of the U-Net, which is the same for both encoders.
+
+**Checks and deviations**
+- The split step gives the same plane features as `model.encode_inputs` on the batch. Dexel: exact (max |diff| 0). Voxel: max |diff| 2.0e-5, against 1.4e-5 for the same model called twice. The CUDA scatter uses atomics, so the voxel path is not bit-reproducible. The check was first written as exact equality, which failed on this noise; it is now a tolerance check (1e-4 times the max feature), and the results file reports both numbers. This is a change from the spec ("same output"), noted here.
+- The profiled step is shorter than the training step recorded in the logs for dexel L=32: 80 ms here vs 106 ms per iteration in `dexel_L32_run.log` (median). The likely cause is the real loader and host-to-device copy, which this profile excludes by reusing one batch (DataLoader 74 ms/batch, close to the step time). The voxel step is about the same in both (151 ms here vs 156 ms in training). Not verified; the data path would need its own timing to confirm.
+- Under the chain's configuration (8 workers, batch 64), the dexel L=32 loader time (74 ms) is close to its GPU step (80 ms), so the loader is close to being the bottleneck; the voxel loader (45 ms) is well below its GPU step (151 ms).
