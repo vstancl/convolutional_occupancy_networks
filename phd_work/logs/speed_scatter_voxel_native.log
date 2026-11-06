@@ -1,0 +1,21 @@
+Current best validation metric (iou): -inf
+Total number of parameters: 1951873
+output path:  out/phd_scatter_voxel_native
+[Epoch 01] it=100, loss=189.8510, time: 36.54s, 08:57
+[Epoch 02] it=200, loss=69.9117, time: 52.67s, 08:57
+[Epoch 02] it=300, loss=52.2512, time: 68.23s, 08:57
+[Epoch 03] it=400, loss=53.7255, time: 84.35s, 08:57
+[Epoch 03] it=500, loss=41.7289, time: 99.93s, 08:58
+[Epoch 04] it=600, loss=45.9429, time: 116.07s, 08:58
+[Epoch 04] it=700, loss=54.9002, time: 131.63s, 08:58
+[Epoch 05] it=800, loss=41.1619, time: 147.77s, 08:59
+[Epoch 05] it=900, loss=39.3271, time: 163.50s, 08:59
+[Epoch 06] it=1000, loss=41.1851, time: 179.67s, 08:59
+[Epoch 06] it=1100, loss=45.0822, time: 195.24s, 08:59
+[Epoch 07] it=1200, loss=39.1634, time: 211.39s, 09:00
+[Epoch 07] it=1300, loss=35.8179, time: 226.98s, 09:00
+[Epoch 08] it=1400, loss=37.7227, time: 243.12s, 09:00
+[Epoch 08] it=1500, loss=41.1619, time: 258.72s, 09:00
+[Epoch 09] it=1600, loss=35.4767, time: 274.86s, 09:01
+[Epoch 09] it=1700, loss=42.9154, time: 290.44s, 09:01
+Time limit reached. Exiting.

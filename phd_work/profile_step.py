@@ -48,6 +48,7 @@ from src import config  # noqa: E402
 from src.common import coordinate2index, normalize_coordinate  # noqa: E402
 from src.encoder.voxels import scatter_mean  # noqa: E402
 from phd_work.dexel_register import register  # noqa: E402
+from phd_work.scatter_switch import apply_from_env  # noqa: E402
 
 PLANE_NAMES = ('xz', 'xy', 'yz')
 PARTS = ['a_first_layer', 'b_scatter', 'c_unet', 'd_decoder', 'e_loss', 'f_backward', 'g_optimizer']
@@ -183,6 +184,7 @@ def main():
     is_dexel = cfg['data']['input_type'] == 'dexels'
     if is_dexel:
         register()
+    print('scatter implementation: %s (SCATTER env)' % apply_from_env())
     device = torch.device('cuda')
     name = os.path.splitext(os.path.basename(args.config))[0]
 

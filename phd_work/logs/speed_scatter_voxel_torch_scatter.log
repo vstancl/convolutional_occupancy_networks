@@ -1,0 +1,30 @@
+Current best validation metric (iou): -inf
+Total number of parameters: 1951873
+output path:  out/phd_scatter_voxel_torch_scatter
+[Epoch 01] it=100, loss=118.6014, time: 31.31s, 09:02
+[Epoch 02] it=200, loss=65.4991, time: 42.22s, 09:02
+[Epoch 02] it=300, loss=47.9536, time: 52.53s, 09:02
+[Epoch 03] it=400, loss=54.4130, time: 63.44s, 09:02
+[Epoch 03] it=500, loss=45.7522, time: 73.76s, 09:02
+[Epoch 04] it=600, loss=45.7299, time: 84.67s, 09:03
+[Epoch 04] it=700, loss=38.4618, time: 94.98s, 09:03
+[Epoch 05] it=800, loss=42.8855, time: 105.88s, 09:03
+[Epoch 05] it=900, loss=51.1012, time: 116.20s, 09:03
+[Epoch 06] it=1000, loss=50.1815, time: 127.10s, 09:03
+[Epoch 06] it=1100, loss=39.8878, time: 137.44s, 09:03
+[Epoch 07] it=1200, loss=44.9618, time: 148.36s, 09:04
+[Epoch 07] it=1300, loss=41.6337, time: 158.70s, 09:04
+[Epoch 08] it=1400, loss=39.0626, time: 169.62s, 09:04
+[Epoch 08] it=1500, loss=42.3606, time: 179.95s, 09:04
+[Epoch 09] it=1600, loss=36.7674, time: 190.86s, 09:04
+[Epoch 09] it=1700, loss=37.9212, time: 201.16s, 09:04
+[Epoch 10] it=1800, loss=39.7350, time: 212.03s, 09:05
+[Epoch 10] it=1900, loss=43.5722, time: 222.31s, 09:05
+[Epoch 11] it=2000, loss=46.6663, time: 233.17s, 09:05
+[Epoch 11] it=2100, loss=42.2646, time: 243.45s, 09:05
+[Epoch 12] it=2200, loss=37.1633, time: 254.29s, 09:05
+[Epoch 12] it=2300, loss=45.6454, time: 264.58s, 09:06
+[Epoch 13] it=2400, loss=33.2930, time: 275.44s, 09:06
+[Epoch 13] it=2500, loss=45.1998, time: 285.74s, 09:06
+[Epoch 14] it=2600, loss=31.6895, time: 296.59s, 09:06
+Time limit reached. Exiting.

@@ -1,0 +1,6 @@
+start 2026-11-06T09:17:26+01:00
+train_voxel_torch_scatter rc=3 wall=303s end=2026-11-06T09:22:29+01:00
+phd_work/logs/speed_scatter_repeat_voxel_torch_scatter.log: intervals=22 median s/it=0.1084 last (it, time)=(2500, 289.72)
+train_voxel_native rc=3 wall=304s end=2026-11-06T09:27:33+01:00
+phd_work/logs/speed_scatter_repeat_voxel_native.log: intervals=14 median s/it=0.1598 last (it, time)=(1700, 292.44)
+CHAIN DONE 2026-11-06T09:27:33+01:00

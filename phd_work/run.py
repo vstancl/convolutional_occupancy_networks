@@ -18,6 +18,7 @@ sys.path[0] = REPO
 sys.path.insert(1, os.path.join(REPO, 'phd_work'))
 
 from phd_work.dexel_register import register  # noqa: E402
+from phd_work.scatter_switch import apply_from_env  # noqa: E402
 
 
 def main():
@@ -27,6 +28,7 @@ def main():
     script = sys.argv[1]
     sys.argv = [script] + sys.argv[2:]
     register()
+    apply_from_env()  # SCATTER=torch_scatter|native (default native)
     runpy.run_path(script, run_name='__main__')
 
 

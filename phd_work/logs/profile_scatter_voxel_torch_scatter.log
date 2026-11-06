@@ -1,0 +1,45 @@
+scatter implementation: torch_scatter (SCATTER env)
+=== voxel_3plane_3cls (input_type=voxels, encoder=voxel_simple_local)
+batch: points (64, 1024, 3), inputs (64, 32, 32, 32) (float32 torch.float32)
+check: split encoder vs model.encode_inputs: keys equal True, max |diff| = 6.69807e-06 (same model called twice: max |diff| = 6.09457e-06; max |feature| = 0.257883)
+timed steps: 50 (warm-up 20); median ms per part:
+  a_first_layer      3.455 ms
+  b_scatter         35.181 ms
+  c_unet            20.607 ms
+  d_decoder          2.614 ms
+  e_loss             0.076 ms
+  f_backward        88.675 ms
+  g_optimizer        0.144 ms
+  sum of parts     150.752 ms
+  remainder          0.120 ms  (zero_grad, timer overhead, Python)
+  total            151.009 ms  (median of total step, zero_grad to step end)
+peak GPU memory, one step: max_memory_allocated 2271.5 MiB; allocated before step 368.7 MiB; transient peak above that 1902.8 MiB
+/home/wish/PhD/convonet/.venv/lib/python3.12/site-packages/torch/profiler/profiler.py:272: UserWarning: Warning: Profiler clears events at the end of each cycle.Only events from the current cycle will be reported.To keep events across cycles, set acc_events=True.
+  _warn_once(
+USDT:2026-11-06 08:55:34 605662:605662 ActivityProfilerController.cpp:415] profiler_start
+USDT:2026-11-06 08:55:39 605662:605662 ActivityProfilerController.cpp:455] profiler_stop
+torch.profiler, 50 real train_step calls: top 20 CUDA kernels by self CUDA time
+  rank kernel                                                                                        calls self CUDA ms    ms/call   % CUDA
+  1    void at::native::_scatter_gather_elementwise_kernel<128, 8, at::native::_cuda_scatter_g...      300       521.70     1.7390    10.8%
+  2    void wgrad_alg0_engine<float, 512, 6, 5, 3, 3, 3, false, 512>(int, int, int, float cons...      600       421.68     0.7028     8.7%
+  3    void at::native::vectorized_elementwise_kernel<4, at::native::BinaryFunctor<float, floa...     2700       301.92     0.1118     6.2%
+  4    void cudnn::engines_precompiled::nchwToNhwcKernel<float, float, float, false, true, (cu...    10000       299.47     0.0299     6.2%
+  5    _5x_cudnn_ampere_scudnn_128x32_relu_small_nn_v1                                                 750       275.69     0.3676     5.7%
+  6    void at::native::elementwise_kernel<128, 2, at::native::gpu_kernel_impl_nocast<at::nati...     3450       243.14     0.0705     5.0%
+  7    _ZN17cutlass__5x_cudnn6KernelINS_4conv6kernel23ImplicitGemmConvolutionINS1_11threadbloc...      750       239.33     0.3191     4.9%
+  8    void at::native::vectorized_elementwise_kernel<4, at::native::CUDAFunctor_add<float>, s...     4900       218.88     0.0447     4.5%
+  9    _5x_cudnn_ampere_scudnn_winograd_128x128_ldg1_ldg4_relu_tile148t_nt_v1                          900       211.93     0.2355     4.4%
+  10   void at::native::vectorized_elementwise_kernel<4, at::native::(anonymous namespace)::la...     2700       170.84     0.0633     3.5%
+  11   void at::native::reduce_kernel<512, 1, at::native::ReduceOp<float, at::native::func_wra...     2850       142.28     0.0499     2.9%
+  12   void cutlass__5x_cudnn::Kernel<cutlass_tensorop_s1688dgrad_optimized_tf32_128x128_16x5_...      600       134.41     0.2240     2.8%
+  13   sm86_xmma_fprop_implicit_gemm_tf32f32_tf32f32_f32_nhwckrsc_nchw_tilesize128x128x32_stag...      750       126.44     0.1686     2.6%
+  14   void at::native::_scatter_gather_elementwise_kernel<128, 8, at::native::_cuda_scatter_g...      150       119.25     0.7950     2.5%
+  15   void at::native::(anonymous namespace)::grid_sampler_2d_backward_kernel<float, int>(int...      150       110.78     0.7385     2.3%
+  16   sm86_xmma_fprop_implicit_gemm_indexed_tf32f32_tf32f32_f32_nhwckrsc_nchw_tilesize128x64x...      450       107.64     0.2392     2.2%
+  17   _5x_cudnn_ampere_scudnn_128x64_stridedB_small_nn_v1                                             150        89.83     0.5989     1.9%
+  18   _ZN17cutlass__5x_cudnn6KernelINS_4conv6kernel23ImplicitGemmConvolutionINS1_11threadbloc...      450        70.55     0.1568     1.5%
+  19   void at::native::(anonymous namespace)::CatArrayBatchedCopy_vectorized<at::native::(ano...      450        66.01     0.1467     1.4%
+  20   void cudnn::engines_precompiled::nhwcToNchwKernel<float, float, float, true, false, (cu...     3500        55.92     0.0160     1.2%
+  (sum of self CUDA over all CUDA kernels: 4846.1 ms over 50 steps)
+chrome trace: out/profile_step_scatter_torch_scatter/voxel_3plane_3cls_trace.json
+

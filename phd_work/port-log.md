@@ -785,3 +785,31 @@ Script: `phd_work/profile_step.py <config>`; output `phd_work/results/profile_st
 - The split step gives the same plane features as `model.encode_inputs` on the batch. Dexel: exact (max |diff| 0). Voxel: max |diff| 2.0e-5, against 1.4e-5 for the same model called twice. The CUDA scatter uses atomics, so the voxel path is not bit-reproducible. The check was first written as exact equality, which failed on this noise; it is now a tolerance check (1e-4 times the max feature), and the results file reports both numbers. This is a change from the spec ("same output"), noted here.
 - The profiled step is shorter than the training step recorded in the logs for dexel L=32: 80 ms here vs 106 ms per iteration in `dexel_L32_run.log` (median). The likely cause is the real loader and host-to-device copy, which this profile excludes by reusing one batch (DataLoader 74 ms/batch, close to the step time). The voxel step is about the same in both (151 ms here vs 156 ms in training). Not verified; the data path would need its own timing to confirm.
 - Under the chain's configuration (8 workers, batch 64), the dexel L=32 loader time (74 ms) is close to its GPU step (80 ms), so the loader is close to being the bottleneck; the voxel loader (45 ms) is well below its GPU step (151 ms).
+
+## 2026-11-06 — Scatter implementation speed check (step P7): native vs torch_scatter
+
+Switch: `phd_work/scatter_switch.py` (monkeypatches `src.encoder.voxels.scatter_mean`; `use_torch_scatter()` calls `torch_scatter.scatter_mean(src, index, out=out)`, the upstream call at `upstream-838bea5`). `SCATTER=torch_scatter|native` is read by `phd_work/run.py` and `phd_work/profile_step.py`; default native (current behaviour). The switch also covers the dexel encoder, which calls the same `generate_plane_features`. No upstream edits.
+
+**1. Correctness** (`phd_work/scatter_check.py`, one real train batch, same seeded weights, `phd_work/results/scatter_check.txt`):
+- Voxel: native vs torch_scatter max |diff| of plane features 0 / 1.05e-5 / 1.17e-5 (xy / xz / yz; max |feature| ≈ 0.2). Native vs native, same weights and batch, gives 0 / 8.9e-6 / 1.1e-5. So the difference is at the atomic-order noise floor, not 1e-6 as expected in the spec. Not investigated further.
+- Dexel L32: exactly 0 for both comparisons on all three planes.
+
+**2–3. Speed, same session** (profile: `profile_step.py`, 20 warm-up + 50 timed steps, medians; train: `train.py --exit-after 300`, validation and checkpoints off, median s/it from it ≥ 300). Chain: `phd_work/logs/chain_scatter_switch.log`; repeat in reversed order: `phd_work/logs/chain_scatter_repeat.log`.
+
+| run | native | torch_scatter |
+|---|---|---|
+| profile voxel, b_scatter (ms) | 35.32 | 35.18 |
+| profile voxel, total step (ms) | 151.27 | 151.01 |
+| profile dexel L32, b_scatter (ms) | 3.63 | 3.61 |
+| profile dexel L32, total step (ms) | 80.18 | 80.00 |
+| train voxel, s/it (chain) | 0.1592 | 0.1084 |
+| train voxel, s/it (repeat, reversed order) | 0.1598 | 0.1084 |
+| train dexel L32, s/it | 0.1070 | 0.1007 |
+
+Logs: `phd_work/logs/profile_scatter_*.log`, `phd_work/logs/speed_scatter_*.log`, `phd_work/logs/speed_scatter_repeat_voxel_*.log`.
+
+**Conclusion: not confirmed.** The profile says the scatter implementation does not change the step time (voxel 151.3 vs 151.0 ms; dexel 80.2 vs 80.0 ms), so `ca728fb` is not the cause from that measurement. But the 300 s training runs show a repeatable voxel gap, native ≈ 0.159 s/it vs torch_scatter ≈ 0.108 s/it, in both run orders. The dexel gap is smaller (0.107 vs 0.101). The two measurements contradict each other for voxel, and the cause is not identified.
+
+Differences between the profile and training that could matter, unverified: the profile reuses one batch and excludes the DataLoader and host-to-device copies; training uses changing batches. The native training runs also logged fewer timing lines (14 vs 22–25 intervals), which suggests fewer iterations per 300 s. The 0.105 s/it figure from 2026-10-26 (`voxel_3plane_bench`, 13 classes, validation every 10000) is consistent with the torch_scatter training number, but the configs differ and it was measured in another session, so it is not a like-for-like comparison.
+
+Next step to resolve this (not done): profile full training iterations (with the real loader and changing batches) under both implementations, and check the scatter backward kernel in training.
