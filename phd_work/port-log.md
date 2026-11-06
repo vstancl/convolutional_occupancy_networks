@@ -700,3 +700,17 @@ Script: `phd_work/input_row.py --L <L> --split test` (occupancy superset from L 
 Per-class Chamfer-L1 ×10, NC and F-Score for each row are in the CSVs. Completeness and accuracy class means are in the same files.
 
 **Reading:** the input rows are the ceiling a mesh made only from the 32³ occupancy can reach (no model). The L=32 model's class-mean IoU of 0.6820 is above the L=32 input row (0.5667) because the model predicts an occupancy surface finer than the 32³ voxel input. L=2 and L=4 rows are equal to L=32 within 1e-4 on IoU, so the dexel slot tail (L beyond 2) adds nothing to the input-only superset at this resolution. The L=1 row is much worse; its occupancy has 10% extra voxels on average.
+
+## 2026-11-06 — Storage size: binvox vs dexels (step P5)
+
+Script: `phd_work/storage_size.py` (3-class test split, 3519 objects). Result file: `phd_work/results/storage_size.txt` (force-added past the `*.txt` ignore rule, as for `dexel_hits_3cls.txt`). The prediction was written into the file's header before the run; the script appends the measurement.
+
+**Prediction vs measurement — prediction did not hold for tri-dexel.**
+- Predicted: single-axis dexel ~ binvox; tri-dexel ~ 3× binvox.
+- Measured (mean bytes; ratio to binvox mean 2636 B): single-axis dexel, uint8 hits + per-ray counts: 2257 (axis 0, 0.86), 1724 (axis 1, 0.65), 1822 (axis 2, 0.69); mean over axes 0.73. Tri-dexel uint8: **5803 B, 2.20×**. Float32 depths: single axis 3822–5956 B (1.45–2.26×); tri-dexel float32 13995 B (**5.31×**).
+- So the single-axis prediction holds only roughly (0.65–0.86×, somewhat smaller than binvox), and the tri-dexel prediction is off (2.2× measured, not 3×).
+- Not investigated further. Likely reasons, unverified: the three axes share most hits (each object's surface is hit on the same voxel boundaries from several directions in the binvox RLE, but the dexel count is per ray and does not share), and binvox is run-length compressed, so 2636 B is far below the 4096 B dense grid.
+
+**Definitions** (as in the script header): hits are boundary indices, entry at i0 and exit at i1+1, stored as uint8 (0..32). Per-ray counts are one uint8 each, 1024 bytes per axis, which is about 39% of the binvox mean on its own. (d) is the sum of the three single-axis dexels. (e) uses float32 depths, 4 bytes per hit, with the same counts. (f) is 3·2L·1024·4 bytes: 49152 B (L=2), 786432 B (L=32), i.e. 18.6× and 298× binvox.
+
+**Ratios** in the table are mean / mean(a).
