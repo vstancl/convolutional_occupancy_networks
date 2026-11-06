@@ -883,3 +883,9 @@ Round 1 ≈ 43.5 h, round 2 ≈ 22.8 h, both ≈ 66.3 h. The deadline is 63 h af
 - Start Fri 15:00: round 1 finishes Sun 10:30; round 2 trains voxel3p through dexel1p L2 and finishes Mon 06:32; **voxel1p of round 2 is skipped** at the deadline. CPU steps and report finish about Mon 06:50.
 - Start Fri 21:00: round 2 trains voxel3p through dexel1p L32 (finishes Mon 09:31); **dexel1p L2 and voxel1p of round 2 are skipped**.
 - The estimate assumes every training completes; grid32 (12.2 h of training) is the largest single item.
+
+## 2026-11-06 — Weekend chain: grid32 moved to the end; visualize_every 0 (step P3b)
+
+- `voxel_1plane_3cls.yaml` and `voxel_grid32_3cls.yaml`: `training.visualize_every: 0` (as in the other configs). `backup_every` stays 10000 (checked by loading the configs: visualize_every 0, backup_every 10000).
+- `chain_weekend.sh`: grid32 is no longer in round 1. The run order is now one explicit schedule: round 1 (voxel3p, dexel3p L32, L2, dexel1p L32, L2, voxel1p, dexel3p L4, dexel3p L1), round 2 (voxel3p, dexel3p L32, L2, dexel1p L32, L2, voxel1p), then grid32 with round-1 naming (`w1_grid32`, `out/phd_w1_grid32`). The timeline printout uses the same schedule. The script passes `bash -n`.
+- Timeline with the new order (cumulative hours from the start, train + eval, from the table in P3): round 1 ends at 30.5 h, round 2 at 53.3 h; grid32 starts at ~53.3 h and its ~12.2 h of training runs past the deadline if the chain starts at Friday 15:00 (deadline is 63 h after that). Starting at Friday 21:00 instead, grid32 starts at Monday ~02:15 (before the deadline) and trains until ~14:30.

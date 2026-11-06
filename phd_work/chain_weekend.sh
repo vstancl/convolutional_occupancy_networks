@@ -155,33 +155,27 @@ uv run python phd_work/weekend_configs.py --round 2 --cfg-dir "$CFGDIR" $([ "$DR
 #   dexel1p_L32 0.0740, dexel1p_L2 0.0530, voxel1p 0.0440, dexel3p_L4 0.0790, grid32 0.3530, dexel3p_L1 0.0780
 declare -A SPI=( [voxel3p]=0.1084 [dexel3p_L32]=0.1007 [dexel3p_L2]=0.0775 [dexel1p_L32]=0.0740
                  [dexel1p_L2]=0.0530 [voxel1p]=0.0440 [dexel3p_L4]=0.0790 [grid32]=0.3530 [dexel3p_L1]=0.0780 )
+# run order: round 1, round 2, then grid32 (round-1 naming, out/phd_w1_grid32)
+SCHEDULE="1:voxel3p 1:dexel3p_L32 1:dexel3p_L2 1:dexel1p_L32 1:dexel1p_L2 1:voxel1p 1:dexel3p_L4 1:dexel3p_L1
+          2:voxel3p 2:dexel3p_L32 2:dexel3p_L2 2:dexel1p_L32 2:dexel1p_L2 2:voxel1p
+          1:grid32"
+
 if [ "$DRY" != 1 ]; then
-  total=0
-  for R in 1 2; do
-    if [ "$R" = 1 ]; then vs="voxel3p dexel3p_L32 dexel3p_L2 dexel1p_L32 dexel1p_L2 voxel1p dexel3p_L4 grid32 dexel3p_L1"
-    else vs="voxel3p dexel3p_L32 dexel3p_L2 dexel1p_L32 dexel1p_L2 voxel1p"; fi
-    rt=0
-    for v in $vs; do
-      h=$(awk -v s="${SPI[$v]}" 'BEGIN{printf "%.2f", 120000*s/3600 + 0.45 + 0.8}')
-      log "estimate R$R $v: ~${h} h (train + eval; s/it ${SPI[$v]})"
-      rt=$(awk -v a="$rt" -v b="$h" 'BEGIN{print a+b}')
-    done
-    log "estimate round $R total: ~$(awk -v t="$rt" 'BEGIN{printf "%.1f", t}') h"
-    total=$(awk -v a="$total" -v b="$rt" 'BEGIN{print a+b}')
+  cum=0
+  for item in $SCHEDULE; do
+    R=${item%%:*}; v=${item#*:}
+    h=$(awk -v s="${SPI[$v]}" 'BEGIN{printf "%.2f", 120000*s/3600 + 0.45 + 0.8}')
+    cum=$(awk -v a="$cum" -v b="$h" 'BEGIN{printf "%.2f", a+b}')
+    log "estimate R$R $v: ~${h} h (train + eval; s/it ${SPI[$v]}); cumulative ~${cum} h"
   done
   left=$(( (DL_EPOCH - $(date +%s)) / 3600 ))
-  log "estimate both rounds: ~$(awk -v t="$total" 'BEGIN{printf "%.1f", t}') h; hours to deadline: ${left}"
+  log "estimate, all trainings + evals: ~${cum} h; hours to deadline: ${left}"
 else
   log "dry run: max_it 200 (no timeline estimate)"
 fi
 
-for R in 1 2; do
-  if [ "$R" = 1 ]; then
-    vs="voxel3p dexel3p_L32 dexel3p_L2 dexel1p_L32 dexel1p_L2 voxel1p dexel3p_L4 grid32 dexel3p_L1"
-  else
-    vs="voxel3p dexel3p_L32 dexel3p_L2 dexel1p_L32 dexel1p_L2 voxel1p"
-  fi
-  for v in $vs; do do_variant "$R" "$v"; done
+for item in $SCHEDULE; do
+  do_variant "${item%%:*}" "${item#*:}"
 done
 
 # ---- after the last training (or the deadline): CPU steps -----------------------

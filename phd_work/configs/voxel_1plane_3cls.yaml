@@ -2,6 +2,7 @@ inherit_from: configs/voxel/shapenet_1plane.yaml
 data:
   classes: ['03001627', '04379243', '03636649']  # chair, table, lamp
 training:
+  visualize_every: 0
   out_dir: out/phd_voxel_1p
   max_it: 120000
   validate_every: 2000
