@@ -714,3 +714,31 @@ Script: `phd_work/storage_size.py` (3-class test split, 3519 objects). Result fi
 **Definitions** (as in the script header): hits are boundary indices, entry at i0 and exit at i1+1, stored as uint8 (0..32). Per-ray counts are one uint8 each, 1024 bytes per axis, which is about 39% of the binvox mean on its own. (d) is the sum of the three single-axis dexels. (e) uses float32 depths, 4 bytes per hit, with the same counts. (f) is 3·2L·1024·4 bytes: 49152 B (L=2), 786432 B (L=32), i.e. 18.6× and 298× binvox.
 
 **Ratios** in the table are mean / mean(a).
+
+## 2026-11-06 — Reference evals of the pretrained voxel 1-plane and grid32 on the 3 classes (step P6)
+
+Configs: `phd_work/configs/pretrained_{1plane,grid32}_3cls.yaml` (inherit `configs/voxel/pretrained/shapenet_{1plane,grid32}.yaml`, which point at the S3 checkpoints; `data.classes` = chair, table, lamp; `out_dir` `out/phd_pretrained_{V}_3cls`; `generation_dir` `generation_pretrained`). Chain: `phd_work/logs/chain_pretrained_3cls.log`, all steps rc 0.
+
+Validation was run with `phd_work/val_eval.py <config> --model <S3 URL>`, the same way as the 3-plane pretrained run (the S3 checkpoint is not in `out_dir`).
+
+| step | 1plane | grid32 |
+|---|---|---|
+| val_eval (wall) | 22 s | 24 s |
+| generate.py (wall) | 1229 s | 1137 s |
+| eval_meshes.py (wall) | 1669 s | 1595 s |
+
+Val IoU (3-class val split): 1plane **0.5465**; grid32 **0.6963**. For reference, the 3-plane pretrained on the same split is 0.6901 (port-log, earlier entry). No reference value exists for 1plane or grid32 in `phd_work/paper_reference.md`, which lists only the 3-plane row (0.752 on the full test set). The 1plane value is much lower than the others, and I did not investigate why. The configs match upstream (`configs/voxel/shapenet_1plane.yaml`, plane_type xz, plane_resolution 64).
+
+Test-set meshes: 3519 for each model (both generate and eval logs have no tracebacks). CSVs: `phd_work/results/pretrained_1plane_3cls.csv` and `phd_work/results/pretrained_grid32_3cls.csv` (3 class rows each, no mean row).
+
+Metrics per class; Chamfer-L1 ×10; the class mean is the average of chair, table and lamp. The 3-plane reference rows are the chair/table/lamp rows of `voxel_3plane_pretrained_full.csv`, from the 13-class eval. Per-class metrics do not depend on the other classes, so these rows compare directly.
+
+| model | chair IoU | lamp IoU | table IoU | class-mean IoU | Ch-L1 ×10 (mean) | NC (mean) | F-Score (mean) |
+|---|---|---|---|---|---|---|---|
+| pretrained 1plane | 0.5838 | 0.4167 | 0.5512 | 0.5172 | 0.2041 | 0.8265 | 0.4860 |
+| pretrained grid32 | 0.7435 | 0.6516 | 0.6784 | 0.6912 | 0.0890 | 0.9100 | 0.7138 |
+| pretrained 3-plane (reference) | 0.7304 | 0.6311 | 0.6786 | 0.6800 | 0.0947 | 0.8990 | 0.7010 |
+
+Per-class Chamfer-L1 ×10, NC and F-Score are in the CSVs. The 3-plane reference per-class values are: chair Ch-L1 0.0874, lamp 0.1108, table 0.0860; NC chair 0.9084, lamp 0.8601, table 0.9283; F-Score chair 0.7094, lamp 0.6837, table 0.7100.
+
+Reading: the grid32 pretrained model is slightly above the 3-plane reference on class-mean IoU (+0.011) and F-Score (+0.013), and below it on Chamfer-L1 (0.0890 vs 0.0947). The 1plane model is clearly weaker than both (class-mean IoU 0.5172). These are single pretrained checkpoints with one eval each, so no run-to-run spread is available.

@@ -1,0 +1,7 @@
+inherit_from: configs/voxel/pretrained/shapenet_1plane.yaml
+data:
+  classes: ['03001627', '04379243', '03636649']  # chair, table, lamp
+training:
+  out_dir: out/phd_pretrained_1plane_3cls
+generation:
+  generation_dir: generation_pretrained
