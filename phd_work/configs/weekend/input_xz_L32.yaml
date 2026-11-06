@@ -1,0 +1,3 @@
+inherit_from: phd_work/configs/input_row_L32.yaml
+training:
+  out_dir: out/phd_input_xz_L32

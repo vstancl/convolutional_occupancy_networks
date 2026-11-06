@@ -1,0 +1,9 @@
+reference: commit d4789b24607b237760ec5595ae632a1314c7ecdf (dirty=False), torch 2.12.0+cu130
+current:   commit e9c21ec400ca260e0fb1b3800729669510408e38 (dirty=False)
+https://s3.eu-central-1.amazonaws.com/avg-projects/convolutional_occupancy_networks/models/voxel/voxel_shapenet_3plane.pt
+=> Loading checkpoint from url...
+encoder xz: max|diff| = 0.000e+00  (max|ref| = 3.305e+01)
+encoder xy: max|diff| = 0.000e+00  (max|ref| = 3.097e+01)
+encoder yz: max|diff| = 0.000e+00  (max|ref| = 3.522e+01)
+logits: max|diff| = 0.000e+00  (max|ref| = 3.115e+01)
+PARITY OK

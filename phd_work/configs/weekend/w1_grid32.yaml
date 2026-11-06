@@ -1,0 +1,5 @@
+inherit_from: phd_work/configs/voxel_grid32_3cls.yaml
+training:
+  out_dir: out/phd_w1_grid32
+  max_it: 120000
+  validate_every: 2000

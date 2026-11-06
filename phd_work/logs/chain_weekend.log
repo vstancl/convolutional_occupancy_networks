@@ -1,0 +1,41 @@
+2026-11-06T15:00:35+01:00 === chain_weekend start (dry=0, deadline 2026-11-09 06:00, scatter torch_scatter)
+2026-11-06T15:00:35+01:00 versions: NVIDIA GeForce RTX 4070, 615.78.08 
+2026-11-06T15:00:35+01:00 START versions torch/CUDA/cuDNN
+2026-11-06T15:00:36+01:00 END versions torch/CUDA/cuDNN rc=0 (ok) wall=1s log=phd_work/logs/chain_weekend_versions.log
+2026-11-06T15:00:36+01:00 versions: torch 2.12.0+cu130 cuda 13.0 cudnn 92000
+2026-11-06T15:00:36+01:00 git: e9c21ec [phd] weekend chain: grid32 runs last (after round 2); visualize_every 0 for the 1-plane and grid32 configs; port-log
+2026-11-06T15:00:36+01:00 df out/: /dev/nvme1n1p3  1.9T  270G  1.6T  15% /home
+2026-11-06T15:00:36+01:00 START scatter setup check
+2026-11-06T15:00:39+01:00 END scatter setup check rc=0 (ok) wall=3s log=phd_work/logs/chain_weekend_scatter_setup.log
+2026-11-06T15:00:39+01:00 scatter setup: SCATTER=torch_scatter; scatter_mean in use: use_torch_scatter.<locals>.scatter_mean_upstream from phd_work.scatter_switch
+2026-11-06T15:00:39+01:00 START parity compare (cuda, SCATTER=torch_scatter; mismatch does not stop the chain)
+2026-11-06T15:00:43+01:00 END parity compare (cuda, SCATTER=torch_scatter; mismatch does not stop the chain) rc=0 (ok) wall=4s log=phd_work/logs/chain_weekend_parity.log
+2026-11-06T15:00:43+01:00 parity: PARITY OK (rc=0)
+wrote 20 round-1 configs to phd_work/configs/weekend
+wrote 14 round-2 configs to phd_work/configs/weekend
+2026-11-06T15:00:43+01:00 estimate R1 voxel3p: ~4.86 h (train + eval; s/it 0.1084); cumulative ~4.86 h
+2026-11-06T15:00:43+01:00 estimate R1 dexel3p_L32: ~4.61 h (train + eval; s/it 0.1007); cumulative ~9.47 h
+2026-11-06T15:00:43+01:00 estimate R1 dexel3p_L2: ~3.83 h (train + eval; s/it 0.0775); cumulative ~13.30 h
+2026-11-06T15:00:43+01:00 estimate R1 dexel1p_L32: ~3.72 h (train + eval; s/it 0.0740); cumulative ~17.02 h
+2026-11-06T15:00:43+01:00 estimate R1 dexel1p_L2: ~3.02 h (train + eval; s/it 0.0530); cumulative ~20.04 h
+2026-11-06T15:00:43+01:00 estimate R1 voxel1p: ~2.72 h (train + eval; s/it 0.0440); cumulative ~22.76 h
+2026-11-06T15:00:43+01:00 estimate R1 dexel3p_L4: ~3.88 h (train + eval; s/it 0.0790); cumulative ~26.64 h
+2026-11-06T15:00:43+01:00 estimate R1 dexel3p_L1: ~3.85 h (train + eval; s/it 0.0780); cumulative ~30.49 h
+2026-11-06T15:00:43+01:00 estimate R2 voxel3p: ~4.86 h (train + eval; s/it 0.1084); cumulative ~35.35 h
+2026-11-06T15:00:43+01:00 estimate R2 dexel3p_L32: ~4.61 h (train + eval; s/it 0.1007); cumulative ~39.96 h
+2026-11-06T15:00:43+01:00 estimate R2 dexel3p_L2: ~3.83 h (train + eval; s/it 0.0775); cumulative ~43.79 h
+2026-11-06T15:00:43+01:00 estimate R2 dexel1p_L32: ~3.72 h (train + eval; s/it 0.0740); cumulative ~47.51 h
+2026-11-06T15:00:43+01:00 estimate R2 dexel1p_L2: ~3.02 h (train + eval; s/it 0.0530); cumulative ~50.53 h
+2026-11-06T15:00:43+01:00 estimate R2 voxel1p: ~2.72 h (train + eval; s/it 0.0440); cumulative ~53.25 h
+2026-11-06T15:00:43+01:00 estimate R1 grid32: ~13.02 h (train + eval; s/it 0.3530); cumulative ~66.27 h
+2026-11-06T15:00:43+01:00 estimate, all trainings + evals: ~66.27 h; hours to deadline: 62
+2026-11-06T15:00:43+01:00 disk free on out/: 1588 GB
+2026-11-06T15:00:43+01:00 START train w1_voxel3p
+2026-11-06T19:00:49+01:00 END train w1_voxel3p rc=3 (ok) wall=14406s log=phd_work/logs/w1_voxel3p.log
+2026-11-06T19:00:49+01:00 disk free on out/: 1588 GB
+2026-11-06T19:00:49+01:00 START generate w1_voxel3p
+2026-11-06T19:21:06+01:00 END generate w1_voxel3p rc=0 (ok) wall=1217s log=phd_work/logs/w1_voxel3p_generate.log
+2026-11-06T19:21:06+01:00 START eval w1_voxel3p
+2026-11-06T19:47:54+01:00 END eval w1_voxel3p rc=0 (ok) wall=1608s log=phd_work/logs/w1_voxel3p_eval.log
+2026-11-06T19:47:54+01:00 copied out/phd_w1_voxel3p/generation_best/eval_meshes.csv -> phd_work/results/w1_voxel3p_best.csv
+2026-11-06T19:47:54+01:00 disk used by out/phd_w1_voxel3p: 9.9G

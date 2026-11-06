@@ -1,0 +1,1 @@
+SCATTER=torch_scatter; scatter_mean in use: use_torch_scatter.<locals>.scatter_mean_upstream from phd_work.scatter_switch
