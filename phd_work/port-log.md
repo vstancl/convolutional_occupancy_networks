@@ -742,3 +742,18 @@ Metrics per class; Chamfer-L1 ×10; the class mean is the average of chair, tabl
 Per-class Chamfer-L1 ×10, NC and F-Score are in the CSVs. The 3-plane reference per-class values are: chair Ch-L1 0.0874, lamp 0.1108, table 0.0860; NC chair 0.9084, lamp 0.8601, table 0.9283; F-Score chair 0.7094, lamp 0.6837, table 0.7100.
 
 Reading: the grid32 pretrained model is slightly above the 3-plane reference on class-mean IoU (+0.011) and F-Score (+0.013), and below it on Chamfer-L1 (0.0890 vs 0.0947). The 1plane model is clearly weaker than both (class-mean IoU 0.5172). These are single pretrained checkpoints with one eval each, so no run-to-run spread is available.
+
+## 2026-11-06 — Report plots and summary (step P2)
+
+Script: `phd_work/report_plots.py` (variants in dicts at the top; add weekend runs there). Output: `phd_work/report/` (PNG + SVG for six plots, `summary.md`). PNGs are gitignored (`*.png`) and were force-added; SVGs and `summary.md` are tracked.
+
+- Plot 1: val IoU vs iteration, one line per trained run (the two voxel runs are joined in order; resumed run2 is continued from run1).
+- Plot 2: val IoU vs wall-clock hours. The `time:` field of each `train.py` log restarts at 0 on resume, so a resumed run is offset by the final `time:` of the earlier log. Run1+run2 total 5.99 h, which matches 12600 s + 9000 s. The logs' `HH:MM` timestamps have no date, so they are not used.
+- Plot 3: test mesh IoU per class, one marker per run, with the 13-class 3-plane pretrained rows (chair/table/lamp) and the two pretrained 3-class models.
+- Plot 4: class-mean test IoU vs L. The network has points only at L=2 and L=32, because no L=1 or L=4 network was trained. The input row has all four L values. The voxel baseline band is min..max of its two runs (0.6771 and 0.6776), so it looks like a line.
+- Plot 5: hits-per-ray histogram recomputed on the test split with `dexel_hits_hist.py` functions (all 3 axes pooled). Max 24, as in `dexel_hits_3cls.txt`.
+- Plot 6: per-object IoU, x = dexel L=32, y = dexel L=2, from the `eval_meshes_full.pkl` files (3519 objects). Colour = rays with > 2 hits over all three axes. The per-object means (L32 0.6936, L2 0.6682) differ from the class means (0.6820, 0.6557) because they weight objects, not classes. L=32 is better for 66.7% of objects.
+
+Summary (`phd_work/report/summary.md`) gives test IoU, Chamfer-L1 ×10, NC and F-Score (class means), val last-10 mean and SD, s/it median (it ≥ 300), and wall time for each run. The s/it values (0.1057 and 0.0888) and wall times match the earlier port-log entries.
+
+Error and fix: plot 2 initially plotted seconds on an axis labelled hours. Fixed by dividing by 3600 before plotting; the summary already used hours.
