@@ -84,3 +84,29 @@ def test_L32_exact_random():
     for density in (0.05, 0.3, 0.6):
         vox = rng.random((RES, RES, RES)) < density
         assert np.array_equal(superset_occupancy(vox, 32), vox)
+
+
+def test_single_plane_L32_exact_random():
+    # one plane, L = 32: the exact union of runs on that axis is the occupied set itself
+    rng = np.random.default_rng(2)
+    for plane in (0, 1, 2):
+        for density in (0.05, 0.3, 0.6):
+            vox = rng.random((RES, RES, RES)) < density
+            assert np.array_equal(superset_occupancy(vox, 32, planes=(plane,)), vox), (plane, density)
+
+
+def test_single_plane_superset_contains_original():
+    rng = np.random.default_rng(3)
+    for plane in (0, 1, 2):
+        for L in (1, 2, 4):
+            vox = rng.random((RES, RES, RES)) < 0.2
+            occ = superset_occupancy(vox, L, planes=(plane,))
+            assert occ[vox].all(), (plane, L)
+
+
+def test_single_plane_is_its_own_plane_only():
+    # one voxel: its run on the plane's rays is that voxel alone (n = 2 <= L, exact)
+    vox = np.zeros((RES, RES, RES), dtype=bool)
+    vox[3, 7, 11] = True
+    for plane in (0, 1, 2):
+        assert np.array_equal(superset_occupancy(vox, 2, planes=(plane,)), vox), plane

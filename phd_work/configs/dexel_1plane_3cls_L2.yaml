@@ -1,0 +1,7 @@
+inherit_from: phd_work/configs/dexel_3plane_3cls_L2.yaml
+model:
+  encoder_kwargs:
+    plane_type: ['xz']
+training:
+  out_dir: out/phd_dexel_1p_L2
+  max_it: 120000

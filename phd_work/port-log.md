@@ -844,3 +844,42 @@ Next step to resolve this (not done): profile full training iterations (with the
 **Conclusion on ca728fb.** The voxel slowdown is explained by the scatter implementation. The torch_scatter path reproduces 0.108 s/it today, close to the 2026-10-26 value of 0.105 s/it, and the native path gives 0.159. So the change from torch_scatter to native in `ca728fb` is the cause of the voxel slowdown, to the extent these measurements can show it. The Oct-26 value came from a different config (13 classes, validation every 10000) and session, so the match is supporting evidence, not an exact replication. `ca728fb`'s port-log entry said parity OK but did not record the speed change; this entry records it.
 
 **Not changed here.** The default stays `native` (the parity-verified port). Switching the default back would need a decision, since CLAUDE.md requires parity for numerical changes and the torch_scatter path is the upstream code. Dexel is also affected (about 6 ms per step), because its planes use the same scatter.
+
+## 2026-11-06 — Weekend chain: configs, dry run, timeline (step P3)
+
+**Configs** (8 base configs with `_test` variants, all `max_it` 120000): `dexel_3plane_3cls_L4`, `dexel_3plane_3cls_L1` (inherit `dexel_3plane_3cls_L32.yaml`, L overridden); `dexel_1plane_3cls_L32`, `dexel_1plane_3cls_L2` (inherit the 3-plane L configs, `plane_type: ['xz']`); `voxel_1plane_3cls` (inherits `configs/voxel/shapenet_1plane.yaml`); `voxel_grid32_3cls` (inherits `configs/voxel/shapenet_grid32.yaml`). Checked by loading every config and comparing with `voxel_3plane_3cls.yaml`:
+- Identical: classes (chair, table, lamp), train/val/test splits, `test.threshold` 0.2, `points_subsample` 1024, batch 64, `validate_every` 2000, model selection iou/maximize, padding 0.1, `n_workers` 8, `checkpoint_every` 2000, `print_every` 100, `c_dim` 32.
+- Differences: `validate_every` is set to 2000 in the two upstream-based configs (upstream has 10000); `training.backup_every` 10000 (ref 20000) and `training.visualize_every` 10000 (ref 0) for `voxel_1plane_3cls`, `voxel_grid32_3cls` (inherited from upstream, not changed). The dexel configs inherit `voxel_3plane_3cls.yaml` and show no differences.
+- Weekend out_dirs `out/phd_w{R}_{variant}` are set by `phd_work/weekend_configs.py`, which writes the per-round configs into `phd_work/configs/weekend/` at chain start (so the base configs keep their own out_dirs).
+
+**Chain** (`phd_work/chain_weekend.sh`): `SCATTER=torch_scatter` for every step; step 0 records versions, git hash, `df` and the scatter check (`phd_work/scatter_setup_check.py` through `run.py`), and runs `parity.py compare --device cuda` with `SCATTER=torch_scatter` (result: **PARITY OK**, rc 0). Per variant: train via `run.py train.py` (rc 0 or 3 accepted), GPU log every 30 s, generate + eval on the test split, CSV copied to `phd_work/results/w{R}_{variant}_best.csv`, then commit and push (real run only). Failed steps are logged and the chain continues; it stops only if free disk on `out/` is below 20 GB; no training starts after `DEADLINE` (default Mon 2026-11-09 06:00). After the last training: `input_row.py --planes xz` for L=2 and 32 with eval, then `report_plots.py`. Every step writes start, end, rc and wall time to `phd_work/logs/chain_weekend.log`.
+
+**Input row, one plane** (`input_row.py --planes`, default `xz,xy,yz`): with one plane the superset comes from that axis only. Tests: single-plane L=32 equals the original voxels on random grids (all three axes) and on all 3519 test objects for `xz` (CLI run: 0 failures). Test suite: 52 passed.
+
+**Report** (`report_plots.py`): weekend variants are added to the variant dict (rounds 1 and 2; missing runs are skipped and listed in `summary.md`). Plot 6b added: per-object IoU(L32) − IoU(L2) vs rays with > 2 hits, log x, scatter with binned means and object counts; plot 6 kept. `PHD_REPORT_DIR` overrides the output directory (dry run only).
+
+**Dry run** (`CHAIN_DRY=1`: max_it 200, validate_every 100, test_split test_smoke, out/dry_w*, DEADLINE 2099; no commits; all outputs deleted afterwards):
+- Exit codes: all 15 trainings rc 3 (`max_it`), all generate and eval rc 0, input rows rc 0, report rc 0, parity PARITY OK, versions and scatter check rc 0. Chain ran from 14:08 to 14:35 (27 min plus timing runs).
+- Peak GPU memory (`max_memory_allocated` for one step, `profile_step.py`, torch_scatter): voxel3p 2179 MiB; dexel3p L32 1967; L2 1922; L4 1925; L1 1921; dexel1p L32 822; L2 776; voxel1p 1052. Grid32: `profile_step.py` does not support `plane_type: grid` (ValueError, rc 1); from the dry-run nvidia-smi samples (30 s), grid32 peaked at **10836 MiB total** on the GPU, against ≈2.1 GB already used by the desktop, so ≈8.7 GB for the run. No out-of-memory at batch 64 (batch size not changed).
+- s/it (median, it ≥ 50, intervals with validation excluded): the chain's own dry-run logs had only one interval each (print every 100), and that interval includes a validation pass, so they are not usable. Replaced by timing runs with `print_every` 10 for the variants without a torch_scatter number: dexel3p L2 **0.0775**, dexel1p L32 **0.0740**, dexel1p L2 **0.0530**, voxel1p **0.0440**, grid32 **0.3530**, dexel3p L4 **0.0790**, dexel3p L1 **0.0780** (14 intervals each). voxel3p 0.1084 and dexel3p L32 0.1007 are from the torch_scatter runs in P7.
+- `speed_stats.py` now skips intervals that contain a validation pass; re-check on the full dexel L32 run: 0.1055 s/it (was 0.1057).
+- Disk: a dry run is not representative (6 test objects). A full run's output is ≈9.5 GB, of which the 3519 meshes are 9.1 GB (checked on `out/phd_dexel_L32`), and checkpoints ≈0.2 GB. Fifteen trainings ≈ 140 GB, within the 1.6 TB free on `/home`.
+
+**Timeline estimate** (train = 120000 × s/it + 0.45 h validation; eval = generate + eval ≈ 0.8 h, from P6 and the full-run logs):
+
+| variant | s/it | train h | train + eval h |
+|---|---|---|---|
+| voxel3p | 0.1084 | 4.06 | 4.86 |
+| dexel3p L32 | 0.1007 | 3.81 | 4.61 |
+| dexel3p L2 | 0.0775 | 3.03 | 3.83 |
+| dexel1p L32 | 0.0740 | 2.92 | 3.72 |
+| dexel1p L2 | 0.0530 | 2.22 | 3.02 |
+| voxel1p | 0.0440 | 1.92 | 2.72 |
+| dexel3p L4 | 0.0790 | 3.08 | 3.88 |
+| grid32 | 0.3530 | 12.22 | 13.02 |
+| dexel3p L1 | 0.0780 | 3.05 | 3.85 |
+
+Round 1 ≈ 43.5 h, round 2 ≈ 22.8 h, both ≈ 66.3 h. The deadline is 63 h after a start at Friday 15:00.
+- Start Fri 15:00: round 1 finishes Sun 10:30; round 2 trains voxel3p through dexel1p L2 and finishes Mon 06:32; **voxel1p of round 2 is skipped** at the deadline. CPU steps and report finish about Mon 06:50.
+- Start Fri 21:00: round 2 trains voxel3p through dexel1p L32 (finishes Mon 09:31); **dexel1p L2 and voxel1p of round 2 are skipped**.
+- The estimate assumes every training completes; grid32 (12.2 h of training) is the largest single item.

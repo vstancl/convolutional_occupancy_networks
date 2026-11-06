@@ -1,0 +1,14 @@
+inherit_from: phd_work/configs/dexel_3plane_3cls_L32.yaml
+data:
+  input_type: dexels
+model:
+  encoder: dexel_local
+  encoder_kwargs:
+    L: 32
+    hidden_dim: 64
+    plane_type: ['xz']
+training:
+  out_dir: out/phd_dexel_1p_L32
+  max_it: 120000
+generation:
+  copy_input: false

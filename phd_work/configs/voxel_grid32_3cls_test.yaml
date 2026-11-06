@@ -1,0 +1,5 @@
+inherit_from: phd_work/configs/voxel_grid32_3cls.yaml
+generation:
+  generation_dir: generation_best
+test:
+  model_file: model_best.pt

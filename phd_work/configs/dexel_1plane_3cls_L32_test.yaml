@@ -1,0 +1,5 @@
+inherit_from: phd_work/configs/dexel_1plane_3cls_L32.yaml
+generation:
+  generation_dir: generation_best
+test:
+  model_file: model_best.pt

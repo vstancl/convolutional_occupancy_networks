@@ -77,11 +77,16 @@ def plane_superset(vox, slots, plane, L):
     return np.moveaxis(sup, -1, RAY_AXIS[plane])
 
 
-def superset_occupancy(vox, L):
+PLANE_BY_NAME = {'xz': 0, 'xy': 1, 'yz': 2}
+
+
+def superset_occupancy(vox, L, planes=(0, 1, 2)):
+    """AND over the given planes (default: all three). One plane: that plane's superset only."""
     slots = voxels_to_dexel_slots(vox, L)
-    occ = np.ones((RES, RES, RES), dtype=bool)
-    for p in range(3):
-        occ &= plane_superset(vox, slots, p, L)
+    occ = None
+    for p in planes:
+        s = plane_superset(vox, slots, p, L)
+        occ = s if occ is None else (occ & s)
     return occ
 
 
@@ -95,12 +100,22 @@ def main():
     ap.add_argument('--L', type=int, required=True)
     ap.add_argument('--split', default='test', choices=['train', 'val', 'test'])
     ap.add_argument('--out-dir', default=None)
+    ap.add_argument('--planes', default='xz,xy,yz',
+                    help='comma-separated planes to AND (default xz,xy,yz; e.g. xz for one plane)')
     ap.add_argument('--config', default=os.path.join(REPO, 'phd_work', 'configs', 'voxel_3plane_3cls.yaml'))
     args = ap.parse_args()
     L = args.L
     if L < 1 or L > RES or (L > 1 and L % 2):
         raise ValueError('L must be 1 or even, <= %d' % RES)
-    out_dir = args.out_dir or os.path.join(REPO, 'out', 'phd_input_L%d' % L)
+    planes = []
+    for name in args.planes.split(','):
+        name = name.strip()
+        if name not in PLANE_BY_NAME:
+            raise ValueError('--planes entries must be xz, xy or yz, got %r' % name)
+        planes.append(PLANE_BY_NAME[name])
+    planes = tuple(planes)
+    tag = '' if planes == (0, 1, 2) else '_' + '_'.join(sorted(args.planes.split(','), key=['xz','xy','yz'].index))
+    out_dir = args.out_dir or os.path.join(REPO, 'out', 'phd_input%s_L%d' % (tag, L))
 
     cwd = os.getcwd()
     os.chdir(REPO)
@@ -131,7 +146,7 @@ def main():
     for c, m in items:
         vox = load_vox(os.path.join(root, c, m, voxels_file))
         ts = time.time()
-        occ = superset_occupancy(vox, L)
+        occ = superset_occupancy(vox, L, planes)
         t_convert += time.time() - ts
         n += 1
         if not np.all(occ[vox]):
@@ -146,7 +161,7 @@ def main():
         os.makedirs(mesh_dir, exist_ok=True)
         mesh.export(os.path.join(mesh_dir, '%s.off' % m))
 
-    print('L=%d split=%s objects=%d out_dir=%s' % (L, args.split, n, out_dir))
+    print('L=%d split=%s planes=%s objects=%d out_dir=%s' % (L, args.split, args.planes, n, out_dir))
     print('superset check (occ contains original voxels): failures=%d' % n_superset_fail)
     if L == RES:
         print('exact check (L=32 occ == original voxels): failures=%d' % n_exact_fail)

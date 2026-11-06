@@ -2,7 +2,8 @@
 
 Reads the "[Epoch ..] it=N, loss=..., time: T s" lines (one per print_every iterations),
 takes the time difference between consecutive lines with it >= SKIP, divides by the
-iteration difference, and reports the median over those intervals.
+iteration difference, and reports the median over those intervals. Intervals that contain a
+validation pass are skipped.
 
 Usage:
     uv run python phd_work/speed_stats.py <log> [<log> ...] [--skip 300]
@@ -14,19 +15,33 @@ import statistics
 PAT = re.compile(r'it=(\d+), loss=[^,]*, time: ([0-9.]+)s')
 
 
+VAL_TAG = 'Validation metric'
+
+
 def stats(path, skip):
+    """Median s/it over intervals between consecutive timing lines with it >= skip.
+    Intervals that contain a validation pass are skipped (validation time is not training time)."""
     pts = []
+    val_after = []  # iterations (last it seen) at which a validation line was printed
+    last_it = None
     with open(path, errors='replace') as f:
         for line in f:
             for chunk in line.split('\r'):
                 m = PAT.search(chunk)
                 if m:
-                    pts.append((int(m.group(1)), float(m.group(2))))
+                    last_it = int(m.group(1))
+                    pts.append((last_it, float(m.group(2))))
+                elif VAL_TAG in chunk and last_it is not None:
+                    val_after.append(last_it)
     pts = sorted(set(pts))
     rates = []
     for (i0, t0), (i1, t1) in zip(pts, pts[1:]):
         if i0 >= skip and i1 > i0:
+            if any(i0 <= v < i1 for v in val_after):
+                continue  # validation ran inside this interval
             rates.append((t1 - t0) / (i1 - i0))
+    if not rates:
+        return 0, float('nan'), pts[-1] if pts else None
     return len(rates), statistics.median(rates), pts[-1]
 
 
