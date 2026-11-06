@@ -813,3 +813,34 @@ Logs: `phd_work/logs/profile_scatter_*.log`, `phd_work/logs/speed_scatter_*.log`
 Differences between the profile and training that could matter, unverified: the profile reuses one batch and excludes the DataLoader and host-to-device copies; training uses changing batches. The native training runs also logged fewer timing lines (14 vs 22–25 intervals), which suggests fewer iterations per 300 s. The 0.105 s/it figure from 2026-10-26 (`voxel_3plane_bench`, 13 classes, validation every 10000) is consistent with the torch_scatter training number, but the configs differ and it was measured in another session, so it is not a like-for-like comparison.
 
 Next step to resolve this (not done): profile full training iterations (with the real loader and changing batches) under both implementations, and check the scatter backward kernel in training.
+
+## 2026-11-06 — Correction to P7 and fixed scatter profile (step P8)
+
+**The P7 profile conclusion was wrong; the profile tool had a bug.** `phd_work/profile_step.py` imported `scatter_mean` by name at import time (`from src.encoder.voxels import scatter_mean`), before `apply_from_env()` patched the module, so both profile runs in P7 used the native function. The P7 training numbers were not affected (`run.py` patches before `runpy`). The P7 entry's "not confirmed" conclusion is withdrawn.
+
+**Fix** (`profile_step.py`): the module is imported as `voxels_mod` and `scatter()` calls `voxels_mod.scatter_mean` at call time. The function in use is printed at the top, and the script raises if it does not match `SCATTER`. After the profiler run it counts `aten::scatter_reduce_` (native) and `aten::scatter_add_`, and raises if the choice and the count disagree.
+
+**Check change from the spec.** The spec asked to fail if native `at::native::_scatter_gather` kernels appear with `SCATTER=torch_scatter`. That check cannot work: torch_scatter's `scatter_mean` is built on `aten::scatter_add_`, which runs the same `_scatter_gather_elementwise_kernel`. Measured: native calls `aten::scatter_reduce_` (ReduceMean) plus `scatter_add_` for counts; torch_scatter calls only `scatter_add_`. So the check uses the aten operator names, which do discriminate. `scatter_check.py` uses the same check (function in use and operator counts per pass).
+
+**Correctness** (`phd_work/results/scatter_check.txt`, rerun): the function in use is confirmed for both passes (native: `scatter_mean`, 3 `scatter_reduce_` calls; torch_scatter: `scatter_mean_upstream`, 0 `scatter_reduce_` calls). Voxel: native vs torch_scatter max |diff| 0 / 9.7e-6 / 1.3e-5 for xy / xz / yz; native vs native 0 / 9.6e-6 / 1.6e-5. Dexel L32: 0 for both. So the difference is at the atomic-order noise floor.
+
+**Fixed profile** (`phd_work/results/profile_step_scatter.txt`; medians over 50 steps, one real batch):
+
+| part (ms) | voxel native | voxel torch_scatter | dexel L32 native | dexel L32 torch_scatter |
+|---|---|---|---|---|
+| a first layer | 3.49 | 3.46 | 0.63 | 0.63 |
+| b scatter (3 planes) | 35.58 | **13.17** | 3.63 | **1.30** |
+| c U-Net (3 planes) | 20.79 | 20.78 | 20.58 | 20.41 |
+| d decoder | 2.67 | 2.57 | 2.66 | 2.63 |
+| e loss | 0.10 | 0.08 | 0.08 | 0.08 |
+| f backward | 89.79 | **58.54** | 52.08 | **48.39** |
+| g optimizer | 0.15 | 0.14 | 0.18 | 0.18 |
+| sum of parts | 152.56 | 98.74 | 79.83 | 73.61 |
+| total step | **153.02** | **99.10** | **79.99** | **73.74** |
+| peak memory one step (MiB) | 2272 | 2179 | 2061 | 1967 |
+
+**Agreement with training** (`train.py --exit-after 300`, P7 chain and repeat): voxel native 0.159 / 0.160 s/it vs torch_scatter 0.108 / 0.108 s/it; the training gap is 0.051 s/it. The fixed profile gap is 54 ms/step (0.054 s). Dexel L32 training 0.107 vs 0.101 (gap 0.006 s/it); profile gap 6.3 ms. The profile now agrees with the training numbers.
+
+**Conclusion on ca728fb.** The voxel slowdown is explained by the scatter implementation. The torch_scatter path reproduces 0.108 s/it today, close to the 2026-10-26 value of 0.105 s/it, and the native path gives 0.159. So the change from torch_scatter to native in `ca728fb` is the cause of the voxel slowdown, to the extent these measurements can show it. The Oct-26 value came from a different config (13 classes, validation every 10000) and session, so the match is supporting evidence, not an exact replication. `ca728fb`'s port-log entry said parity OK but did not record the speed change; this entry records it.
+
+**Not changed here.** The default stays `native` (the parity-verified port). Switching the default back would need a decision, since CLAUDE.md requires parity for numerical changes and the torch_scatter path is the upstream code. Dexel is also affected (about 6 ms per step), because its planes use the same scatter.

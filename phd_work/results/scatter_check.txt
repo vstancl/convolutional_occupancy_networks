@@ -1,9 +1,17 @@
+  native pass:
+  function in use: scatter_mean; aten::scatter_reduce_ calls: 3, aten::scatter_add_ calls: 3
+  torch_scatter pass:
+  function in use: use_torch_scatter.<locals>.scatter_mean_upstream; aten::scatter_reduce_ calls: 0, aten::scatter_add_ calls: 6
 === voxel_3plane_3cls.yaml: batch inputs (64, 32, 32, 32)
   plane xy  max|feature| 0.2080 | native vs torch_scatter max|diff| 0 | native vs native (noise floor) max|diff| 0
-  plane xz  max|feature| 0.1952 | native vs torch_scatter max|diff| 1.05e-05 | native vs native (noise floor) max|diff| 8.85e-06
-  plane yz  max|feature| 0.2194 | native vs torch_scatter max|diff| 1.17e-05 | native vs native (noise floor) max|diff| 1.1e-05
+  plane xz  max|feature| 0.1952 | native vs torch_scatter max|diff| 9.66e-06 | native vs native (noise floor) max|diff| 9.61e-06
+  plane yz  max|feature| 0.2194 | native vs torch_scatter max|diff| 1.32e-05 | native vs native (noise floor) max|diff| 1.59e-05
   planes compared: ['xy', 'xz', 'yz']
 
+  native pass:
+  function in use: scatter_mean; aten::scatter_reduce_ calls: 3, aten::scatter_add_ calls: 3
+  torch_scatter pass:
+  function in use: use_torch_scatter.<locals>.scatter_mean_upstream; aten::scatter_reduce_ calls: 0, aten::scatter_add_ calls: 6
 === dexel_3plane_3cls_L32.yaml: batch inputs (64, 3, 64, 32, 32)
   plane xy  max|feature| 0.1105 | native vs torch_scatter max|diff| 0 | native vs native (noise floor) max|diff| 0
   plane xz  max|feature| 0.1088 | native vs torch_scatter max|diff| 0 | native vs native (noise floor) max|diff| 0

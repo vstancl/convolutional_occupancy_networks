@@ -46,7 +46,7 @@ if REPO not in sys.path:
 
 from src import config  # noqa: E402
 from src.common import coordinate2index, normalize_coordinate  # noqa: E402
-from src.encoder.voxels import scatter_mean  # noqa: E402
+import src.encoder.voxels as voxels_mod  # noqa: E402  (call-time lookup: SCATTER patches the attribute)
 from phd_work.dexel_register import register  # noqa: E402
 from phd_work.scatter_switch import apply_from_env  # noqa: E402
 
@@ -105,7 +105,7 @@ def scatter(enc, pts, c, plane):
     xy = normalize_coordinate(pts.clone(), plane=plane, padding=enc.padding)
     index = coordinate2index(xy, enc.reso_plane)
     fea = c.new_zeros(B, enc.c_dim, enc.reso_plane ** 2)
-    fea = scatter_mean(c.permute(0, 2, 1), index, out=fea)
+    fea = voxels_mod.scatter_mean(c.permute(0, 2, 1), index, out=fea)
     return fea.reshape(B, enc.c_dim, enc.reso_plane, enc.reso_plane)
 
 
@@ -184,7 +184,13 @@ def main():
     is_dexel = cfg['data']['input_type'] == 'dexels'
     if is_dexel:
         register()
-    print('scatter implementation: %s (SCATTER env)' % apply_from_env())
+    scatter_choice = apply_from_env()
+    expected_name = 'scatter_mean_upstream' if scatter_choice == 'torch_scatter' else 'scatter_mean'
+    in_use = voxels_mod.scatter_mean.__qualname__
+    print('scatter implementation: %s (SCATTER env); function in use: %s from %s'
+          % (scatter_choice, in_use, voxels_mod.scatter_mean.__module__))
+    if not in_use.endswith(expected_name):
+        raise RuntimeError('SCATTER=%s but scatter_mean in use is %s' % (scatter_choice, in_use))
     device = torch.device('cuda')
     name = os.path.splitext(os.path.basename(args.config))[0]
 
@@ -288,6 +294,20 @@ def main():
         print('  %-4d %-90s %8d %12.2f %10.4f %7.1f%%' % (i, key_short, cnt, us / 1000.0, us / 1000.0 / max(cnt, 1),
                                                        100.0 * us / total_cuda))
     print('  (sum of self CUDA over all CUDA kernels: %.1f ms over %d steps)' % (total_cuda / 1000.0, args.steps))
+    # Which scatter ran: native scatter_mean calls aten::scatter_reduce_ (ReduceMean);
+    # torch_scatter's scatter_mean is built on aten::scatter_add_ only. (Both implementations
+    # run the same at::native::_scatter_gather_elementwise_kernel, so kernel names do not discriminate.)
+    op_counts = {}
+    for e in prof.key_averages():
+        if e.key in ('aten::scatter_reduce_', 'aten::scatter_add_'):
+            op_counts[e.key] = op_counts.get(e.key, 0) + int(e.count)
+    n_reduce = op_counts.get('aten::scatter_reduce_', 0)
+    print('scatter check (profiled steps): aten::scatter_reduce_ calls = %d, aten::scatter_add_ calls = %d'
+          % (n_reduce, op_counts.get('aten::scatter_add_', 0)))
+    if scatter_choice == 'torch_scatter' and n_reduce > 0:
+        raise RuntimeError('SCATTER=torch_scatter but aten::scatter_reduce_ (native scatter) ran %d times' % n_reduce)
+    if scatter_choice == 'native' and n_reduce == 0:
+        raise RuntimeError('SCATTER=native but aten::scatter_reduce_ never ran')
     print('chrome trace: %s' % trace)
     print()
 

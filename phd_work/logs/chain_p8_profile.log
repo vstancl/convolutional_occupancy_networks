@@ -1,0 +1,6 @@
+start 2026-11-06T09:36:44+01:00
+profile voxel_3plane_3cls native rc=0 wall=47s end=2026-11-06T09:37:31+01:00
+profile dexel_3plane_3cls_L32 native rc=0 wall=40s end=2026-11-06T09:38:11+01:00
+profile voxel_3plane_3cls torch_scatter rc=0 wall=39s end=2026-11-06T09:38:50+01:00
+profile dexel_3plane_3cls_L32 torch_scatter rc=0 wall=39s end=2026-11-06T09:39:29+01:00
+CHAIN DONE 2026-11-06T09:39:29+01:00

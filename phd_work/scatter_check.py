@@ -16,6 +16,24 @@ if REPO not in sys.path:
 from src import config  # noqa: E402
 from phd_work.dexel_register import register  # noqa: E402
 from phd_work.scatter_switch import use_native, use_torch_scatter  # noqa: E402
+import src.encoder.voxels as voxels_mod  # noqa: E402
+from torch.profiler import profile, ProfilerActivity  # noqa: E402
+
+
+def which_scatter(model, inputs, expect):
+    """Function object in use + aten scatter operator counts for one encode. Fails if not `expect`."""
+    name = voxels_mod.scatter_mean.__qualname__
+    with profile(activities=[ProfilerActivity.CPU]) as prof:
+        with torch.no_grad():
+            model.encode_inputs(inputs)
+    counts = {e.key: int(e.count) for e in prof.key_averages()}
+    n_reduce = counts.get('aten::scatter_reduce_', 0)
+    print('  function in use: %s; aten::scatter_reduce_ calls: %d, aten::scatter_add_ calls: %d'
+          % (name, n_reduce, counts.get('aten::scatter_add_', 0)))
+    if expect == 'torch_scatter' and (n_reduce > 0 or not name.endswith('scatter_mean_upstream')):
+        raise RuntimeError('expected torch_scatter, got %s (scatter_reduce_ calls %d)' % (name, n_reduce))
+    if expect == 'native' and (n_reduce == 0 or name.endswith('scatter_mean_upstream')):
+        raise RuntimeError('expected native, got %s (scatter_reduce_ calls %d)' % (name, n_reduce))
 
 CONFIGS = ['voxel_3plane_3cls.yaml', 'dexel_3plane_3cls_L32.yaml']
 
@@ -42,10 +60,14 @@ def main():
             model = config.get_model(cfg, device=device, dataset=ds).eval()
 
             use_native()
+            print('  native pass:')
+            which_scatter(model, inputs, 'native')
             native_a = encode(model, inputs)
             native_b = encode(model, inputs)
             use_torch_scatter()
             try:
+                print('  torch_scatter pass:')
+                which_scatter(model, inputs, 'torch_scatter')
                 upstream = encode(model, inputs)
             finally:
                 use_native()
