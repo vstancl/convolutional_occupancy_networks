@@ -83,3 +83,14 @@ wrote 14 round-2 configs to phd_work/configs/weekend
 2026-11-07T11:02:45+01:00 END eval w1_dexel1p_L2 rc=0 (ok) wall=1729s log=phd_work/logs/w1_dexel1p_L2_eval.log
 2026-11-07T11:02:45+01:00 copied out/phd_w1_dexel1p_L2/generation_best/eval_meshes.csv -> phd_work/results/w1_dexel1p_L2_best.csv
 2026-11-07T11:02:45+01:00 disk used by out/phd_w1_dexel1p_L2: 11G
+2026-11-07T11:02:47+01:00 published: [phd] weekend R1 dexel1p_L2: train rc=3, logs and results (head 4d8bda4)
+2026-11-07T11:02:47+01:00 disk free on out/: 1574 GB
+2026-11-07T11:02:47+01:00 START train w1_voxel1p
+2026-11-07T12:58:18+01:00 END train w1_voxel1p rc=3 (ok) wall=6931s log=phd_work/logs/w1_voxel1p.log
+2026-11-07T12:58:18+01:00 disk free on out/: 1573 GB
+2026-11-07T12:58:18+01:00 START generate w1_voxel1p
+2026-11-07T13:19:25+01:00 END generate w1_voxel1p rc=0 (ok) wall=1267s log=phd_work/logs/w1_voxel1p_generate.log
+2026-11-07T13:19:25+01:00 START eval w1_voxel1p
+2026-11-07T13:47:58+01:00 END eval w1_voxel1p rc=0 (ok) wall=1713s log=phd_work/logs/w1_voxel1p_eval.log
+2026-11-07T13:47:58+01:00 copied out/phd_w1_voxel1p/generation_best/eval_meshes.csv -> phd_work/results/w1_voxel1p_best.csv
+2026-11-07T13:47:58+01:00 disk used by out/phd_w1_voxel1p: 11G
