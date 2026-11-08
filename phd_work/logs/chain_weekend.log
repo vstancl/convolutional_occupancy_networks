@@ -138,3 +138,14 @@ wrote 14 round-2 configs to phd_work/configs/weekend
 2026-11-08T06:47:58+01:00 END eval w2_dexel3p_L32 rc=0 (ok) wall=1604s log=phd_work/logs/w2_dexel3p_L32_eval.log
 2026-11-08T06:47:58+01:00 copied out/phd_w2_dexel3p_L32/generation_best/eval_meshes.csv -> phd_work/results/w2_dexel3p_L32_best.csv
 2026-11-08T06:47:58+01:00 disk used by out/phd_w2_dexel3p_L32: 9.4G
+2026-11-08T06:47:59+01:00 published: [phd] weekend R2 dexel3p_L32: train rc=3, logs and results (head 4aa0ba9)
+2026-11-08T06:47:59+01:00 disk free on out/: 1561 GB
+2026-11-08T06:47:59+01:00 START train w2_dexel3p_L2
+2026-11-08T09:55:30+01:00 END train w2_dexel3p_L2 rc=3 (ok) wall=11251s log=phd_work/logs/w2_dexel3p_L2.log
+2026-11-08T09:55:31+01:00 disk free on out/: 1561 GB
+2026-11-08T09:55:31+01:00 START generate w2_dexel3p_L2
+2026-11-08T10:16:24+01:00 END generate w2_dexel3p_L2 rc=0 (ok) wall=1253s log=phd_work/logs/w2_dexel3p_L2_generate.log
+2026-11-08T10:16:24+01:00 START eval w2_dexel3p_L2
+2026-11-08T10:43:31+01:00 END eval w2_dexel3p_L2 rc=0 (ok) wall=1627s log=phd_work/logs/w2_dexel3p_L2_eval.log
+2026-11-08T10:43:31+01:00 copied out/phd_w2_dexel3p_L2/generation_best/eval_meshes.csv -> phd_work/results/w2_dexel3p_L2_best.csv
+2026-11-08T10:43:31+01:00 disk used by out/phd_w2_dexel3p_L2: 9.5G
