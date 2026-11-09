@@ -182,3 +182,14 @@ wrote 14 round-2 configs to phd_work/configs/weekend
 2026-11-08T20:37:52+01:00 END eval w2_voxel1p rc=0 (ok) wall=1686s log=phd_work/logs/w2_voxel1p_eval.log
 2026-11-08T20:37:52+01:00 copied out/phd_w2_voxel1p/generation_best/eval_meshes.csv -> phd_work/results/w2_voxel1p_best.csv
 2026-11-08T20:37:52+01:00 disk used by out/phd_w2_voxel1p: 11G
+2026-11-08T20:37:54+01:00 published: [phd] weekend R2 voxel1p: train rc=3, logs and results (head 0b2236a)
+2026-11-08T20:37:54+01:00 disk free on out/: 1534 GB
+2026-11-08T20:37:54+01:00 START train w1_grid32
+2026-11-09T08:37:08+01:00 END train w1_grid32 rc=3 (ok) wall=43154s log=phd_work/logs/w1_grid32.log
+2026-11-09T08:37:09+01:00 disk free on out/: 1534 GB
+2026-11-09T08:37:09+01:00 START generate w1_grid32
+2026-11-09T08:56:01+01:00 END generate w1_grid32 rc=0 (ok) wall=1132s log=phd_work/logs/w1_grid32_generate.log
+2026-11-09T08:56:01+01:00 START eval w1_grid32
+2026-11-09T09:23:00+01:00 END eval w1_grid32 rc=0 (ok) wall=1619s log=phd_work/logs/w1_grid32_eval.log
+2026-11-09T09:23:00+01:00 copied out/phd_w1_grid32/generation_best/eval_meshes.csv -> phd_work/results/w1_grid32_best.csv
+2026-11-09T09:23:00+01:00 disk used by out/phd_w1_grid32: 10G
