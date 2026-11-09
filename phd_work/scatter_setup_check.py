@@ -6,9 +6,9 @@ import os
 
 import src.encoder.voxels as voxels_mod
 
-choice = os.environ.get('SCATTER', 'native')
+choice = os.environ.get('SCATTER', 'torch_scatter')
 name = voxels_mod.scatter_mean.__qualname__
 print('SCATTER=%s; scatter_mean in use: %s from %s' % (choice, name, voxels_mod.scatter_mean.__module__))
-want = 'scatter_mean_upstream' if choice == 'torch_scatter' else 'scatter_mean'
+want = 'scatter_mean_upstream' if choice == 'torch_scatter' else 'scatter_mean_native'
 if not name.endswith(want):
     raise RuntimeError('SCATTER=%s but scatter_mean in use is %s' % (choice, name))

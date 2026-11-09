@@ -185,7 +185,7 @@ def main():
     if is_dexel:
         register()
     scatter_choice = apply_from_env()
-    expected_name = 'scatter_mean_upstream' if scatter_choice == 'torch_scatter' else 'scatter_mean'
+    expected_name = 'scatter_mean_upstream' if scatter_choice == 'torch_scatter' else 'scatter_mean_native'
     in_use = voxels_mod.scatter_mean.__qualname__
     print('scatter implementation: %s (SCATTER env); function in use: %s from %s'
           % (scatter_choice, in_use, voxels_mod.scatter_mean.__module__))

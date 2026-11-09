@@ -32,7 +32,7 @@ def which_scatter(model, inputs, expect):
           % (name, n_reduce, counts.get('aten::scatter_add_', 0)))
     if expect == 'torch_scatter' and (n_reduce > 0 or not name.endswith('scatter_mean_upstream')):
         raise RuntimeError('expected torch_scatter, got %s (scatter_reduce_ calls %d)' % (name, n_reduce))
-    if expect == 'native' and (n_reduce == 0 or name.endswith('scatter_mean_upstream')):
+    if expect == 'native' and (n_reduce == 0 or not name.endswith('scatter_mean_native')):
         raise RuntimeError('expected native, got %s (scatter_reduce_ calls %d)' % (name, n_reduce))
 
 CONFIGS = ['voxel_3plane_3cls.yaml', 'dexel_3plane_3cls_L32.yaml']
