@@ -207,3 +207,5 @@ wrote 14 round-2 configs to phd_work/configs/weekend
 2026-11-09T09:50:41+01:00 published: [phd] weekend: input rows for one plane (xz), L=2 and 32: logs and results (head 2faefec)
 2026-11-09T09:50:41+01:00 START report_plots
 2026-11-09T09:50:47+01:00 END report_plots rc=0 (ok) wall=6s log=phd_work/logs/report_plots_weekend.log
+2026-11-09T09:50:50+01:00 published: [phd] weekend: report plots and summary (head ae9e46b)
+2026-11-09T09:50:50+01:00 CHAIN DONE
