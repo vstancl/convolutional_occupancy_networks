@@ -8,3 +8,13 @@
 2026-11-09T13:01:15+01:00 END eval column_1plane rc=0 (ok) wall=1701s log=phd_work/logs/column_1plane_eval.log
 2026-11-09T13:01:15+01:00 copied CSV -> phd_work/results/column_1plane_best.csv
 2026-11-09T13:01:15+01:00 disk used by out/phd_column_1p: 11G
+2026-11-09T13:01:17+01:00 published: [phd] control: voxel column encoder, 1plane (train rc=3), logs and results (head d5b2928)
+2026-11-09T13:01:20+01:00 disk free on out/: 1528 GB
+2026-11-09T13:01:20+01:00 START train column_3plane
+2026-11-09T16:10:43+01:00 END train column_3plane rc=3 (ok) wall=11363s log=phd_work/logs/column_3plane.log
+2026-11-09T16:10:43+01:00 START generate column_3plane
+2026-11-09T16:30:51+01:00 END generate column_3plane rc=0 (ok) wall=1208s log=phd_work/logs/column_3plane_generate.log
+2026-11-09T16:30:51+01:00 START eval column_3plane
+2026-11-09T16:57:31+01:00 END eval column_3plane rc=0 (ok) wall=1600s log=phd_work/logs/column_3plane_eval.log
+2026-11-09T16:57:31+01:00 copied CSV -> phd_work/results/column_3plane_best.csv
+2026-11-09T16:57:31+01:00 disk used by out/phd_column_3p: 9.9G
