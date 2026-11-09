@@ -1,0 +1,7 @@
+L=32 split=test planes=xz objects=3519 out_dir=out/phd_input_xz_L32
+superset check (occ contains original voxels): failures=0
+exact check (L=32 occ == original voxels): failures=0
+mean extra-voxel fraction (extra / original occupied): 0.0000
+mean superset time per object: 4.94 ms (voxel conversion + plane supersets, excl. meshing)
+total time: 40.0 s
+CHECKS PASS
