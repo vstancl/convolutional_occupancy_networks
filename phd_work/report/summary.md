@@ -25,9 +25,6 @@ Training wall time: sum of the final `time:` of each log in the run. s/it: media
 | w2 dexel 1-plane L=32 | phd_work/logs/w2_dexel1p_L32.log; phd_work/results/w2_dexel1p_L32_best.csv | 0.6211 | 0.1225 | 0.8550 | 0.5881 | 0.6338 (0.0039) | 0.0827 | 3.01 |
 | w2 dexel 1-plane L=2 | phd_work/logs/w2_dexel1p_L2.log; phd_work/results/w2_dexel1p_L2_best.csv | 0.5632 | 0.1506 | 0.8349 | 0.5515 | 0.5727 (0.0053) | 0.0595 | 2.28 |
 | w2 voxel 1-plane | phd_work/logs/w2_voxel1p.log; phd_work/results/w2_voxel1p_best.csv | 0.4987 | 0.2298 | 0.8097 | 0.4499 | 0.5335 (0.0026) | 0.0532 | 2.02 |
-| w2 dexel 3-plane L=4 | phd_work/logs/w2_dexel3p_L4.log; phd_work/results/w2_dexel3p_L4_best.csv | not available yet | | | | | | |
-| w2 voxel grid32 | phd_work/logs/w2_grid32.log; phd_work/results/w2_grid32_best.csv | not available yet | | | | | | |
-| w2 dexel 3-plane L=1 | phd_work/logs/w2_dexel3p_L1.log; phd_work/results/w2_dexel3p_L1_best.csv | not available yet | | | | | | |
 | input row L=1 | phd_work/results/input_row_L1.csv (no training) | 0.5307 | 0.1613 | 0.7827 | 0.4279 | n/a | n/a | n/a |
 | input row L=2 | phd_work/results/input_row_L2.csv (no training) | 0.5667 | 0.1330 | 0.7907 | 0.4528 | n/a | n/a | n/a |
 | input row L=4 | phd_work/results/input_row_L4.csv (no training) | 0.5667 | 0.1330 | 0.7908 | 0.4528 | n/a | n/a | n/a |
@@ -41,4 +38,4 @@ Plot 6b bins (main; rays>2 bin centre: mean IoU L32 - L2 (n objects)): 1: +0.000
 Plot 6b bins (w1; rays>2 bin centre: mean IoU L32 - L2 (n objects)): 1: +0.0072 (n=52); 3: +0.0050 (n=9); 7: +0.0038 (n=23); 14: +0.0143 (n=58); 30: +0.0151 (n=103); 64: +0.0216 (n=356); 136: +0.0179 (n=1047); 291: +0.0327 (n=1308); 619: +0.0490 (n=500); 1318: +0.0426 (n=63)
 Plot 6b bins (w2; rays>2 bin centre: mean IoU L32 - L2 (n objects)): 1: -0.0060 (n=52); 3: +0.0136 (n=9); 7: +0.0005 (n=23); 14: +0.0023 (n=58); 30: +0.0097 (n=103); 64: +0.0181 (n=356); 136: +0.0194 (n=1047); 291: +0.0316 (n=1308); 619: +0.0469 (n=500); 1318: +0.0207 (n=63)
 
-Missing (skipped): w2 dexel 3-plane L=4 (training logs); w2 voxel grid32 (training logs); w2 dexel 3-plane L=1 (training logs); w2 dexel 3-plane L=4 (test CSV); w2 voxel grid32 (test CSV); w2 dexel 3-plane L=1 (test CSV)
+Missing (skipped): none

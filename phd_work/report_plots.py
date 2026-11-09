@@ -78,8 +78,11 @@ WEEKEND_VARIANTS = {
     'dexel3p_L1': ('dexel 3-plane L=1', 1, 3),
 }
 WEEKEND_ROUNDS = (1, 2)
+ROUND2_EXCLUDED = {'dexel3p_L4', 'grid32', 'dexel3p_L1'}  # not in round 2 (chain_weekend.sh)
 for _R in WEEKEND_ROUNDS:
     for _v, (_label, _L, _planes) in WEEKEND_VARIANTS.items():
+        if _R == 2 and _v in ROUND2_EXCLUDED:
+            continue
         VARIANTS['w%d %s' % (_R, _label)] = {
             'logs': ['w%d_%s.log' % (_R, _v)],
             'test_csv': 'w%d_%s_best.csv' % (_R, _v),
