@@ -10,21 +10,21 @@ Training wall time: sum of the final `time:` of each log in the run. s/it: media
 | voxel 3-plane, 3-class (s2) | phd_work/logs/3cls_s2.log; cfg voxel_3plane_3cls_s2.yaml | 0.6776 | 0.0955 | 0.8970 | 0.7026 | 0.6844 (0.0032) | 0.1573 | 5.57 |
 | dexel 3-plane L=32 | phd_work/logs/dexel_L32_run.log; cfg dexel_3plane_3cls_L32.yaml | 0.6820 | 0.0938 | 0.8988 | 0.7003 | 0.6874 (0.0028) | 0.1057 | 3.90 |
 | dexel 3-plane L=2 | phd_work/logs/dexel_L2_run.log; cfg dexel_3plane_3cls_L2.yaml | 0.6557 | 0.1051 | 0.8894 | 0.6697 | 0.6643 (0.0022) | 0.0888 | 3.33 |
-| w1 voxel 3-plane | phd_work/logs/w1_voxel3p.log; phd_work/results/w1_voxel3p_best.csv | not available yet | | | | | | |
-| w1 dexel 3-plane L=32 | phd_work/logs/w1_dexel3p_L32.log; phd_work/results/w1_dexel3p_L32_best.csv | not available yet | | | | | | |
-| w1 dexel 3-plane L=2 | phd_work/logs/w1_dexel3p_L2.log; phd_work/results/w1_dexel3p_L2_best.csv | not available yet | | | | | | |
-| w1 dexel 1-plane L=32 | phd_work/logs/w1_dexel1p_L32.log; phd_work/results/w1_dexel1p_L32_best.csv | not available yet | | | | | | |
-| w1 dexel 1-plane L=2 | phd_work/logs/w1_dexel1p_L2.log; phd_work/results/w1_dexel1p_L2_best.csv | not available yet | | | | | | |
-| w1 voxel 1-plane | phd_work/logs/w1_voxel1p.log; phd_work/results/w1_voxel1p_best.csv | not available yet | | | | | | |
-| w1 dexel 3-plane L=4 | phd_work/logs/w1_dexel3p_L4.log; phd_work/results/w1_dexel3p_L4_best.csv | not available yet | | | | | | |
-| w1 voxel grid32 | phd_work/logs/w1_grid32.log; phd_work/results/w1_grid32_best.csv | not available yet | | | | | | |
-| w1 dexel 3-plane L=1 | phd_work/logs/w1_dexel3p_L1.log; phd_work/results/w1_dexel3p_L1_best.csv | not available yet | | | | | | |
-| w2 voxel 3-plane | phd_work/logs/w2_voxel3p.log; phd_work/results/w2_voxel3p_best.csv | not available yet | | | | | | |
-| w2 dexel 3-plane L=32 | phd_work/logs/w2_dexel3p_L32.log; phd_work/results/w2_dexel3p_L32_best.csv | not available yet | | | | | | |
-| w2 dexel 3-plane L=2 | phd_work/logs/w2_dexel3p_L2.log; phd_work/results/w2_dexel3p_L2_best.csv | not available yet | | | | | | |
-| w2 dexel 1-plane L=32 | phd_work/logs/w2_dexel1p_L32.log; phd_work/results/w2_dexel1p_L32_best.csv | not available yet | | | | | | |
-| w2 dexel 1-plane L=2 | phd_work/logs/w2_dexel1p_L2.log; phd_work/results/w2_dexel1p_L2_best.csv | not available yet | | | | | | |
-| w2 voxel 1-plane | phd_work/logs/w2_voxel1p.log; phd_work/results/w2_voxel1p_best.csv | not available yet | | | | | | |
+| w1 voxel 3-plane | phd_work/logs/w1_voxel3p.log; phd_work/results/w1_voxel3p_best.csv | 0.6811 | 0.0943 | 0.8998 | 0.7006 | 0.6865 (0.0028) | 0.1069 | 3.99 |
+| w1 dexel 3-plane L=32 | phd_work/logs/w1_dexel3p_L32.log; phd_work/results/w1_dexel3p_L32_best.csv | 0.6803 | 0.0956 | 0.8985 | 0.6976 | 0.6860 (0.0024) | 0.0992 | 3.65 |
+| w1 dexel 3-plane L=2 | phd_work/logs/w1_dexel3p_L2.log; phd_work/results/w1_dexel3p_L2_best.csv | 0.6502 | 0.1076 | 0.8860 | 0.6593 | 0.6600 (0.0023) | 0.0828 | 3.12 |
+| w1 dexel 1-plane L=32 | phd_work/logs/w1_dexel1p_L32.log; phd_work/results/w1_dexel1p_L32_best.csv | 0.6245 | 0.1193 | 0.8542 | 0.6010 | 0.6353 (0.0033) | 0.0825 | 3.00 |
+| w1 dexel 1-plane L=2 | phd_work/logs/w1_dexel1p_L2.log; phd_work/results/w1_dexel1p_L2_best.csv | 0.5632 | 0.1482 | 0.8280 | 0.5559 | 0.5745 (0.0020) | 0.0593 | 2.21 |
+| w1 voxel 1-plane | phd_work/logs/w1_voxel1p.log; phd_work/results/w1_voxel1p_best.csv | 0.5057 | 0.2181 | 0.8117 | 0.4616 | 0.5332 (0.0037) | 0.0516 | 1.92 |
+| w1 dexel 3-plane L=4 | phd_work/logs/w1_dexel3p_L4.log; phd_work/results/w1_dexel3p_L4_best.csv | 0.6790 | 0.0949 | 0.8985 | 0.6941 | 0.6856 (0.0023) | 0.0839 | 3.15 |
+| w1 voxel grid32 | phd_work/logs/w1_grid32.log; phd_work/results/w1_grid32_best.csv | 0.6915 | 0.0882 | 0.9096 | 0.7142 | 0.6934 (0.0020) | 0.3511 | 11.98 |
+| w1 dexel 3-plane L=1 | phd_work/logs/w1_dexel3p_L1.log; phd_work/results/w1_dexel3p_L1_best.csv | 0.6305 | 0.1147 | 0.8816 | 0.6376 | 0.6431 (0.0024) | 0.0825 | 3.10 |
+| w2 voxel 3-plane | phd_work/logs/w2_voxel3p.log; phd_work/results/w2_voxel3p_best.csv | 0.6769 | 0.0947 | 0.8977 | 0.6966 | 0.6866 (0.0018) | 0.1067 | 3.90 |
+| w2 dexel 3-plane L=32 | phd_work/logs/w2_dexel3p_L32.log; phd_work/results/w2_dexel3p_L32_best.csv | 0.6796 | 0.0959 | 0.8982 | 0.6926 | 0.6874 (0.0018) | 0.0993 | 3.65 |
+| w2 dexel 3-plane L=2 | phd_work/logs/w2_dexel3p_L2.log; phd_work/results/w2_dexel3p_L2_best.csv | 0.6529 | 0.1054 | 0.8874 | 0.6646 | 0.6595 (0.0022) | 0.0830 | 3.12 |
+| w2 dexel 1-plane L=32 | phd_work/logs/w2_dexel1p_L32.log; phd_work/results/w2_dexel1p_L32_best.csv | 0.6211 | 0.1225 | 0.8550 | 0.5881 | 0.6338 (0.0039) | 0.0827 | 3.01 |
+| w2 dexel 1-plane L=2 | phd_work/logs/w2_dexel1p_L2.log; phd_work/results/w2_dexel1p_L2_best.csv | 0.5632 | 0.1506 | 0.8349 | 0.5515 | 0.5727 (0.0053) | 0.0595 | 2.28 |
+| w2 voxel 1-plane | phd_work/logs/w2_voxel1p.log; phd_work/results/w2_voxel1p_best.csv | 0.4987 | 0.2298 | 0.8097 | 0.4499 | 0.5335 (0.0026) | 0.0532 | 2.02 |
 | w2 dexel 3-plane L=4 | phd_work/logs/w2_dexel3p_L4.log; phd_work/results/w2_dexel3p_L4_best.csv | not available yet | | | | | | |
 | w2 voxel grid32 | phd_work/logs/w2_grid32.log; phd_work/results/w2_grid32_best.csv | not available yet | | | | | | |
 | w2 dexel 3-plane L=1 | phd_work/logs/w2_dexel3p_L1.log; phd_work/results/w2_dexel3p_L1_best.csv | not available yet | | | | | | |
@@ -38,5 +38,7 @@ Training wall time: sum of the final `time:` of each log in the run. s/it: media
 
 Per-object comparison (test split, dexel L=32 vs L=2): 3519 objects; mean IoU L32 0.6936, L2 0.6682; fraction of objects where L=32 is better 0.667.
 Plot 6b bins (main; rays>2 bin centre: mean IoU L32 - L2 (n objects)): 1: +0.0007 (n=52); 3: -0.0027 (n=9); 7: +0.0059 (n=23); 14: +0.0103 (n=58); 30: +0.0065 (n=103); 64: +0.0160 (n=356); 136: +0.0167 (n=1047); 291: +0.0289 (n=1308); 619: +0.0468 (n=500); 1318: +0.0538 (n=63)
+Plot 6b bins (w1; rays>2 bin centre: mean IoU L32 - L2 (n objects)): 1: +0.0072 (n=52); 3: +0.0050 (n=9); 7: +0.0038 (n=23); 14: +0.0143 (n=58); 30: +0.0151 (n=103); 64: +0.0216 (n=356); 136: +0.0179 (n=1047); 291: +0.0327 (n=1308); 619: +0.0490 (n=500); 1318: +0.0426 (n=63)
+Plot 6b bins (w2; rays>2 bin centre: mean IoU L32 - L2 (n objects)): 1: -0.0060 (n=52); 3: +0.0136 (n=9); 7: +0.0005 (n=23); 14: +0.0023 (n=58); 30: +0.0097 (n=103); 64: +0.0181 (n=356); 136: +0.0194 (n=1047); 291: +0.0316 (n=1308); 619: +0.0469 (n=500); 1318: +0.0207 (n=63)
 
-Missing (skipped): w1 voxel 3-plane (training logs); w1 dexel 3-plane L=32 (training logs); w1 dexel 3-plane L=2 (training logs); w1 dexel 1-plane L=32 (training logs); w1 dexel 1-plane L=2 (training logs); w1 voxel 1-plane (training logs); w1 dexel 3-plane L=4 (training logs); w1 voxel grid32 (training logs); w1 dexel 3-plane L=1 (training logs); w2 voxel 3-plane (training logs); w2 dexel 3-plane L=32 (training logs); w2 dexel 3-plane L=2 (training logs); w2 dexel 1-plane L=32 (training logs); w2 dexel 1-plane L=2 (training logs); w2 voxel 1-plane (training logs); w2 dexel 3-plane L=4 (training logs); w2 voxel grid32 (training logs); w2 dexel 3-plane L=1 (training logs); w1 voxel 3-plane (test CSV); w1 dexel 3-plane L=32 (test CSV); w1 dexel 3-plane L=2 (test CSV); w1 dexel 1-plane L=32 (test CSV); w1 dexel 1-plane L=2 (test CSV); w1 voxel 1-plane (test CSV); w1 dexel 3-plane L=4 (test CSV); w1 voxel grid32 (test CSV); w1 dexel 3-plane L=1 (test CSV); w2 voxel 3-plane (test CSV); w2 dexel 3-plane L=32 (test CSV); w2 dexel 3-plane L=2 (test CSV); w2 dexel 1-plane L=32 (test CSV); w2 dexel 1-plane L=2 (test CSV); w2 voxel 1-plane (test CSV); w2 dexel 3-plane L=4 (test CSV); w2 voxel grid32 (test CSV); w2 dexel 3-plane L=1 (test CSV); plot 6b pair w1 (per-object pkl); plot 6b pair w2 (per-object pkl)
+Missing (skipped): w2 dexel 3-plane L=4 (training logs); w2 voxel grid32 (training logs); w2 dexel 3-plane L=1 (training logs); w2 dexel 3-plane L=4 (test CSV); w2 voxel grid32 (test CSV); w2 dexel 3-plane L=1 (test CSV)

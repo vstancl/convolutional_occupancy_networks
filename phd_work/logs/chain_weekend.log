@@ -204,3 +204,6 @@ wrote 14 round-2 configs to phd_work/configs/weekend
 2026-11-09T09:37:43+01:00 END input_row xz L=32 rc=0 (ok) wall=42s log=phd_work/logs/input_row_xz_L32.log
 2026-11-09T09:37:43+01:00 START eval input_row xz L=32
 2026-11-09T09:50:39+01:00 END eval input_row xz L=32 rc=0 (ok) wall=776s log=phd_work/logs/eval_input_row_xz_L32.log
+2026-11-09T09:50:41+01:00 published: [phd] weekend: input rows for one plane (xz), L=2 and 32: logs and results (head 2faefec)
+2026-11-09T09:50:41+01:00 START report_plots
+2026-11-09T09:50:47+01:00 END report_plots rc=0 (ok) wall=6s log=phd_work/logs/report_plots_weekend.log
