@@ -1,0 +1,10 @@
+2026-11-09T10:16:21+01:00 === chain_column start (scatter torch_scatter)
+2026-11-09T10:16:23+01:00 disk free on out/: 1531 GB
+2026-11-09T10:16:24+01:00 START train column_1plane
+2026-11-09T12:12:36+01:00 END train column_1plane rc=3 (ok) wall=6972s log=phd_work/logs/column_1plane.log
+2026-11-09T12:12:37+01:00 START generate column_1plane
+2026-11-09T12:32:54+01:00 END generate column_1plane rc=0 (ok) wall=1217s log=phd_work/logs/column_1plane_generate.log
+2026-11-09T12:32:54+01:00 START eval column_1plane
+2026-11-09T13:01:15+01:00 END eval column_1plane rc=0 (ok) wall=1701s log=phd_work/logs/column_1plane_eval.log
+2026-11-09T13:01:15+01:00 copied CSV -> phd_work/results/column_1plane_best.csv
+2026-11-09T13:01:15+01:00 disk used by out/phd_column_1p: 11G
