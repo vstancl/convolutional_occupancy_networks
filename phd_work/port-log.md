@@ -939,3 +939,19 @@ Files per run: `phd_work/logs/w{R}_{variant}.log` (train), `..._gpu.csv`, `..._g
 - **Switch** (`phd_work/scatter_switch.py`, commit `e2360d7`): the default is now upstream (`scatter_mean_upstream`, a wrapper of `torch_scatter.scatter_mean`); `SCATTER=native` selects `scatter_mean_native` (the former `scatter_reduce_` function, kept in the switch module under its own name, because `voxels.py` no longer contains it). `run.py`, `profile_step.py` and `scatter_setup_check.py` default to upstream. Checks checked: `SCATTER` unset and `torch_scatter` → `scatter_mean_upstream`; `native` → `scatter_mean_native`. Test suite: 52 passed.
 - **CHANGES.md:** the ca728fb row is marked reverted (commit `e2360d7`), with the reason and the reversal commit.
 - **Plot 4** (`report_plots.py`): the one-plane input row (`input_row_xz_L2`, `_L32`) is a second dashed line; the voxel 1-plane runs are a second band (orange); the voxel 3-plane band is drawn at least ±0.003 around its mean, with a solid mean line, so it is visible. Regenerated.
+
+## 2026-11-09 — Voxel-column control encoder (step P10)
+
+**Purpose.** Separate "per-ray vector encoding" from "depth parametrisation". `VoxelColumnEncoder` (`phd_work/column_encoder.py`, a subclass of `DexelEncoder`) takes the raw occupancy column along each ray, 32 voxels as 32 channels in voxel order along the ray, instead of dexel slots. Everything else is the dexel encoder's: the ray encoder `Conv2d(32, 64, 1) → ReLU → Conv2d(64, 32, 1) → actvn` (the dexel ray encoder with 2L = 32 input channels), the plane placement (`ray_points`, same cells), the parent's scatter and U-Net. Ray and image axes follow `dexels.py` (xz: rays along axis 1, image (0, 2); xy: axis 2, (0, 1); yz: axis 0, (1, 2)).
+
+**Tests** (`phd_work/tests/test_column_encoder.py`, 6 tests, pass; full suite 58 passed): column channel k of image (u, v) equals the voxel at position k along the ray, for each plane (fixed indices per plane); for each plane, the plane cell of ray (u, v) equals the dexel encoder's cell of ray (u, v) (all 1024 distinct); a single non-zero ray feature lands only in its own cell (U-Net off); forward shapes and backward gradients; parameter counts; registration as `voxel_column`.
+
+**Parameters** (c_dim 32; the U-Net is the same as in the 3-plane voxel encoder): ray encoder 4192 = (32·64+64) + (64·32+32); U-Net 1,934,976; whole encoder 1,939,168. Compare: `LocalVoxelEncoder` conv_in 896, total 1,935,872; `DexelEncoder` L=32 ray encoder 6240, total 1,941,216.
+
+**Registration.** `phd_work/dexel_register.py` registers `voxel_column` next to `dexel_local` (table `ENCODERS`); `unregister` restores both. The data is the ordinary voxel field (`input_type: voxels`), so no new data field.
+
+**Configs.** `phd_work/configs/voxel_column_1plane_3cls.yaml` (`plane_type ['xz']`) and `voxel_column_3plane_3cls.yaml`, each inheriting `voxel_3plane_3cls.yaml` (3 classes, splits, threshold 0.2, batch 64, validate_every 2000, model selection iou/maximize) with `model.encoder: voxel_column`, `hidden_dim 64`, `max_it 120000`, out_dirs `out/phd_column_1p` and `out/phd_column_3p`; `_test` variants with `generation_dir generation_best`, `model_file model_best.pt`.
+
+**Smoke test** (200 iterations, validate_every 100, test_smoke): training rc 3 (`max_it`), generate rc 0, eval rc 0.
+
+**Chain.** `phd_work/chain_column.sh`, tmux session `phd_column`, log `phd_work/logs/chain_column.log`: 1-plane first, then 3-plane; training via `run.py` (torch_scatter); GPU log every 30 s; generate and eval on the test split; CSV to `phd_work/results/column_{1plane,3plane}_best.csv`; commit and push after each model.
