@@ -23,9 +23,10 @@ from src.data.fields import VoxelsField  # noqa: E402
 from src.encoder import encoder_dict  # noqa: E402
 from src.utils import binvox_rw  # noqa: E402
 from phd_work.dexel_encoder import DexelEncoder  # noqa: E402
+from phd_work.column_encoder import VoxelColumnEncoder  # noqa: E402
 from phd_work.dexels import voxels_to_dexel_slots  # noqa: E402
 
-ENCODER_NAME = 'dexel_local'
+ENCODERS = {'dexel_local': DexelEncoder, 'voxel_column': VoxelColumnEncoder}  # control: P10
 
 _saved = {}
 
@@ -60,13 +61,15 @@ def _get_inputs_field(mode, cfg):
 def register():
     if 'orig_get_inputs_field' not in _saved:
         _saved['orig_get_inputs_field'] = upstream_config.get_inputs_field
-        _saved['had_encoder'] = ENCODER_NAME in encoder_dict
-    encoder_dict[ENCODER_NAME] = DexelEncoder
+    for name, cls in ENCODERS.items():
+        _saved.setdefault('had_' + name, name in encoder_dict)
+        encoder_dict[name] = cls
     upstream_config.get_inputs_field = _get_inputs_field
 
 
 def unregister():
     if 'orig_get_inputs_field' in _saved:
         upstream_config.get_inputs_field = _saved.pop('orig_get_inputs_field')
-        if not _saved.pop('had_encoder'):
-            encoder_dict.pop(ENCODER_NAME, None)
+    for name in ENCODERS:
+        if 'had_' + name in _saved and not _saved.pop('had_' + name):
+            encoder_dict.pop(name, None)

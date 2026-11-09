@@ -1,0 +1,9 @@
+inherit_from: phd_work/configs/voxel_3plane_3cls.yaml
+model:
+  encoder: voxel_column
+  encoder_kwargs:
+    hidden_dim: 64
+    plane_type: ['xz']
+training:
+  out_dir: out/phd_column_1p
+  max_it: 120000
