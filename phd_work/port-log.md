@@ -889,3 +889,44 @@ Round 1 ≈ 43.5 h, round 2 ≈ 22.8 h, both ≈ 66.3 h. The deadline is 63 h af
 - `voxel_1plane_3cls.yaml` and `voxel_grid32_3cls.yaml`: `training.visualize_every: 0` (as in the other configs). `backup_every` stays 10000 (checked by loading the configs: visualize_every 0, backup_every 10000).
 - `chain_weekend.sh`: grid32 is no longer in round 1. The run order is now one explicit schedule: round 1 (voxel3p, dexel3p L32, L2, dexel1p L32, L2, voxel1p, dexel3p L4, dexel3p L1), round 2 (voxel3p, dexel3p L32, L2, dexel1p L32, L2, voxel1p), then grid32 with round-1 naming (`w1_grid32`, `out/phd_w1_grid32`). The timeline printout uses the same schedule. The script passes `bash -n`.
 - Timeline with the new order (cumulative hours from the start, train + eval, from the table in P3): round 1 ends at 30.5 h, round 2 at 53.3 h; grid32 starts at ~53.3 h and its ~12.2 h of training runs past the deadline if the chain starts at Friday 15:00 (deadline is 63 h after that). Starting at Friday 21:00 instead, grid32 starts at Monday ~02:15 (before the deadline) and trains until ~14:30.
+
+## 2026-11-09 — Weekend chain: results, versions, deviations (step P9)
+
+**Run.** `phd_work/chain_weekend.sh`, started Fri 2026-11-06 15:00 in tmux `phd_weekend`; finished Mon 2026-11-09 09:50 (`CHAIN DONE`). Log: `phd_work/logs/chain_weekend.log` (start, end, rc and wall time of every step). Deadline Mon 06:00 (no new training after it). All 15 trainings exited 3 (`max_it` 120000), every generate and eval exited 0, both input-row evals and the report exited 0; nothing was skipped by the deadline. Disk: 1534 GB free at the last check (rule: stop below 20 GB; not triggered).
+
+**Versions** (chain step 0): NVIDIA GeForce RTX 4070, driver 615.78.08; torch 2.12.0+cu130; CUDA 13.0; cuDNN 92000; git `e9c21ec` at start.
+
+**Scatter.** All weekend runs used `SCATTER=torch_scatter` (the upstream `torch_scatter.scatter_mean`, via `phd_work/run.py`). Scatter setup check at step 0: `scatter_mean in use: use_torch_scatter.<locals>.scatter_mean_upstream`.
+
+**Parity** (step 0, `phd_work/parity.py compare --device cuda` through `run.py`, `SCATTER=torch_scatter`): **PARITY OK**, rc 0. Log `phd_work/logs/chain_weekend_parity.log`.
+
+**Per-variant results.** Test metrics: class mean over chair, table, lamp (`phd_work/results/w{R}_{variant}_best.csv`, 3519 meshes each). Val IoU: last-10 validation mean (SD), from `phd_work/logs/w{R}_{variant}.log`. s/it: median over it ≥ 300, validation intervals excluded (`phd_work/speed_stats.py`). Wall time: sum of training time from the logs (train.py `time:`), hours. Peak GPU memory: maximum `memory.used` sampled every 30 s in `phd_work/logs/w{R}_{variant}_gpu.csv`, total on the GPU; about 2.1 GB of it was used by desktop processes before the runs.
+
+| run | Chamfer-L1 ×10 | NC | F-Score | test IoU | val IoU last-10 | s/it | wall h | peak GPU MiB |
+|---|---|---|---|---|---|---|---|---|
+| w1 voxel 3-plane | 0.0943 | 0.8998 | 0.7006 | **0.6811** | 0.6865 (0.0028) | 0.1069 | 4.00 | 5415 |
+| w1 dexel 3-plane L=32 | 0.0956 | 0.8985 | 0.6976 | 0.6803 | 0.6860 (0.0024) | 0.0992 | 3.66 | 4082 |
+| w1 dexel 3-plane L=4 | 0.0949 | 0.8985 | 0.6941 | 0.6790 | 0.6856 (0.0023) | 0.0839 | 3.16 | 4000 |
+| w1 dexel 3-plane L=2 | 0.1076 | 0.8860 | 0.6593 | 0.6502 | 0.6600 (0.0023) | 0.0828 | 3.13 | 4034 |
+| w1 dexel 3-plane L=1 | 0.1147 | 0.8816 | 0.6376 | 0.6305 | 0.6431 (0.0024) | 0.0825 | 3.11 | 4032 |
+| w1 dexel 1-plane L=32 | 0.1193 | 0.8542 | 0.6010 | 0.6245 | 0.6353 (0.0033) | 0.0825 | 3.00 | 3105 |
+| w1 dexel 1-plane L=2 | 0.1482 | 0.8280 | 0.5559 | 0.5632 | 0.5745 (0.0020) | 0.0593 | 2.22 | 3068 |
+| w1 voxel 1-plane | 0.2181 | 0.8117 | 0.4616 | 0.5057 | 0.5332 (0.0037) | 0.0516 | 1.93 | 3789 |
+| **w1 voxel grid32** | **0.0882** | **0.9096** | **0.7142** | **0.6915** | 0.6934 (0.0020) | 0.3511 | 11.99 | 11712 |
+| w2 voxel 3-plane | 0.0947 | 0.8977 | 0.6966 | 0.6769 | 0.6866 (0.0018) | 0.1067 | 3.91 | 5270 |
+| w2 dexel 3-plane L=32 | 0.0959 | 0.8982 | 0.6926 | 0.6796 | 0.6874 (0.0018) | 0.0993 | 3.66 | 4083 |
+| w2 dexel 3-plane L=2 | 0.1054 | 0.8874 | 0.6646 | 0.6529 | 0.6595 (0.0022) | 0.0830 | 3.13 | 4035 |
+| w2 dexel 1-plane L=32 | 0.1225 | 0.8550 | 0.5881 | 0.6211 | 0.6338 (0.0039) | 0.0827 | 3.01 | 3116 |
+| w2 dexel 1-plane L=2 | 0.1506 | 0.8349 | 0.5515 | 0.5632 | 0.5727 (0.0053) | 0.0595 | 2.28 | 3405 |
+| w2 voxel 1-plane | 0.2298 | 0.8097 | 0.4499 | 0.4987 | 0.5335 (0.0026) | 0.0532 | 2.02 | 4596 |
+
+Files per run: `phd_work/logs/w{R}_{variant}.log` (train), `..._gpu.csv`, `..._generate.log`, `..._eval.log`; results `phd_work/results/w{R}_{variant}_best.csv`; configs `phd_work/configs/weekend/`. Input rows, one plane (`input_row.py --planes xz`, no training): `phd_work/results/input_row_xz_L2.csv`, `input_row_xz_L32.csv`. Summary with all rows: `phd_work/report/summary.md`.
+
+**Reading.** Grid32 (round 1) is the best test IoU (0.6915), at about three times the step time and 3× the training time of the 3-plane voxel run. Among the 3-plane runs, voxel and dexel L=32 and L=4 are within ~0.003 IoU of each other in both rounds, and L=2 and L=1 are clearly lower. The 1-plane variants are clearly lower again, and the voxel 1-plane is the lowest. Round-1 and round-2 repeats of the same variant agree within ~0.003 test IoU (val last-10 within ~0.003), which is the best available estimate of run-to-run spread; each variant has one seed.
+
+**Deviations and issues.**
+- **grid32 finished after the deadline**, as designed: its training started Sun 2026-11-08 20:38 (before the deadline) and ended Mon 08:37; eval ended 09:23. The schedule had moved it to the end (P3b).
+- **GPU memory:** grid32 peaked at 11712 MiB total on a 12282 MiB card; no out-of-memory at batch 64. Its batch size was not changed.
+- **Round 2 excludes** L=4, L=1 and grid32 (not in round 2 by design). The report listed them as missing; this was a report bug. Fixed in `report_plots.py` (round 2 excludes these three variants) and regenerated (commit `6e25e7f`).
+- **Timeline:** the chain ran close to the estimate in P3: round 1 ended Sat 21:39 (estimate 21:30), round 2 ended Sun 20:37 (estimate 20:15).
+- **Chain-internal decisions:** the dry run's s/it values were not usable (validation inside each interval), so `speed_stats.py` now skips intervals that contain a validation (P3); timeline constants were taken from timing runs.
