@@ -108,6 +108,7 @@ PRETRAINED = {
 }
 
 VOXEL_BASELINE = ['voxel 3-plane, 3-class (run1+run2)', 'voxel 3-plane, 3-class (s2)']
+VOXEL1_BASELINE = ['w1 voxel 1-plane', 'w2 voxel 1-plane']
 MAIN_PAIR = ('dexel 3-plane L=32', 'dexel 3-plane L=2')
 
 # ---- parsing ----------------------------------------------------------------------
@@ -235,17 +236,33 @@ def plot_test_per_class(rows):
     return fig
 
 
-def plot_iou_vs_L(net_series, inp, voxel_vals):
-    fig, ax = plt.subplots(figsize=(8, 5.5))
+BAND_HALF_WIDTH = 0.003  # bands are drawn at least this wide around the runs, so they stay visible
+
+
+def plot_iou_vs_L(net_series, inp, inp_xz, bands):
+    """bands: [(label, values, colour)]; each band spans min..max of its runs (at least
+    +-BAND_HALF_WIDTH around the mean), with a solid line at the mean."""
+    fig, ax = plt.subplots(figsize=(8.5, 6))
     for name, pts in net_series.items():
         Ls = sorted(pts)
         ax.plot(Ls, [pts[L] for L in Ls], marker='o', label=name)
     Li = sorted(inp)
     if Li:
-        ax.plot(Li, [inp[L] for L in Li], marker='s', ls='--', color='k', label='input row (occupancy superset)')
-    if voxel_vals:
-        ax.axhspan(min(voxel_vals), max(voxel_vals), color='grey', alpha=0.25,
-                   label='voxel 3-plane baseline (min..max of runs)')
+        ax.plot(Li, [inp[L] for L in Li], marker='s', ls='--', color='k',
+                label='input row, all 3 planes (occupancy superset)')
+    Lx = sorted(inp_xz)
+    if Lx:
+        ax.plot(Lx, [inp_xz[L] for L in Lx], marker='D', ls='--', color='tab:purple',
+                label='input row, 1 plane xz (occupancy superset)')
+    for label, values, colour in bands:
+        if not values:
+            continue
+        lo, hi = min(values), max(values)
+        mean = sum(values) / len(values)
+        lo = min(lo, mean - BAND_HALF_WIDTH)
+        hi = max(hi, mean + BAND_HALF_WIDTH)
+        ax.axhspan(lo, hi, color=colour, alpha=0.3, label='%s (min..max of runs, mean line)' % label)
+        ax.axhline(mean, color=colour, lw=1.2, ls='-')
     ax.set_xscale('log', base=2)
     ax.set_xticks([1, 2, 4, 8, 16, 32])
     ax.set_xticklabels(['1', '2', '4', '8', '16', '32'])
@@ -253,7 +270,7 @@ def plot_iou_vs_L(net_series, inp, voxel_vals):
     ax.set_ylabel('test mesh IoU, class mean (chair, table, lamp)')
     ax.set_title('Test IoU vs L')
     ax.grid(alpha=0.3)
-    ax.legend(fontsize=7)
+    ax.legend(fontsize=7, loc='lower right')
     return fig
 
 
@@ -387,9 +404,16 @@ def main():
         key = '%s network, %d-plane' % (group, v['planes'])
         net_series.setdefault(key, {})[v['L']] = test[name]['iou']['mean']
     inp = {L: test['input row L=%d' % L]['iou']['mean'] for L in INPUT_ROWS if 'input row L=%d' % L in test}
-    voxel_vals = [test[k]['iou']['mean'] for k in VOXEL_BASELINE if k in test]
+    inp_xz = {}
+    for L in (2, 32):
+        m = test_metrics(res('input_row_xz_L%d.csv' % L))
+        if m is not None:
+            inp_xz[L] = m['iou']['mean']
+    voxel3 = [test[k]['iou']['mean'] for k in VOXEL_BASELINE if k in test]
+    voxel1 = [test[k]['iou']['mean'] for k in VOXEL1_BASELINE if k in test]
+    bands = [('voxel 3-plane baseline', voxel3, 'tab:blue'), ('voxel 1-plane', voxel1, 'tab:orange')]
     if net_series or inp:
-        save(plot_iou_vs_L(net_series, inp, voxel_vals), 'plot4_test_iou_vs_L')
+        save(plot_iou_vs_L(net_series, inp, inp_xz, bands), 'plot4_test_iou_vs_L')
 
     # 5: hits per ray histogram (recomputed on the test split)
     root = os.path.join(REPO, 'data', 'ShapeNet')
