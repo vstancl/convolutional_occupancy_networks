@@ -26,7 +26,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # h5/, for _paths
-import _paths  # noqa: E402,F401  (puts csgbox and dexio on sys.path)
+from _paths import add_external_paths  # noqa: E402
 
 SAMPLE_SHAPES: int = 200  # training shapes examined
 SELECTION_SEED: int = 0  # seed of the shape selection (numpy default_rng)
@@ -176,7 +176,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--data-root", type=Path, required=True, help="csgbox v1 root (contains generation.jsonl and csg/)")
     args = ap.parse_args()
-    import dexio  # noqa: E402  (importable through h5/_paths.py)
+    add_external_paths()
+    import dexio  # noqa: E402  (importable after add_external_paths)
 
     ids = select_shapes(training_ids(args.data_root))
     per_axis: dict[str, dict | None] = {a: None for a in AXES}
