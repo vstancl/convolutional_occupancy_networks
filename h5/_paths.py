@@ -35,7 +35,7 @@ def add_external_paths() -> str:
             raise RuntimeError(f"external path does not exist: {p}")
         s = str(p)
         if s not in sys.path:
-            sys.path.insert(0, s)
+            sys.path.append(s)
 
     import numpy  # noqa: F401
     import csgbox.ceilings  # noqa: F401
