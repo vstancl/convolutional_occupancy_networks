@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import statistics
 import time
+from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -69,6 +71,8 @@ EVAL_CHUNK_RAYS: int = 8192
 # artefact (1e-6) and below the smallest true partial fraction in the 10 test shapes (2.2e-5): with it the
 # gate is reproduced exactly on those shapes; 1e-4 differs on 5 rays. Not the default (literal rule).
 OCC_SNAP_RECOMMENDED: float = 1e-5
+MASK_THRESHOLDS: tuple[float, ...] = (0.3, 0.4, 0.5, 0.6, 0.7)  # decoding grid of hits and binary targets
+OCC_SNAP_GRID: tuple[float, ...] = (1e-3, 1e-2, 0.03, 0.1)  # decoding grid of occfrac_128
 TARGET_K: dict[str, int] = {"hits_8": 2, "hits_16": 4, "hits_8_plane": 2}  # K per hits target
 N_ALL: int = 3 * N_AXIS
 
@@ -82,8 +86,14 @@ def _empty(n_rays: int = 0) -> RayHits:
     return RayHits(np.zeros(n_rays + 1, dtype=np.int64), np.zeros(0), np.zeros(0, dtype=bool), None)
 
 
-def _decode_axis(target: str, out: dict, thr: float, occ_snap: float | None = None) -> RayHits:
-    """Decoder rule of one target for the rows of one axis (``out`` values are numpy arrays)."""
+def _decode_axis(target: str, out: dict, setting: dict) -> RayHits:
+    """Decoder rule of one target for the rows of one axis under one decoding setting.
+
+    ``setting`` may hold ``thr`` (hits and binary: the probability threshold) and ``occ_snap``
+    (occfrac: the snapping, None for the literal rule). Missing keys take the defaults.
+    """
+    thr = float(setting.get("thr", EVAL_THR))
+    occ_snap = setting.get("occ_snap")
     if target in TARGET_K:
         K = TARGET_K[target]
         t = BOX_LO + out["s_pred"] * H
@@ -102,6 +112,20 @@ def _decode_axis(target: str, out: dict, thr: float, occ_snap: float | None = No
     raise ValueError(f"unknown target {target!r}")
 
 
+def decode_by_axis(target: str, outputs: dict, ray_axis: np.ndarray, setting: dict) -> list[RayHits]:
+    """One ``RayHits`` per axis for the rows of ``outputs`` under one decoding setting."""
+    ray_axis = np.asarray(ray_axis)
+    result = []
+    for a in range(3):
+        rows = np.flatnonzero(ray_axis == a)
+        if rows.size == 0:
+            result.append(_empty())
+            continue
+        sub = {k: np.asarray(v)[rows] for k, v in outputs.items()}
+        result.append(_decode_axis(target, sub, setting))
+    return result
+
+
 def outputs_to_rayhits(target: str, outputs: dict, ray_axis: np.ndarray, thr: float = EVAL_THR,
                        occ_snap: float | None = None) -> list[RayHits]:
     """Decoder outputs of R rays to one ``RayHits`` per axis (rays kept in input order within each axis).
@@ -117,16 +141,7 @@ def outputs_to_rayhits(target: str, outputs: dict, ray_axis: np.ndarray, thr: fl
     fraction of 1e-6, which ``decode_occfrac`` reads as a partial cell, so every empty cell becomes a
     spurious thin wall (see docs/h5-3.md).
     """
-    ray_axis = np.asarray(ray_axis)
-    result = []
-    for a in range(3):
-        rows = np.flatnonzero(ray_axis == a)
-        if rows.size == 0:
-            result.append(_empty())
-            continue
-        sub = {k: np.asarray(v)[rows] for k, v in outputs.items()}
-        result.append(_decode_axis(target, sub, thr, occ_snap))
-    return result
+    return decode_by_axis(target, outputs, ray_axis, {"thr": thr, "occ_snap": occ_snap})
 
 
 def _gt_axes(tree) -> list[RayHits]:
@@ -154,37 +169,118 @@ def _rays_of(rays) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return ray_fields(ray_axis * N_AXIS + ray_index)
 
 
-def evaluate_shape(model, shape_id: str, split: str, rays="all", thr: float = EVAL_THR, device=None,
-                   chunk_rays: int = EVAL_CHUNK_RAYS, root: Path = DATA_ROOT, deltas=EVAL_DELTAS,
-                   occ_snap: float | None = None) -> list[dict]:
-    """Per-axis ``evaluate_axis`` results of one shape for the rays requested.
+@dataclass
+class Prepared:
+    """One shape with its rays and their GT: ``gt_sub[a]`` holds the rays of axis a, in input order."""
 
-    The encoder runs once; the decoder runs in chunks of ``chunk_rays`` rays. The GT is
-    ``gt_hits(tree)`` (float64), restricted to the same rays with ``subset_rays``. Returns three dicts
-    (x, y, z), each the output of ``csgbox.ceilings.evaluate_axis``.
-    """
-    if shape_id not in set(shape_ids(split, Path(root))):
-        raise ValueError(f"{shape_id} is not in {split}.lst")
-    shape_dir = Path(root) / "csg" / shape_id
-    device = torch.device(device) if device is not None else next(model.parameters()).device
-    tree = from_json((shape_dir / "tree.json").read_text(encoding="utf-8"))
+    shape_id: str
+    ray_axis: np.ndarray
+    ray_index: np.ndarray
+    uv: np.ndarray
+    gt_sub: list[RayHits]
+
+
+_PREPARED: dict[tuple, Prepared] = {}  # in-memory cache of prepared shapes (validation GT is computed once)
+
+
+def clear_prepared_cache() -> None:
+    _PREPARED.clear()
+
+
+def _prepare(shape_id: str, ray_axis, ray_index, uv, root: Path) -> Prepared:
+    tree = from_json((Path(root) / "csg" / shape_id / "tree.json").read_text(encoding="utf-8"))
     gt = _gt_axes(tree)
-    ray_axis, ray_index, uv = _rays_of(rays)
+    ray_axis = np.asarray(ray_axis)
+    ray_index = np.asarray(ray_index)
+    gt_sub = [subset_rays(gt[a], ray_index[np.flatnonzero(ray_axis == a)]) for a in range(3)]
+    return Prepared(shape_id, ray_axis, ray_index, np.asarray(uv), gt_sub)
 
+
+def prepare_fixed(split: str, index: int, n_rays: int = 4096, root: Path = DATA_ROOT) -> Prepared:
+    """Shape ``index`` of ``split.lst`` with its fixed rays (``fixed_val_rays``) and their GT. Cached in memory."""
+    key = ("fixed", str(root), split, int(index), int(n_rays))
+    if key not in _PREPARED:
+        sid = shape_ids(split, Path(root))[index]
+        ray_axis, ray_index, uv = fixed_val_rays(index, n=n_rays, split=split, root=Path(root))
+        _PREPARED[key] = _prepare(sid, ray_axis, ray_index, uv, Path(root))
+    return _PREPARED[key]
+
+
+def prepare_all(shape_id: str, root: Path = DATA_ROOT) -> Prepared:
+    """Every ray of a shape with the full GT (``rays="all"``). Cached in memory."""
+    key = ("all", str(root), shape_id)
+    if key not in _PREPARED:
+        ray_axis, ray_index, uv = ray_fields(np.arange(N_ALL, dtype=np.int64))
+        _PREPARED[key] = _prepare(shape_id, ray_axis, ray_index, uv, Path(root))
+    return _PREPARED[key]
+
+
+@contextmanager
+def deterministic_kernels():
+    """Deterministic CUDA kernels for the forward pass. Without them the encoder's point scatter
+    (ConvONet's scatter_mean / scatter_max) gives plane features that differ by up to ~6e-4 between two runs
+    on the same input; threshold decisions then flip and F1 moves by ~1e-4 (H5-4). Used for evaluation only:
+    the backward of grid_sample has no deterministic CUDA kernel, so training stays non-deterministic."""
+    prev = torch.are_deterministic_algorithms_enabled()
+    torch.use_deterministic_algorithms(True)
+    try:
+        yield
+    finally:
+        torch.use_deterministic_algorithms(prev)
+
+
+def run_decoder(model, prep: Prepared, device=None, chunk_rays: int = EVAL_CHUNK_RAYS,
+                root: Path = DATA_ROOT) -> dict:
+    """One network pass over a shape: the encoder once, the decoder in chunks. Numpy outputs, one row per ray."""
+    device = torch.device(device) if device is not None else next(model.parameters()).device
     model.eval()
-    with torch.no_grad():
-        inputs = torch.as_tensor(shape_points(shape_id, Path(root)), device=device)[None]
+    with torch.no_grad(), deterministic_kernels():
+        inputs = torch.as_tensor(shape_points(prep.shape_id, Path(root)), device=device)[None]
         planes = model.encode(inputs)
         chunks: dict[str, list] = {}
-        for start in range(0, ray_axis.size, chunk_rays):
+        for start in range(0, prep.ray_axis.size, chunk_rays):
             sl = slice(start, start + chunk_rays)
-            ax_t = torch.as_tensor(ray_axis[sl], device=device)[None]
-            uv_t = torch.as_tensor(uv[sl], device=device)[None]
+            ax_t = torch.as_tensor(prep.ray_axis[sl], device=device)[None]
+            uv_t = torch.as_tensor(prep.uv[sl], device=device)[None]
             out = model.decode(planes, ax_t, uv_t)
             for k, v in out.items():
                 chunks.setdefault(k, []).append(v[0].detach().cpu().numpy())
-    outputs = {k: np.concatenate(v, axis=0) for k, v in chunks.items()}
-    return evaluate_outputs(model.target, outputs, gt, ray_axis, ray_index, thr, occ_snap, deltas)
+    return {k: np.concatenate(v, axis=0) for k, v in chunks.items()}
+
+
+def score_grid(target: str, outputs: dict, ray_axis: np.ndarray, gt_sub: list[RayHits], settings: list[dict],
+               deltas=EVAL_DELTAS) -> list[list[dict]]:
+    """For every decoding setting, the three ``evaluate_axis`` dicts (one list per setting), from one set of outputs."""
+    grid = []
+    for st in settings:
+        dec = decode_by_axis(target, outputs, ray_axis, st)
+        grid.append([evaluate_axis(gt_sub[a], dec[a], a, tuple(deltas), H) for a in range(3)])
+    return grid
+
+
+def evaluate_shape(model, shape_id: str, split: str, rays="all", thr: float = EVAL_THR, device=None,
+                   chunk_rays: int = EVAL_CHUNK_RAYS, root: Path = DATA_ROOT, deltas=EVAL_DELTAS,
+                   occ_snap: float | None = None, settings: list[dict] | None = None):
+    """Per-axis ``evaluate_axis`` results of one shape for the rays requested.
+
+    ``rays`` is "all" or ``(ray_axis, ray_index)``. With ``settings=None`` (default) the single setting
+    ``{thr, occ_snap}`` is used and three dicts (x, y, z) are returned. With a list of decoding settings,
+    one network pass serves all of them and the return value is one list of three dicts per setting.
+    """
+    if shape_id not in set(shape_ids(split, Path(root))):
+        raise ValueError(f"{shape_id} is not in {split}.lst")
+    if isinstance(rays, str):
+        if rays != "all":
+            raise ValueError("rays must be 'all' or (ray_axis, ray_index)")
+        prep = prepare_all(shape_id, Path(root))
+    else:
+        ray_axis, ray_index, uv = _rays_of(rays)
+        prep = _prepare(shape_id, ray_axis, ray_index, uv, Path(root))
+    outs = run_decoder(model, prep, device, chunk_rays, Path(root))
+    if settings is None:
+        return score_grid(model.target, outs, prep.ray_axis, prep.gt_sub,
+                          [{"thr": thr, "occ_snap": occ_snap}], deltas)[0]
+    return score_grid(model.target, outs, prep.ray_axis, prep.gt_sub, list(settings), deltas)
 
 
 def evaluate_outputs(target: str, outputs: dict, gt: list[RayHits], ray_axis: np.ndarray, ray_index: np.ndarray,
@@ -192,17 +288,12 @@ def evaluate_outputs(target: str, outputs: dict, gt: list[RayHits], ray_axis: np
     """Decode the outputs of the given rays and evaluate them against ``gt`` (the three axes, all rays).
 
     ``ray_axis`` and ``ray_index`` (R,) say which ray each output row is. Returns three ``evaluate_axis``
-    dicts (x, y, z). Used by ``evaluate_shape`` and, with perfect outputs, by the tests.
+    dicts (x, y, z). Used by the tests with perfect outputs.
     """
     ray_axis = np.asarray(ray_axis)
     ray_index = np.asarray(ray_index)
-    dec = outputs_to_rayhits(target, outputs, ray_axis, thr, occ_snap)
-    results = []
-    for a in range(3):
-        rows = np.flatnonzero(ray_axis == a)
-        gt_a = subset_rays(gt[a], ray_index[rows])
-        results.append(evaluate_axis(gt_a, dec[a], a, tuple(deltas), H))
-    return results
+    gt_sub = [subset_rays(gt[a], ray_index[np.flatnonzero(ray_axis == a)]) for a in range(3)]
+    return score_grid(target, outputs, ray_axis, gt_sub, [{"thr": thr, "occ_snap": occ_snap}], deltas)[0]
 
 
 # ---------------------------------------------------------------- aggregation (reimplements gate_ceilings)
@@ -323,22 +414,58 @@ def to_markdown(summary: dict, deltas=EVAL_DELTAS, title: str = "Ray-space evalu
 # ---------------------------------------------------------------- validation metric
 
 
+def setting_name(st: dict) -> str:
+    if "occ_snap" in st:
+        return "literal" if st["occ_snap"] is None else f"occ_snap={st['occ_snap']:g}"
+    if "thr" in st:
+        return f"thr={st['thr']:g}"
+    return "default"
+
+
+def decoding_grid(target: str) -> list[dict]:
+    """The decoding settings evaluated at every validation of ``target`` (one network pass serves all)."""
+    if target in TARGET_K or target == "binary_128":
+        return [{"thr": t} for t in MASK_THRESHOLDS]
+    if target == "occfrac_128":
+        return [{"occ_snap": s} for s in OCC_SNAP_GRID]
+    if target == "tsdf_128":
+        return [{}]
+    raise ValueError(f"unknown target {target!r}")
+
+
+def grid_summaries(model, items: list[Prepared], settings: list[dict], device=None,
+                   root: Path = DATA_ROOT, deltas=EVAL_DELTAS) -> list[dict]:
+    """One ``aggregate`` summary per decoding setting over the prepared shapes (one network pass per shape)."""
+    per: list[list[dict]] = [[] for _ in settings]
+    for prep in items:
+        outs = run_decoder(model, prep, device, EVAL_CHUNK_RAYS, Path(root))
+        grid = score_grid(model.target, outs, prep.ray_axis, prep.gt_sub, settings, deltas)
+        for k, res in enumerate(grid):
+            per[k].extend(res)
+    summaries = []
+    for st, res in zip(settings, per):
+        summary, _md = aggregate(res, deltas)
+        summary["setting"] = dict(st)
+        summary["setting_name"] = setting_name(st)
+        summary["n_shapes"] = len(items)
+        summaries.append(summary)
+    return summaries
+
+
 def val_metric(model, n_shapes: int = 200, n_rays: int = 4096, split: str = "val", thr: float = EVAL_THR,
-               device=None, root: Path = DATA_ROOT, occ_snap: float | None = None) -> dict:
+               device=None, root: Path = DATA_ROOT, occ_snap: float | None = None,
+               settings: list[dict] | None = None):
     """F1 at delta 0.002 and the thin-recall summary on the first ``n_shapes`` shapes of ``val.lst``.
 
-    The rays are the fixed validation rays of ``fixed_val_rays`` (``n_rays`` per shape). Returns the
-    summary of ``aggregate`` (key ``deltas['0.002']['f1']`` is the metric).
+    The rays are the fixed validation rays (``n_rays`` per shape), prepared once and cached. With
+    ``settings=None`` the single setting ``{thr, occ_snap}`` is used and one summary is returned (metric:
+    ``deltas['0.002']['f1']``). With a list of settings, one summary per setting, in order.
     """
     ids = shape_ids(split, Path(root))[:n_shapes]
-    results: list[dict] = []
-    for i, sid in enumerate(ids):
-        ray_axis, ray_index, _uv = fixed_val_rays(i, n=n_rays, split=split, root=Path(root))
-        results.extend(evaluate_shape(model, sid, split, rays=(ray_axis, ray_index), thr=thr, device=device,
-                                      root=Path(root), occ_snap=occ_snap))
-    summary, _md = aggregate(results)
-    summary["n_shapes"] = len(ids)
-    return summary
+    items = [prepare_fixed(split, i, n_rays, Path(root)) for i in range(len(ids))]
+    if settings is None:
+        return grid_summaries(model, items, [{"thr": thr, "occ_snap": occ_snap}], device, Path(root))[0]
+    return grid_summaries(model, items, list(settings), device, Path(root))
 
 
 def median_seconds(fn, repeats: int = 3) -> float:

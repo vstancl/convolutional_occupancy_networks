@@ -1,0 +1,22 @@
+# Shared defaults of the h5 training runs (H5-4). A target file overrides these keys; unknown keys are errors.
+target: null           # hits_8, hits_16, hits_8_plane, occfrac_128, tsdf_128, binary_128
+model: null            # overrides of H5RayModel's cfg (hidden, dilations); null = the defaults of models.py
+lr: 0.0001             # Adam learning rate
+batch_size: 32         # shapes per iteration (one sample per shape)
+n_rays: 512            # rays per sample
+n_points: 10000        # encoder points per sample
+noise: 0.001           # Gaussian noise on the points
+seed: 0                # data order, ray and point sampling, initial weights, train subset
+max_it: 100000         # total iterations (--max-it overrides)
+num_workers: 4         # DataLoader workers
+log_every: 50          # iterations between log.jsonl records
+val_every: 5000        # iterations between validations (a validation also runs at max_it)
+val_shapes: 200        # validation shapes: first val_shapes of val.lst
+val_rays: 4096         # fixed rays per validation shape
+val_split: val
+train_split: train
+train_subset: null     # n shapes chosen with Generator(PCG64(seed)) from train.lst; null = all
+eval_on_train: false   # validate on the train subset with all rays (pilot overfit runs)
+lam: 1.0               # weight of the mask loss in hits_loss
+pos_weight: null       # per-slot pos_weight of the mask BCE; null = POS_WEIGHT_K2 (capped at 10 in losses.py)
+out_dir: null          # run directory (set in each target file)
