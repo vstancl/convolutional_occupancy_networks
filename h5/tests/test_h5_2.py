@@ -411,7 +411,8 @@ def _loss_of(model, batch, target):
         d = hits_loss(out["s_pred"], out["mask_logits"], batch["hits_s"], batch["hits_mask"], pw)
     else:
         d = dense_loss(out["logits"], batch["y"], batch["informative"], target)
-    return d["total"]
+    # occfrac_128: the soft-target BCE floor is removed, the criterion is on the excess (H5-3 step 0)
+    return d["excess"] if target == "occfrac_128" else d["total"]
 
 
 @pytest.mark.skipif(not HAS_GPU, reason="micro-overfit runs on GPU")
@@ -430,12 +431,13 @@ def test_f_micro_overfit(target):
         loss = _loss_of(model, batch, target)
         loss.backward()
         opt.step()
-        losses.append(float(loss))
+        losses.append(float(loss.detach()))
     with torch.no_grad():
         final = float(_loss_of(model, batch, target))
-    print(f"\nf {target}: initial loss {init:.6f}, last training-step loss {losses[-1]:.6f}, "
-          f"loss after {OVERFIT_STEPS} steps {final:.6f}, drop {(1 - final / init) * 100:.1f} %")
-    assert final < (1.0 - ATOL_OVERFIT_RATIO) * init, f"{target}: loss did not drop by more than 50 %"
+    name = "excess" if target == "occfrac_128" else "loss"
+    print(f"\nf {target}: initial {name} {init:.6f}, last training-step {name} {losses[-1]:.6f}, "
+          f"{name} after {OVERFIT_STEPS} steps {final:.6f}, drop {(1 - final / init) * 100:.1f} %")
+    assert final < (1.0 - ATOL_OVERFIT_RATIO) * init, f"{target}: {name} did not drop by more than 50 %"
 
 
 # ---------------------------------------------------------------- g. time and memory (GPU)

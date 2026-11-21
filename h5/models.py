@@ -270,13 +270,20 @@ class H5RayModel(nn.Module):
                                   dilations=tuple(cfg.get("dilations", TRUNK_DILATIONS)))
             self.head = HitsHead(self.K, hidden=hidden) if self.kind == "hits" else DenseHead(hidden=hidden)
 
+    def encode(self, inputs: torch.Tensor) -> dict:
+        """Plane features of one shape batch (run once per shape at evaluation)."""
+        return self.encoder(inputs)
+
     def forward(self, inputs: torch.Tensor, ray_axis: torch.Tensor, ray_origin_uv: torch.Tensor) -> dict:
-        planes = self.encoder(inputs)
+        return self.decode(self.encode(inputs), ray_axis, ray_origin_uv)
+
+    def decode(self, planes: dict, ray_axis: torch.Tensor, ray_origin_uv: torch.Tensor) -> dict:
+        """Head outputs for the rays given the plane features (any number of rays)."""
         if self.kind == "plane":
             c = perpendicular_plane_feature(ray_axis, ray_origin_uv, planes)
             s, mask = self.head(c)
             return {"s_pred": s, "mask_logits": mask}
-        pts = ray_sample_points(ray_axis, ray_origin_uv).to(inputs.device)
+        pts = ray_sample_points(ray_axis, ray_origin_uv).to(ray_origin_uv.device)
         feats = self.trunk(pts, planes)
         if self.kind == "hits":
             s, mask = self.head(feats)

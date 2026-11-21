@@ -89,7 +89,9 @@ def dense_loss(logits: torch.Tensor, y: torch.Tensor, informative: torch.Tensor,
     - ``tsdf_128``: L1 between ``2.5 h tanh(logits)`` and ``y``, in units of ``h``.
 
     A mean over an empty set is skipped: its 0.5 term is zero (see decision in ``h5/docs/h5-2.md``).
-    Returns ``{"total", "informative", "other"}``.
+    Returns ``{"total", "informative", "other", "entropy_floor", "excess"}``. ``entropy_floor`` is the
+    same 0.5/0.5 mean of the binary entropy of ``y`` (occfrac only; 0 for binary and tsdf), and
+    ``excess = total - entropy_floor``.
     """
     lg = _flat(logits, M)
     yy = _flat(y, M)
@@ -105,4 +107,15 @@ def dense_loss(logits: torch.Tensor, y: torch.Tensor, informative: torch.Tensor,
     l_inf = _masked_mean(cell, inf.to(cell.dtype))
     l_oth = _masked_mean(cell, (~inf).to(cell.dtype))
     total = 0.5 * l_inf + 0.5 * l_oth
-    return {"total": total, "informative": l_inf, "other": l_oth}
+    # Irreducible part of the loss: the binary entropy of a soft target is the BCE floor. Zero for the
+    # binary and tsdf targets, whose entropy floor is not defined here (their loss is not a BCE on soft y).
+    if target == "occfrac_128":
+        yc = yy.to(lg.dtype).clamp(0.0, 1.0)
+        ent = -(torch.xlogy(yc, yc) + torch.xlogy(1.0 - yc, 1.0 - yc))  # 0 log 0 = 0
+        e_inf = _masked_mean(ent, inf.to(ent.dtype))
+        e_oth = _masked_mean(ent, (~inf).to(ent.dtype))
+        floor = 0.5 * e_inf + 0.5 * e_oth
+    else:
+        floor = total.detach() * 0.0
+    return {"total": total, "informative": l_inf, "other": l_oth, "entropy_floor": floor,
+            "excess": total - floor}
