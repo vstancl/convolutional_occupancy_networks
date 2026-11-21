@@ -18,6 +18,17 @@ from csgbox.ceilings import RayHits  # noqa: E402
 AXIS_LETTERS: tuple[str, str, str] = ("x", "y", "z")
 
 
+def rayhits_from_arrays(arrays) -> RayHits:
+    """``RayHits`` of one ``dexio`` axis (``DexelFile.axes[letter]``), with float64 ``t`` and normals."""
+    normal = None if arrays.normal is None else arrays.normal.astype(np.float64)
+    return RayHits(
+        offsets=arrays.offsets.astype(np.int64),
+        t=arrays.t.astype(np.float64),
+        enter=arrays.enter.astype(bool),
+        normal=normal,
+    )
+
+
 def load_axis_rayhits(npz_path, axis: int) -> RayHits:
     """Hits of one ray axis of ``dexels_128.npz`` as a ``RayHits``.
 
@@ -27,14 +38,7 @@ def load_axis_rayhits(npz_path, axis: int) -> RayHits:
     if axis not in (0, 1, 2):
         raise ValueError(f"axis must be 0, 1 or 2, got {axis!r}")
     dex = dexio.read(npz_path)
-    arrays = dex.axes[AXIS_LETTERS[axis]]
-    normal = None if arrays.normal is None else arrays.normal.astype(np.float64)
-    return RayHits(
-        offsets=arrays.offsets.astype(np.int64),
-        t=arrays.t.astype(np.float64),
-        enter=arrays.enter.astype(bool),
-        normal=normal,
-    )
+    return rayhits_from_arrays(dex.axes[AXIS_LETTERS[axis]])
 
 
 def subset_rays(gt: RayHits, rays: np.ndarray) -> RayHits:
