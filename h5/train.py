@@ -29,6 +29,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 import yaml
 from torch.utils.data import DataLoader, Dataset
 
@@ -40,13 +41,13 @@ from _paths import add_external_paths  # noqa: E402
 
 add_external_paths()
 
-from data import DATA_ROOT, TARGETS, build_item, shape_ids  # noqa: E402
+from data import DATA_ROOT, POINT_TARGETS, TARGETS, build_item, build_point_item, shape_ids  # noqa: E402
 from eval_rays import decoding_grid, grid_summaries, prepare_all, prepare_fixed  # noqa: E402
 from losses import POS_WEIGHT_K2, dense_loss, hits_loss  # noqa: E402
-from models import H5RayModel  # noqa: E402
+from models import POINT_TARGET_NAMES, build_model  # noqa: E402
 
 CONFIG_DIR: Path = H5_DIR / "configs"
-ALL_TARGETS: tuple[str, ...] = tuple(TARGETS) + ("hits_8_plane",)
+ALL_TARGETS: tuple[str, ...] = tuple(TARGETS) + ("hits_8_plane",) + tuple(POINT_TARGETS)
 HITS_TARGETS: tuple[str, ...] = ("hits_8", "hits_16", "hits_8_plane")
 SELECTION_DELTA: str = "0.002"  # the validation metric is F1 at this delta
 
@@ -109,6 +110,8 @@ class TrainSamples(Dataset):
 
     def __getitem__(self, g: int) -> dict[str, np.ndarray]:
         rng = np.random.default_rng(np.random.SeedSequence([self.seed, 2, int(g)]))
+        if self.target in POINT_TARGET_NAMES:  # point decoders: query points, the n_rays setting is not used
+            return build_point_item(self.shape_of(g), rng, self.target, self.n_points, self.noise)
         return build_item(self.shape_of(g), rng, self.target, self.n_rays, self.n_points, self.noise)
 
 
@@ -120,6 +123,11 @@ def make_loader(cfg: dict, shapes: list[str], g_start: int, g_end: int) -> DataL
 
 
 def compute_loss(model, batch: dict, target: str, cfg: dict) -> dict:
+    if target in POINT_TARGET_NAMES:
+        # ConvONet's point loss: BCE with logits per query point, summed over points, mean over shapes
+        logits = model(batch["inputs"], batch["query"])["logits"]
+        bce = F.binary_cross_entropy_with_logits(logits, batch["occ"], reduction="none")
+        return {"total": bce.sum(-1).mean()}
     out = model(batch["inputs"], batch["ray_axis"], batch["ray_origin_uv"])
     if target in HITS_TARGETS:
         pw = cfg["pos_weight"] if cfg["pos_weight"] is not None else POS_WEIGHT_K2
@@ -175,7 +183,7 @@ def run(cfg: dict, resume: bool = False, device: torch.device | None = None) -> 
         raise FileExistsError(f"{out} already holds a run; use --resume or another out_dir")
 
     torch.manual_seed(int(cfg["seed"]))
-    model = H5RayModel(target, cfg.get("model") or None).to(device)
+    model = build_model(target, cfg.get("model") or None).to(device)
     opt = torch.optim.Adam(model.parameters(), lr=float(cfg["lr"]))
     iteration, best_f1, best_it = 0, -math.inf, None
     if resume:

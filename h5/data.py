@@ -257,3 +257,83 @@ class RayShapeDataset(Dataset):
     def __getitem__(self, index: int) -> dict[str, np.ndarray]:
         shape_dir = self.root / "csg" / self.ids[index]
         return build_item(shape_dir, self.rng_for(index), self.target, self.n_rays, self.n_points, self.noise)
+
+
+# ---------------------------------------------------------------------------------------------------
+# Point decoders (H5-5a): query points with occupancy, for ConvONet's point-wise decoder.
+# ---------------------------------------------------------------------------------------------------
+
+POINT_TARGETS: tuple[str, ...] = ("points_std", "points_strong")
+POINTS_FILE: str = "points.npz"  # uniform in the box, packed occupancies (ConvONet's points.npz)
+SURFACE_POINTS_FILE: str = "points_surface.npz"  # near the surface; sigma 0.002 and 0.01, half each
+N_QUERY: int = 2048  # query points per shape (ConvONet points_subsample)
+
+
+def read_occupancy_points(path: Path) -> tuple[np.ndarray, np.ndarray]:
+    """``points`` (P, 3) float32 and ``occ`` (P,) float32 in {0, 1} of a ConvONet-style point file.
+
+    The occupancies are packed bits (``np.packbits``, big bit order); unpacked as ConvONet does
+    (``np.unpackbits(...)[:P]``).
+    """
+    with np.load(path) as z:
+        points = z["points"].astype(np.float32)
+        occ = np.unpackbits(z["occupancies"])[: points.shape[0]].astype(np.float32)
+    return points, occ
+
+
+def build_point_item(shape_dir: Path, rng: np.random.Generator, target: str, n_points: int, noise: float,
+                     n_query: int = N_QUERY) -> dict[str, np.ndarray]:
+    """One point-decoder item: the encoder input (as ``build_item``) and ``n_query`` query points with occupancy.
+
+    ``points_std``: all query points from ``points.npz``. ``points_strong``: ``n_query // 2`` from
+    ``points.npz`` and ``n_query // 2`` from ``points_surface.npz`` (both sigma halves of the stored file).
+    ``from_surface`` (bool) marks the points drawn from the surface file (all False for ``points_std``).
+    """
+    if target not in POINT_TARGETS:
+        raise ValueError(f"target must be one of {POINT_TARGETS}, got {target!r}")
+    with np.load(Path(shape_dir) / POINTCLOUD_FILE) as pc:
+        cloud = pc["points"]
+        idx = rng.choice(cloud.shape[0], size=n_points, replace=False)
+        pts = cloud[idx].astype(np.float64)
+    pts = pts + rng.normal(0.0, noise, size=pts.shape)
+    uni_p, uni_o = read_occupancy_points(Path(shape_dir) / POINTS_FILE)
+    if target == "points_std":
+        idx = rng.choice(uni_p.shape[0], size=n_query, replace=False)
+        query, occ = uni_p[idx], uni_o[idx]
+        from_surface = np.zeros(n_query, dtype=bool)
+    else:
+        half = n_query // 2
+        i_u = rng.choice(uni_p.shape[0], size=n_query - half, replace=False)
+        sur_p, sur_o = read_occupancy_points(Path(shape_dir) / SURFACE_POINTS_FILE)
+        i_s = rng.choice(sur_p.shape[0], size=half, replace=False)
+        query = np.concatenate([uni_p[i_u], sur_p[i_s]])
+        occ = np.concatenate([uni_o[i_u], sur_o[i_s]])
+        from_surface = np.concatenate([np.zeros(n_query - half, dtype=bool), np.ones(half, dtype=bool)])
+    return {"inputs": pts.astype(np.float32), "query": query.astype(np.float32),
+            "occ": occ.astype(np.float32), "from_surface": from_surface}
+
+
+class PointShapeDataset(Dataset):
+    """One item per shape of ``csg/{split}.lst``, as ``RayShapeDataset``, for the point decoders.
+
+    Same encoder input and the same per-item seeding (``seed`` gives ``SeedSequence([seed, index])``).
+    Items: ``inputs`` (n_points, 3), ``query`` (n_query, 3), ``occ`` (n_query,), ``from_surface`` (n_query,) bool.
+    """
+
+    def __init__(self, split: str, target: str, n_points: int = 10000, noise: float = 0.001,
+                 seed: int | None = None, root: Path = DATA_ROOT):
+        if target not in POINT_TARGETS:
+            raise ValueError(f"target must be one of {POINT_TARGETS}, got {target!r}")
+        self.split, self.target, self.n_points, self.noise, self.seed = split, target, n_points, noise, seed
+        self.root = Path(root)
+        self.ids = shape_ids(split, self.root)
+
+    def __len__(self) -> int:
+        return len(self.ids)
+
+    def __getitem__(self, index: int) -> dict[str, np.ndarray]:
+        if self.seed is not None:
+            rng = np.random.default_rng(np.random.SeedSequence([self.seed, index]))
+        else:
+            rng = np.random.default_rng(np.random.SeedSequence([int(torch.initial_seed()) % (2**63), index]))
+        return build_point_item(self.root / "csg" / self.ids[index], rng, self.target, self.n_points, self.noise)

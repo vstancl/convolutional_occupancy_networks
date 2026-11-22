@@ -1,0 +1,3 @@
+# points_strong: H5-5a point decoder (ConvONet LocalDecoder), see default.yaml for the shared keys
+target: points_strong
+out_dir: ~/PhD/data/csgbox/h5_runs/points_strong

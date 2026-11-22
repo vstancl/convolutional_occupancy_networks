@@ -294,3 +294,51 @@ class H5RayModel(nn.Module):
 def n_params(module: nn.Module | None) -> int:
     """Number of parameters of a module (0 for None)."""
     return 0 if module is None else sum(p.numel() for p in module.parameters())
+
+
+# ---------------------------------------------------------------------------------------------------
+# Point decoders (H5-5a): the same encoder, and ConvONet's LocalDecoder as the point-wise decoder.
+# ---------------------------------------------------------------------------------------------------
+
+POINT_HIDDEN: int = 32  # shapenet_3plane.yaml decoder_kwargs.hidden_size; n_blocks is LocalDecoder's default (5)
+
+
+class PointModel(nn.Module):
+    """Encoder (as ``H5RayModel``) and ConvONet's ``LocalDecoder`` (simple_local, bilinear, padding 0.1).
+
+    ``forward(inputs, query)`` returns ``{"logits": (B, P)}``: the occupancy logit of each query point.
+    The decoder is ConvONet's own module, built with the settings of ``shapenet_3plane.yaml``.
+    """
+
+    kind = "points"
+
+    def __init__(self, target: str, cfg: dict | None = None):
+        super().__init__()
+        if target not in ("points_std", "points_strong"):
+            raise ValueError(f"not a point target: {target!r}")
+        self.target = target
+        self.encoder = _encoder()
+        self.decoder = LocalDecoder(dim=3, c_dim=ENC_C_DIM, hidden_size=POINT_HIDDEN, sample_mode=SAMPLE_MODE,
+                                    padding=PADDING)
+        self.trunk = None
+        self.head = self.decoder
+
+    def encode(self, inputs: torch.Tensor) -> dict:
+        return self.encoder(inputs)
+
+    def decode(self, planes: dict, query: torch.Tensor) -> torch.Tensor:
+        """Logits (B, P) of the query points (B, P, 3) given the plane features."""
+        return self.decoder(query.float(), planes)
+
+    def forward(self, inputs: torch.Tensor, query: torch.Tensor) -> dict:
+        return {"logits": self.decode(self.encode(inputs), query)}
+
+
+POINT_TARGET_NAMES: tuple[str, ...] = ("points_std", "points_strong")
+
+
+def build_model(target: str, cfg: dict | None = None) -> nn.Module:
+    """``PointModel`` for the point targets, ``H5RayModel`` for the others."""
+    if target in POINT_TARGET_NAMES:
+        return PointModel(target, cfg)
+    return H5RayModel(target, cfg)

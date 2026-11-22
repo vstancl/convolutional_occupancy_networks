@@ -7,7 +7,7 @@ n_rays: 512            # rays per sample
 n_points: 10000        # encoder points per sample
 noise: 0.001           # Gaussian noise on the points
 seed: 0                # data order, ray and point sampling, initial weights, train subset
-max_it: 100000         # total iterations (--max-it overrides)
+max_it: 120000         # total iterations (--max-it overrides)
 num_workers: 4         # DataLoader workers
 log_every: 50          # iterations between log.jsonl records
 val_every: 5000        # iterations between validations (a validation also runs at max_it)

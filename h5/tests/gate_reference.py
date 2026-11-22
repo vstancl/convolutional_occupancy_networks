@@ -44,7 +44,7 @@ def main(argv: list[str]) -> int:
     from csgbox.grid import cell_size
     from csgbox.tree import from_json
 
-    reps = ("hits_8", "hits_16", "occfrac_128", "tsdf_128", "binary_128")
+    reps = ("hits_8", "hits_16", "occfrac_128", "tsdf_128", "binary_128", "points_512")
     h = cell_size(GEN_CHECK_N)
     deltas = (GATE_HIT_DELTA, h / 2.0)
     results = [process_shape(str(s)) for s in shapes]

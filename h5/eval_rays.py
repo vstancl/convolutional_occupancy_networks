@@ -50,6 +50,8 @@ from csgbox.thin import CLASSES  # noqa: E402
 from csgbox.tree import from_json  # noqa: E402
 
 from data import DATA_ROOT, N_AXIS, POINTCLOUD_FILE, fixed_val_rays, ray_fields, shape_ids  # noqa: E402
+from eval_points import ray_geometry, ray_protocol, network_prob_fn  # noqa: E402
+from models import POINT_TARGET_NAMES  # noqa: E402
 from rays import subset_rays  # noqa: E402
 from slots import decode_slots  # noqa: E402
 from to_hits import decode_binary_array  # noqa: E402
@@ -73,6 +75,7 @@ EVAL_CHUNK_RAYS: int = 8192
 OCC_SNAP_RECOMMENDED: float = 1e-5
 MASK_THRESHOLDS: tuple[float, ...] = (0.3, 0.4, 0.5, 0.6, 0.7)  # decoding grid of hits and binary targets
 OCC_SNAP_GRID: tuple[float, ...] = (1e-3, 1e-2, 0.03, 0.1)  # decoding grid of occfrac_128
+POINT_ISO_GRID: tuple[float, ...] = (0.2, 0.5)  # iso of the point decoders (ray protocol, N = 512)
 TARGET_K: dict[str, int] = {"hits_8": 2, "hits_16": 4, "hits_8_plane": 2}  # K per hits target
 N_ALL: int = 3 * N_AXIS
 
@@ -276,6 +279,10 @@ def evaluate_shape(model, shape_id: str, split: str, rays="all", thr: float = EV
     else:
         ray_axis, ray_index, uv = _rays_of(rays)
         prep = _prepare(shape_id, ray_axis, ray_index, uv, Path(root))
+    if getattr(model, "kind", None) == "points":
+        grid_settings = [{"iso": 0.5}] if settings is None else list(settings)
+        res = score_points(model, prep, grid_settings, device or next(model.parameters()).device, Path(root), deltas)
+        return res[0] if settings is None else res
     outs = run_decoder(model, prep, device, chunk_rays, Path(root))
     if settings is None:
         return score_grid(model.target, outs, prep.ray_axis, prep.gt_sub,
@@ -415,6 +422,8 @@ def to_markdown(summary: dict, deltas=EVAL_DELTAS, title: str = "Ray-space evalu
 
 
 def setting_name(st: dict) -> str:
+    if "iso" in st:
+        return f"iso={st['iso']:g}"
     if "occ_snap" in st:
         return "literal" if st["occ_snap"] is None else f"occ_snap={st['occ_snap']:g}"
     if "thr" in st:
@@ -430,16 +439,46 @@ def decoding_grid(target: str) -> list[dict]:
         return [{"occ_snap": s} for s in OCC_SNAP_GRID]
     if target == "tsdf_128":
         return [{}]
+    if target in POINT_TARGET_NAMES:
+        return [{"iso": x} for x in POINT_ISO_GRID]
     raise ValueError(f"unknown target {target!r}")
+
+
+def point_hits(model, prep: Prepared, isos: list[float], device, root: Path = DATA_ROOT) -> list[list[RayHits]]:
+    """Ray protocol of a point decoder on the rays of ``prep``: per iso, the three axes' ``RayHits``.
+
+    The encoder runs once; the sampling is shared by the isos (``eval_points.ray_protocol``).
+    """
+    inputs = torch.as_tensor(shape_points(prep.shape_id, Path(root)), device=device)[None]
+    model.eval()
+    with deterministic_kernels():
+        with torch.no_grad():
+            planes = model.encode(inputs)
+        origins, dirs = ray_geometry(prep.ray_axis, prep.ray_index)
+        decs = ray_protocol(network_prob_fn(model, planes), origins, dirs, list(isos), device=device)
+    rows = [np.flatnonzero(prep.ray_axis == a) for a in range(3)]
+    return [[subset_rays(dec, rows[a]) for a in range(3)] for dec in decs]
+
+
+def score_points(model, prep: Prepared, settings: list[dict], device, root: Path = DATA_ROOT,
+                 deltas=EVAL_DELTAS) -> list[list[dict]]:
+    """``evaluate_axis`` dicts of a point decoder, one list of three per iso setting."""
+    per_iso = point_hits(model, prep, [float(s["iso"]) for s in settings], device, root)
+    return [[evaluate_axis(prep.gt_sub[a], hits[a], a, tuple(deltas), H) for a in range(3)] for hits in per_iso]
 
 
 def grid_summaries(model, items: list[Prepared], settings: list[dict], device=None,
                    root: Path = DATA_ROOT, deltas=EVAL_DELTAS) -> list[dict]:
     """One ``aggregate`` summary per decoding setting over the prepared shapes (one network pass per shape)."""
     per: list[list[dict]] = [[] for _ in settings]
+    if device is None:
+        device = next(model.parameters()).device
     for prep in items:
-        outs = run_decoder(model, prep, device, EVAL_CHUNK_RAYS, Path(root))
-        grid = score_grid(model.target, outs, prep.ray_axis, prep.gt_sub, settings, deltas)
+        if getattr(model, "kind", None) == "points":
+            grid = score_points(model, prep, settings, device, Path(root), deltas)
+        else:
+            outs = run_decoder(model, prep, device, EVAL_CHUNK_RAYS, Path(root))
+            grid = score_grid(model.target, outs, prep.ray_axis, prep.gt_sub, settings, deltas)
         for k, res in enumerate(grid):
             per[k].extend(res)
     summaries = []
