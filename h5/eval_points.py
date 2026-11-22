@@ -76,15 +76,15 @@ def network_prob_fn(model, planes: dict) -> ProbFn:
 
 
 def _sample_probs(prob_fn: ProbFn, origins: np.ndarray, dirs: np.ndarray, n: int, dtype: torch.dtype,
-                  device: torch.device) -> torch.Tensor:
+                  device: torch.device, chunk: int = RAY_CHUNK) -> torch.Tensor:
     """Probabilities (R, n) float32 at the N uniform samples of every ray."""
     R = origins.shape[0]
     h = (BOX_HI - BOX_LO) / n
     z = torch.as_tensor(BOX_LO + (np.arange(n, dtype=np.float64) + 0.5) * h, dtype=dtype, device=device)
     probs = torch.empty((R, n), dtype=torch.float32, device=device)
     with torch.no_grad():
-        for c0 in range(0, R, RAY_CHUNK):
-            c1 = min(c0 + RAY_CHUNK, R)
+        for c0 in range(0, R, chunk):
+            c1 = min(c0 + chunk, R)
             o = torch.as_tensor(origins[c0:c1], dtype=dtype, device=device)
             d = torch.as_tensor(dirs[c0:c1], dtype=dtype, device=device)
             pts = o[:, None, :] + z[None, :, None] * d[:, None, :]  # (c, n, 3)
@@ -142,8 +142,8 @@ def _decode_iso(probs: torch.Tensor, prob_fn: ProbFn, origins: np.ndarray, dirs:
 
 def ray_protocol(prob_fn: ProbFn, origins: np.ndarray, dirs: np.ndarray, isos: list[float], n: int = PROTOCOL_N,
                  bisect: int = BISECT_STEPS, dtype: torch.dtype = torch.float32,
-                 device: torch.device | None = None) -> list[RayHits]:
+                 device: torch.device | None = None, chunk: int = RAY_CHUNK) -> list[RayHits]:
     """One ``RayHits`` (all rays, input order) per iso value, from one sampling pass."""
     device = device or torch.device("cpu")
-    probs = _sample_probs(prob_fn, origins, dirs, n, dtype, device)
+    probs = _sample_probs(prob_fn, origins, dirs, n, dtype, device, chunk)
     return [_decode_iso(probs, prob_fn, origins, dirs, iso, n, dtype, device, bisect) for iso in isos]

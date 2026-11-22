@@ -262,8 +262,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--resume", action="store_true")
     p.add_argument("--max-it", type=int, default=None)
     p.add_argument("--out-dir", type=str, default=None)
+    p.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
+                   help="override a config key (value parsed as YAML), repeatable")
     args = p.parse_args(argv)
     overrides = {}
+    for item in args.set:
+        key, _, value = item.partition("=")
+        if not _ or not key:
+            raise SystemExit(f"--set expects KEY=VALUE, got {item!r}")
+        overrides[key] = yaml.safe_load(value)
     if args.max_it is not None:
         overrides["max_it"] = args.max_it
     if args.out_dir is not None:
