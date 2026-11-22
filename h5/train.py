@@ -112,7 +112,9 @@ class TrainSamples(Dataset):
         rng = np.random.default_rng(np.random.SeedSequence([self.seed, 2, int(g)]))
         if self.target in POINT_TARGET_NAMES:  # point decoders: query points, the n_rays setting is not used
             return build_point_item(self.shape_of(g), rng, self.target, self.n_points, self.noise)
-        return build_item(self.shape_of(g), rng, self.target, self.n_rays, self.n_points, self.noise)
+        # hits_8_plane has the hits_8 targets (its head differs, not its data)
+        data_target = "hits_8" if self.target == "hits_8_plane" else self.target
+        return build_item(self.shape_of(g), rng, data_target, self.n_rays, self.n_points, self.noise)
 
 
 def make_loader(cfg: dict, shapes: list[str], g_start: int, g_end: int) -> DataLoader:

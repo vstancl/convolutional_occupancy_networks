@@ -4,8 +4,8 @@
 #   cd ~/PhD/convonet && h5/scripts/pilot.sh            # full pilot, runs in ~/PhD/runs/h5_pilot
 #   cd ~/PhD/convonet && h5/scripts/pilot.sh --dry-run  # the whole chain with small numbers, in a scratch directory
 #
-# Runs, in order: P1_hits_8, P1_occfrac_128 (train subset, eval on it); P2_hits_8, P2_occfrac_128,
-# P2_points_strong (full train). Each run resumes from model_last.pt if it exists. The chain stops at the first
+# Runs, in order: P1_hits_8, P1_occfrac_128 (train subset, eval on it); P2_hits_8, P2_hits_8_plane,
+# P2_occfrac_128, P2_points_strong (full train). Each run resumes from model_last.pt if it exists. The chain stops at the first
 # failure (set -e). After P2: evaluation of the checkpoints on the validation shapes (all rays), the P2 decoding
 # timing, and the report. Everything is logged to ROOT/chain.log.
 set -euo pipefail
@@ -54,6 +54,7 @@ log "PILOT CHAIN root=$ROOT dry=${1:-no}"
 run_train P1_hits_8 hits_8 "$P1_MAX" "$P1_VAL" --set train_subset="$SUBSET" --set eval_on_train=true
 run_train P1_occfrac_128 occfrac_128 "$P1_MAX" "$P1_VAL" --set train_subset="$SUBSET" --set eval_on_train=true
 run_train P2_hits_8 hits_8 "$P2_MAX" "$P2_VAL"
+run_train P2_hits_8_plane hits_8_plane "$P2_MAX" "$P2_VAL"
 run_train P2_occfrac_128 occfrac_128 "$P2_MAX" "$P2_VAL"
 run_train P2_points_strong points_strong "$P2_MAX" "$P2_VAL"
 
@@ -61,8 +62,9 @@ log "START eval (checkpoints $ITS, $EVAL_SHAPES val shapes, all rays)"
 "$PY" "$SCRIPTS/pilot_report.py" eval --root "$ROOT" --its "$ITS" --n-val-shapes "$EVAL_SHAPES" 2>&1 | tee -a "$LOG"
 log "END eval"
 
-log "START timing of the P2 checkpoints at $LAST (hits_8_plane and occfrac_128 untrained)"
+log "START timing of the P2 checkpoints at $LAST (occfrac_128 untrained)"
 "$PY" "$SCRIPTS/time_decode.py" --ckpt hits_8="$ROOT/P2_hits_8/model_it$LAST.pt" \
+    --ckpt hits_8_plane="$ROOT/P2_hits_8_plane/model_it$LAST.pt" \
     --ckpt points_strong="$ROOT/P2_points_strong/model_it$LAST.pt" \
     --n-shapes "$TIME_SHAPES" --tag p2 --out-dir "$ROOT/timing" 2>&1 | tee -a "$LOG"
 log "END timing"

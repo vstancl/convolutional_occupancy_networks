@@ -18,8 +18,9 @@ The decision rule, in this order (first match wins):
 3. CONTINUE if the P2 gap at the last iteration >= 0.05 and >= the P2 gap at the previous iteration;
 4. UNCLEAR otherwise (extend hits_8 and occfrac_128 to 60k).
 
-The cost rule is separate: PASS if hits_8 or hits_8_plane is at least 10 times faster than points_strong at
-N = 512 (total per shape, from the P0 timing of the pilot), else REPORT ONLY.
+Speed condition only (not part of the decision): PASS if hits_8 or hits_8_plane is at least 10 times faster
+than points_strong at N = 512 (total per shape, trained timings), else REPORT ONLY. A cost indication (speed ratio
+and recall at L/h >= 0.25 against points N = 512) is also reported; it is not a decision either.
 
 The P1 gap is M(hits_8) - M(occfrac_128) on the train subset (final checkpoint, all rays), at the selected
 setting of each run. The P2 gap is the same on the validation shapes (all rays).
@@ -57,7 +58,8 @@ from eval_rays import (  # noqa: E402
 )
 from models import build_model  # noqa: E402
 
-P2_RUNS: dict[str, str] = {"hits_8": "hits_8", "occfrac_128": "occfrac_128", "points_strong": "points_strong"}
+P2_RUNS: dict[str, str] = {"hits_8": "hits_8", "hits_8_plane": "hits_8_plane", "occfrac_128": "occfrac_128",
+                           "points_strong": "points_strong"}
 DELTA: str = str(GATE_HIT_DELTA)
 H = cell_size(GEN_CHECK_N)
 N_SMALL = sum(1 for b in GATE_BIN_EDGES[1:] if b <= 1.0)  # bins with L/h < 1
@@ -179,8 +181,16 @@ def run_report(root: Path, its: list[int], p1_it: int, out: Path) -> dict:
         cost.update({"points_N512_total_s": n512, "hits_8_total_s": by["hits_8"]["total"],
                      "hits_8_plane_total_s": by["hits_8_plane"]["total"], "ratio_hits_8": ratio_hits,
                      "ratio_hits_8_plane": ratio_plane,
-                     "hits_8_plane_untrained": "hits_8_plane" in timing.get("untrained_methods", []),
+                     "untrained_methods": timing.get("untrained_methods", []),
                      "verdict": "PASS" if max(ratio_hits, ratio_plane) >= THRESHOLDS["cost_ratio"] else "REPORT ONLY"})
+    # indication only (not a decision): speed ratio and recall gap at the last iteration, trained timing
+    indication = {}
+    last_it = its[-1]
+    for m in ("hits_8", "hits_8_plane"):
+        rec_m = M_bins(rows[(m, last_it)]["summary"], [2, 3, 4, 5])
+        rec_p = M_bins(rows[("points_strong", last_it)]["summary"], [2, 3, 4, 5])
+        indication[m] = {"speed_ratio": (cost["points_N512_total_s"] / cost[f"{m}_total_s"]) if cost["available"] else None,
+                         "recall_ge_0_25": rec_m, "points_recall_ge_0_25": rec_p, "recall_difference": rec_m - rec_p}
     doc = {"its": its, "p1_it": p1_it, "P1": p1,
            "P2_gap": {str(it): gaps[it] for it in its},
            "point_check": point_check,
@@ -190,16 +200,20 @@ def run_report(root: Path, its: list[int], p1_it: int, out: Path) -> dict:
            "ceiling_hits_8_M": ceil["hits_8"]["deltas"][DELTA]["walls_gaps_pooled_L_lt_1"],
            "ceiling_occfrac_128_M": ceil["occfrac_128"]["deltas"][DELTA]["walls_gaps_pooled_L_lt_1"],
            "ceiling_occ_snap": ceil["occ_snap"],
-           "verdict": code, "verdict_reason": why, "cost": cost}
+           "verdict": code, "verdict_reason": why, "cost": cost, "cost_indication": indication}
     out.mkdir(parents=True, exist_ok=True)
     (out / "report.json").write_text(json.dumps(doc, indent=1, default=float), encoding="utf-8")
     (out / "report.md").write_text(to_markdown(doc, rows, p1, ceil), encoding="utf-8")
     print(f"VERDICT: {code}  ({why})")
+    for m, v in indication.items():
+        print(f"indication {m}: speed ratio {v['speed_ratio'] if v['speed_ratio'] is None else round(v['speed_ratio'], 2)}, "
+              f"recall (L/h >= 0.25) {v['recall_ge_0_25']:.3f} vs points N=512 {v['points_recall_ge_0_25']:.3f} "
+              f"(difference {v['recall_difference']:.3f})")
     print(f"point check {point_check:.4f}; P1 gap {p1['gap']:.4f}; P2 gaps " +
           ", ".join(f"{it}: {gaps[it]:.4f}" for it in its))
     if cost["available"]:
-        print(f"cost: hits_8 {cost['ratio_hits_8']:.2f}x, hits_8_plane {cost['ratio_hits_8_plane']:.2f}x faster than "
-              f"points N=512 -> {cost['verdict']}")
+        print(f"speed condition only: hits_8 {cost['ratio_hits_8']:.2f}x, hits_8_plane {cost['ratio_hits_8_plane']:.2f}x "
+              f"faster than points N=512 -> {cost['verdict']}")
     else:
         print("cost: timing not available")
     return doc
@@ -218,16 +232,22 @@ def to_markdown(doc: dict, rows: dict, p1: dict, ceil: dict) -> str:
          f"M(occfrac_128) {p1['occfrac_128']['M']:.3f} = **{p1['gap']:.3f}** (STOP needs <= {THRESHOLDS['stop_gap']}).",
          "- P2 gap (validation, all rays): " + ", ".join(f"it {it}: **{doc['P2_gap'][str(it)]:.3f}**" for it in doc["its"])
          + f" (CONTINUE needs >= {THRESHOLDS['continue_gap']} at the last iteration, and >= the previous one).",
-         f"- Cost: **{doc['cost'].get('verdict', 'timing not available')}**"
-         + (f" (points N=512 / hits_8 = {doc['cost']['ratio_hits_8']:.2f}; points N=512 / hits_8_plane = "
-            f"{doc['cost']['ratio_hits_8_plane']:.2f}"
-            f"{' (hits_8_plane untrained)' if doc['cost'].get('hits_8_plane_untrained') else ''}; "
-            f"PASS needs >= {THRESHOLDS['cost_ratio']:g} for hits_8 or hits_8_plane)"
-            if doc["cost"].get("available") else ""), "",
+         f"- Speed condition only: **{doc['cost'].get('verdict', 'timing not available')}** (points N=512 / hits_8 = "
+         + (f"{doc['cost']['ratio_hits_8']:.2f}; points N=512 / hits_8_plane = {doc['cost']['ratio_hits_8_plane']:.2f}; "
+            f"PASS needs >= {THRESHOLDS['cost_ratio']:g} for hits_8 or hits_8_plane, trained timings)"
+            if doc["cost"].get("available") else "n/a)"), "",
          "## Selected decoding settings", "", "| run | iteration | setting |", "|---|---|---|"]
     for key, name in doc["selected"].items():
         run, it = key.split("@")
         L.append(f"| {run} | {it} | {name} |")
+    L += ["## Cost indication (not a decision)", "",
+          "Indication: the full criterion needs the point recall at N < 512. Trained timings at 20k; recall of walls "
+          "and gaps (delta 0.002, validation, all rays) pooled over L/h >= 0.25, against points_strong N = 512 at the "
+          "same iteration.", "",
+          "| method | speed ratio points N=512 / method | recall L/h >= 0.25 | points N=512 recall L/h >= 0.25 | difference |",
+          "|---|---|---|---|---|"]
+    L += [f"| {m} | {_f(v['speed_ratio'], 3)} | {_f(v['recall_ge_0_25'], 3)} | {_f(v['points_recall_ge_0_25'], 3)} | "
+          f"{_f(v['recall_difference'], 3)} |" for m, v in doc["cost_indication"].items()] + [""]
     L += ["", "## Metric M (walls + gaps recall, delta 0.002, L/h < 1) and F1 of all hits", "",
           "| run | iteration | M | F1 |", "|---|---|---|---|"]
     for key in doc["M"]:
