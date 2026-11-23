@@ -45,7 +45,7 @@ from _paths import add_external_paths  # noqa: E402
 
 add_external_paths()
 
-from csgbox.ceilings import decode_hits, decode_occfrac, evaluate_axis, occ_fraction  # noqa: E402
+from csgbox.ceilings import decode_hits, decode_occfrac, occ_fraction  # noqa: E402
 from csgbox.constants import GATE_BIN_EDGES, GATE_HIT_DELTA, GEN_CHECK_N  # noqa: E402
 from csgbox.grid import cell_size  # noqa: E402
 
@@ -53,7 +53,10 @@ from data import DATA_ROOT, shape_ids  # noqa: E402
 from eval_rays import (  # noqa: E402
     EVAL_DELTAS,
     aggregate,
+    dec_gt_ratio,
+    evaluate_axis_diag,
     grid_summaries,
+    m_comparable,
     prepare_all,
 )
 from models import build_model  # noqa: E402
@@ -91,8 +94,9 @@ def run_eval(root: Path, its: list[int], n_val: int, device: torch.device) -> No
             doc = {"run": run, "iteration": it, "setting": setting, "setting_name": summary["setting_name"],
                    "n_shapes": len(ids), "summary": summary}
             (out / f"{run}_it{it}.json").write_text(json.dumps(doc, default=float), encoding="utf-8")
-            print(f"eval {run} it {it} {summary['setting_name']}: M "
-                  f"{M(summary):.4f}, F1 {summary['deltas'][DELTA]['f1']:.4f}", flush=True)
+            print(f"eval {run} it {it} {summary['setting_name']}: M {_m_str(summary)}, "
+                  f"precision {summary['deltas'][DELTA]['precision']:.4f}, decoded/GT {dec_gt_ratio(summary):.3f}, "
+                  f"F1 {summary['deltas'][DELTA]['f1']:.4f}", flush=True)
     # ceilings of hits_8 and occfrac_128 on the same shapes and rays; occfrac at the snap of the last checkpoint
     last = max(its)
     occ_setting = json.loads((root / "P2_occfrac_128" / f"model_it{last}.json").read_text(encoding="utf-8"))["setting"]
@@ -101,11 +105,11 @@ def run_eval(root: Path, its: list[int], n_val: int, device: torch.device) -> No
     for prep in items:
         for a in range(3):
             gt = prep.gt_sub[a]
-            ceil["hits_8"].append(evaluate_axis(gt, decode_hits(gt, 8), a, tuple(EVAL_DELTAS), H))
+            ceil["hits_8"].append(evaluate_axis_diag(gt, decode_hits(gt, 8), a, tuple(EVAL_DELTAS), H))
             f = occ_fraction(gt, 128).astype(np.float32)
             if snap is not None:
                 f = np.where(f < snap, 0.0, np.where(f > 1.0 - snap, 1.0, f)).astype(np.float32)
-            ceil["occfrac_128"].append(evaluate_axis(gt, decode_occfrac(f), a, tuple(EVAL_DELTAS), H))
+            ceil["occfrac_128"].append(evaluate_axis_diag(gt, decode_occfrac(f), a, tuple(EVAL_DELTAS), H))
     doc = {"occ_snap": snap, "n_shapes": len(ids),
            "hits_8": aggregate(ceil["hits_8"])[0], "occfrac_128": aggregate(ceil["occfrac_128"])[0]}
     (out / "ceilings.json").write_text(json.dumps(doc, default=float), encoding="utf-8")
@@ -117,6 +121,12 @@ def run_eval(root: Path, its: list[int], n_val: int, device: torch.device) -> No
 def M(summary: dict) -> float:
     """Recall of thin walls and gaps (c >= 0.5) at delta 0.002, pooled over L/h < 1."""
     return float(summary["deltas"][DELTA]["walls_gaps_pooled_L_lt_1"])
+
+
+def _m_str(summary: dict, digits: int = 4) -> str:
+    """M with the not-comparable mark when decoded/GT hits is outside the band (H5-6)."""
+    s = f"{M(summary):.{digits}f}"
+    return s if m_comparable(summary) else s + " (not comparable)"
 
 
 def M_bins(summary: dict, bins: list[int]) -> float:
@@ -139,8 +149,11 @@ def p1_values(root: Path, p1_it: int) -> dict:
         rec = [json.loads(x) for x in (root / f"P1_{t}" / "val.jsonl").read_text(encoding="utf-8").splitlines() if x]
         r = next(r for r in rec if r["iteration"] == p1_it)
         s = next(s for s in r["settings"] if s["setting_name"] == r["selected"])
-        out[t] = {"setting": r["selected"], "M": M(s), "F1": s["deltas"][DELTA]["f1"]}
+        out[t] = {"setting": r["selected"], "M": M(s), "F1": s["deltas"][DELTA]["f1"],
+                  "precision": s["deltas"][DELTA]["precision"], "dec_gt_ratio": dec_gt_ratio(s),
+                  "comparable": m_comparable(s)}
     out["gap"] = out["hits_8"]["M"] - out["occfrac_128"]["M"]
+    out["gap_comparable"] = out["hits_8"]["comparable"] and out["occfrac_128"]["comparable"]
     return out
 
 
@@ -196,6 +209,12 @@ def run_report(root: Path, its: list[int], p1_it: int, out: Path) -> dict:
            "point_check": point_check,
            "M": {f"{run}@{it}": M(rows[(run, it)]["summary"]) for run in P2_RUNS for it in its},
            "F1_all": {f"{run}@{it}": rows[(run, it)]["summary"]["deltas"][DELTA]["f1"] for run in P2_RUNS for it in its},
+           "precision": {f"{run}@{it}": rows[(run, it)]["summary"]["deltas"][DELTA]["precision"]
+                         for run in P2_RUNS for it in its},
+           "dec_gt_ratio": {f"{run}@{it}": dec_gt_ratio(rows[(run, it)]["summary"]) for run in P2_RUNS for it in its},
+           "not_comparable": [f"{run}@{it}" for run in P2_RUNS for it in its
+                              if not m_comparable(rows[(run, it)]["summary"])]
+                             + [f"P1_{t}" for t in ("hits_8", "occfrac_128") if not p1[t]["comparable"]],
            "selected": {f"{run}@{it}": rows[(run, it)]["setting_name"] for run in P2_RUNS for it in its},
            "ceiling_hits_8_M": ceil["hits_8"]["deltas"][DELTA]["walls_gaps_pooled_L_lt_1"],
            "ceiling_occfrac_128_M": ceil["occfrac_128"]["deltas"][DELTA]["walls_gaps_pooled_L_lt_1"],
@@ -205,6 +224,8 @@ def run_report(root: Path, its: list[int], p1_it: int, out: Path) -> dict:
     (out / "report.json").write_text(json.dumps(doc, indent=1, default=float), encoding="utf-8")
     (out / "report.md").write_text(to_markdown(doc, rows, p1, ceil), encoding="utf-8")
     print(f"VERDICT: {code}  ({why})")
+    if doc["not_comparable"]:
+        print(f"WARNING: M not comparable (decoded/GT outside [0.8, 1.25]) for: {', '.join(doc['not_comparable'])}")
     for m, v in indication.items():
         print(f"indication {m}: speed ratio {v['speed_ratio'] if v['speed_ratio'] is None else round(v['speed_ratio'], 2)}, "
               f"recall (L/h >= 0.25) {v['recall_ge_0_25']:.3f} vs points N=512 {v['points_recall_ge_0_25']:.3f} "
@@ -229,7 +250,9 @@ def to_markdown(doc: dict, rows: dict, p1: dict, ceil: dict) -> str:
          f"- Point check (points_strong at it {doc['its'][-1]}, recall of walls and gaps, L/h in [0.25, 1)): "
          f"**{doc['point_check']:.3f}** (REDESIGN ENCODER below {THRESHOLDS['redesign_encoder']}).",
          f"- P1 gap (train subset, all rays, final it {doc['p1_it']}): M(hits_8) {p1['hits_8']['M']:.3f} - "
-         f"M(occfrac_128) {p1['occfrac_128']['M']:.3f} = **{p1['gap']:.3f}** (STOP needs <= {THRESHOLDS['stop_gap']}).",
+         f"M(occfrac_128) {p1['occfrac_128']['M']:.3f} = **{p1['gap']:.3f}** (STOP needs <= {THRESHOLDS['stop_gap']})"
+         + ("" if p1["gap_comparable"] else " **— not comparable: decoded/GT outside [0.8, 1.25]**")
+         + f"; decoded/GT hits_8 {p1['hits_8']['dec_gt_ratio']:.3f}, occfrac_128 {p1['occfrac_128']['dec_gt_ratio']:.3f}.",
          "- P2 gap (validation, all rays): " + ", ".join(f"it {it}: **{doc['P2_gap'][str(it)]:.3f}**" for it in doc["its"])
          + f" (CONTINUE needs >= {THRESHOLDS['continue_gap']} at the last iteration, and >= the previous one).",
          f"- Speed condition only: **{doc['cost'].get('verdict', 'timing not available')}** (points N=512 / hits_8 = "
@@ -249,12 +272,16 @@ def to_markdown(doc: dict, rows: dict, p1: dict, ceil: dict) -> str:
     L += [f"| {m} | {_f(v['speed_ratio'], 3)} | {_f(v['recall_ge_0_25'], 3)} | {_f(v['points_recall_ge_0_25'], 3)} | "
           f"{_f(v['recall_difference'], 3)} |" for m, v in doc["cost_indication"].items()] + [""]
     L += ["", "## Metric M (walls + gaps recall, delta 0.002, L/h < 1) and F1 of all hits", "",
-          "| run | iteration | M | F1 |", "|---|---|---|---|"]
+          "M is marked not comparable when decoded/GT hits is outside [0.8, 1.25].", "",
+          "| run | iteration | M | precision | decoded/GT | F1 |", "|---|---|---|---|---|---|"]
     for key in doc["M"]:
         run, it = key.split("@")
-        L.append(f"| {run} | {it} | {_f(doc['M'][key])} | {_f(doc['F1_all'][key])} |")
+        mark = "" if key not in doc["not_comparable"] else " (not comparable)"
+        L.append(f"| {run} | {it} | {_f(doc['M'][key])}{mark} | {_f(doc['precision'][key])} | "
+                 f"{_f(doc['dec_gt_ratio'][key])} | {_f(doc['F1_all'][key])} |")
     L += ["", f"Ceilings on the same shapes and rays (occ_snap {doc['ceiling_occ_snap']}): "
-          f"hits_8 M {_f(doc['ceiling_hits_8_M'])}, occfrac_128 M {_f(doc['ceiling_occfrac_128_M'])}.", "",
+          f"hits_8 M {_m_str(ceil['hits_8'], 3)}, occfrac_128 M {_m_str(ceil['occfrac_128'], 3)}; "
+          f"decoded/GT hits_8 {_f(dec_gt_ratio(ceil['hits_8']))}, occfrac_128 {_f(dec_gt_ratio(ceil['occfrac_128']))}.", "",
           "## Recall of walls and gaps per L/h bin (delta 0.002, validation, all rays)", ""]
     for run in P2_RUNS:
         it = doc["its"][-1]
@@ -273,8 +300,8 @@ def to_markdown(doc: dict, rows: dict, p1: dict, ceil: dict) -> str:
               "| tangent chord | " + " | ".join(_f(x, 3) for x in rc[2]) + " |", ""]
     L += ["## P2 gap per iteration", "", "| iteration | M(hits_8) | M(occfrac_128) | gap |", "|---|---|---|---|"]
     for it in doc["its"]:
-        L.append(f"| {it} | {_f(doc['M'][f'hits_8@{it}'])} | {_f(doc['M'][f'occfrac_128@{it}'])} | "
-                 f"{_f(doc['P2_gap'][str(it)])} |")
+        L.append(f"| {it} | {_m_str(rows[('hits_8', it)]['summary'], 3)} | "
+                 f"{_m_str(rows[('occfrac_128', it)]['summary'], 3)} | {_f(doc['P2_gap'][str(it)])} |")
     L += ["", "## Verdict rule", "", "1. REDESIGN ENCODER if point check < 0.3; 2. STOP if P1 gap <= 0.02 and P2 gap "
           "(last) <= 0.02; 3. CONTINUE if P2 gap (last) >= 0.05 and >= P2 gap (previous); 4. UNCLEAR otherwise."]
     return "\n".join(L) + "\n"
