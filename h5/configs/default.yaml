@@ -2,6 +2,7 @@
 target: null           # hits_8, hits_16, hits_8_plane, occfrac_128, tsdf_128, binary_128
 model: null            # overrides of H5RayModel's cfg (hidden, dilations); null = the defaults of models.py
 lr: 0.0001             # Adam learning rate
+lr_steps: null         # [[iteration, lr], ...]: from that iteration (1-based, as logged) on the learning rate is lr; null = constant
 batch_size: 32         # shapes per iteration (one sample per shape)
 n_rays: 512            # rays per sample
 n_points: 10000        # encoder points per sample

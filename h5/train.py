@@ -69,7 +69,19 @@ def load_config(path: Path, overrides: dict | None = None) -> dict:
         if int(cfg[key]) <= 0:
             raise ValueError(f"{key} must be > 0")
     cfg["out_dir"] = str(Path(cfg["out_dir"]).expanduser())
+    for step in cfg["lr_steps"] or []:
+        if len(step) != 2 or int(step[0]) <= 0 or float(step[1]) <= 0:
+            raise ValueError(f"lr_steps entries are [iteration > 0, lr > 0], got {step!r}")
     return cfg
+
+
+def lr_at(base_lr: float, steps, k: int) -> float:
+    """Learning rate of iteration k (1-based, as logged): the lr of the last step with iteration <= k."""
+    lr = float(base_lr)
+    for it, new in sorted(steps or [], key=lambda s: int(s[0])):
+        if k >= int(it):
+            lr = float(new)
+    return lr
 
 
 def choose_train_shapes(cfg: dict) -> list[str]:
@@ -197,6 +209,9 @@ def run(cfg: dict, resume: bool = False, device: torch.device | None = None) -> 
         torch.set_rng_state(blob["rng_cpu"].cpu())
         if device.type == "cuda" and blob.get("rng_cuda") is not None:
             torch.cuda.set_rng_state(blob["rng_cuda"].cpu(), device)
+        # the config of this resume (the run's config.json is the first one; max_it or lr_steps may differ now)
+        (out / f"config_resumed_at_{iteration}.json").write_text(json.dumps(cfg, indent=1, default=str),
+                                                                encoding="utf-8")
     else:
         (out / "config.json").write_text(json.dumps(cfg, indent=1, default=str), encoding="utf-8")
         if cfg["eval_on_train"] or cfg["train_subset"] is not None:
@@ -214,6 +229,9 @@ def run(cfg: dict, resume: bool = False, device: torch.device | None = None) -> 
         torch.cuda.reset_peak_memory_stats(device)
     for batch in loader:
         batch = {k: v.to(device, non_blocking=True) for k, v in batch.items()}
+        lr_now = lr_at(cfg["lr"], cfg.get("lr_steps"), iteration + 1)  # from the iteration counter: resume-safe
+        for group in opt.param_groups:
+            group["lr"] = lr_now
         parts = compute_loss(model, batch, target, cfg)
         opt.zero_grad(set_to_none=True)
         parts["total"].backward()
@@ -224,7 +242,7 @@ def run(cfg: dict, resume: bool = False, device: torch.device | None = None) -> 
             if device.type == "cuda":
                 torch.cuda.synchronize(device)
             now = time.perf_counter()
-            record = {"iteration": iteration, "loss": float(parts["total"].detach()),
+            record = {"iteration": iteration, "loss": float(parts["total"].detach()), "lr": lr_now,
                       "parts": {k: float(v.detach()) for k, v in parts.items() if k != "total"},
                       "s_per_it": (now - window_t) / window_n,
                       "peak_gib": (torch.cuda.max_memory_allocated(device) / 2**30) if device.type == "cuda" else None}
