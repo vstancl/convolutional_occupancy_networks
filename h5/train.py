@@ -11,6 +11,10 @@ config keys in ``h5/docs/h5-4.md``). Nothing is random except through explicit s
   So a resumed run draws the same batches as an uninterrupted one, and the number of DataLoader workers
   does not change the data.
 
+Decoding setting of a validation (``_select``, H5-K1-1a): best F1 at delta 0.002 among the settings whose decoded/GT
+ratio is in ``RATIO_BAND``; if none is, the setting whose ratio is closest to the band. Each validation records the
+chosen setting, its ratio and whether it is in the band.
+
 Files in ``out_dir``: ``config.json``; ``log.jsonl`` (every ``log_every`` iterations: loss parts, s/it, peak
 GPU memory); ``val.jsonl`` (every validation: the summary of every decoding setting); ``model_last.pt`` (model,
 optimizer, iteration, best F1 and RNG state, written at every validation, used by ``--resume``);
@@ -42,7 +46,7 @@ from _paths import add_external_paths  # noqa: E402
 add_external_paths()
 
 from data import DATA_ROOT, POINT_TARGETS, TARGETS, build_item, build_point_item, shape_ids  # noqa: E402
-from eval_rays import decoding_grid, grid_summaries, prepare_all, prepare_fixed  # noqa: E402
+from eval_rays import RATIO_BAND, decoding_grid, dec_gt_ratio, grid_summaries, prepare_all, prepare_fixed  # noqa: E402
 from losses import POS_WEIGHT_K2, dense_loss, hits_loss  # noqa: E402
 from models import POINT_TARGET_NAMES, build_model  # noqa: E402
 
@@ -159,10 +163,38 @@ def _json_line(path: Path, record: dict) -> None:
         f.write(json.dumps(record, default=float) + "\n")
 
 
-def _select(summaries: list[dict]) -> int:
-    """Index of the setting with the best F1 at delta 0.002 (NaN counts as worst; ties go to the first)."""
-    f1 = [s["deltas"][SELECTION_DELTA]["f1"] for s in summaries]
-    return max(range(len(f1)), key=lambda k: -math.inf if (f1[k] != f1[k]) else f1[k])
+def _f1(summary: dict) -> float:
+    """F1 at delta 0.002 of a summary (NaN counts as -inf)."""
+    v = summary["deltas"][SELECTION_DELTA]["f1"]
+    return -math.inf if v != v else v
+
+
+def _band_distance(ratio: float) -> float:
+    """Distance of a decoded/GT ratio to ``RATIO_BAND``: 0 inside, distance to the nearer edge outside, inf if NaN."""
+    if ratio != ratio:
+        return math.inf
+    lo, hi = RATIO_BAND
+    if lo <= ratio <= hi:
+        return 0.0
+    return min(abs(ratio - lo), abs(ratio - hi))
+
+
+def _select(summaries: list[dict]) -> dict:
+    """Choice of the decoding setting (H5-K1-1a).
+
+    Among the settings whose decoded/GT ratio is in ``RATIO_BAND``, the one with the best F1 at delta 0.002. If no
+    setting is in the band, the one whose ratio is closest to the band (ties: higher F1). Remaining ties go to the
+    first setting. Returns ``{"index", "ratio", "in_band"}`` of the chosen setting.
+    """
+    ratios = [dec_gt_ratio(s) for s in summaries]
+    f1 = [_f1(s) for s in summaries]
+    dist = [_band_distance(r) for r in ratios]
+    in_band = [k for k in range(len(summaries)) if dist[k] == 0.0]
+    if in_band:
+        k = max(in_band, key=lambda j: f1[j])
+    else:
+        k = min(range(len(summaries)), key=lambda j: (dist[j], -f1[j]))
+    return {"index": k, "ratio": ratios[k], "in_band": dist[k] == 0.0}
 
 
 def validation(model, cfg: dict, device: torch.device) -> list[dict]:
@@ -251,17 +283,21 @@ def run(cfg: dict, resume: bool = False, device: torch.device | None = None) -> 
         if iteration % int(cfg["val_every"]) == 0 or iteration == max_it:
             t_val = time.perf_counter()
             summaries = validation(model, cfg, device)
-            sel = _select(summaries)
+            choice = _select(summaries)
+            sel = choice["index"]
             f1_all = [s["deltas"][SELECTION_DELTA]["f1"] for s in summaries]
             _json_line(val_path, {"iteration": iteration, "selected": summaries[sel]["setting_name"],
-                                  "selected_f1": f1_all[sel], "f1": f1_all, "settings": summaries,
+                                  "selected_f1": f1_all[sel], "selected_ratio": choice["ratio"],
+                                  "selected_in_band": choice["in_band"], "f1": f1_all, "settings": summaries,
                                   "val_seconds": time.perf_counter() - t_val})
             state = {"target": target, "state_dict": model.state_dict(), "iteration": iteration,
-                     "decoding": summaries[sel]["setting"], "f1": f1_all[sel]}
+                     "decoding": summaries[sel]["setting"], "f1": f1_all[sel], "ratio": choice["ratio"],
+                     "in_band": choice["in_band"]}
             torch.save({**state, "summary": summaries[sel]}, out / f"model_it{iteration}.pt")
             (out / f"model_it{iteration}.json").write_text(json.dumps(
                 {"iteration": iteration, "selected_setting": summaries[sel]["setting_name"],
-                 "setting": summaries[sel]["setting"], "f1": f1_all[sel], "summary": summaries[sel]},
+                 "setting": summaries[sel]["setting"], "f1": f1_all[sel], "ratio": choice["ratio"],
+                 "in_band": choice["in_band"], "summary": summaries[sel]},
                 indent=1, default=float), encoding="utf-8")
             if f1_all[sel] == f1_all[sel] and f1_all[sel] > best_f1:  # NaN never improves
                 best_f1, best_it = f1_all[sel], iteration

@@ -52,7 +52,7 @@ from _paths import add_external_paths  # noqa: E402
 
 add_external_paths()
 
-from data import DATA_ROOT  # noqa: E402
+from data import DATA_ROOT, shape_ids  # noqa: E402
 from eval_rays import (  # noqa: E402
     BIN_LABELS,
     EVAL_DELTAS,
@@ -88,14 +88,21 @@ def train_loss(run_dir: Path, it: int, val_every: int) -> float:
 
 # ---------------------------------------------------------------- stage eval
 
-def run_eval(root: Path, its: list[int], device: torch.device) -> None:
+def run_eval(root: Path, its: list[int], device: torch.device, runs_wanted: tuple[str, ...] = RUNS,
+             split: str | None = None, n_shapes: int | None = None) -> None:
+    """Evaluates the checkpoints of ``runs_wanted`` with all rays. Shapes: the training subset of the Q0 runs
+    (``split`` None), or the first ``n_shapes`` shapes of ``split`` (e.g. ``val`` for H5-K1-1)."""
     out = root / "eval"
     out.mkdir(parents=True, exist_ok=True)
-    runs = [r for r in RUNS if (root / r).is_dir()]
-    shapes = {run: json.loads((root / run / "train_subset.json").read_text(encoding="utf-8")) for run in runs}
-    if any(shapes[r] != shapes[runs[0]] for r in runs):
-        raise ValueError("the Q0 runs do not use the same training shapes")
-    items = [prepare_all(sid, DATA_ROOT) for sid in shapes[runs[0]]]
+    runs = [r for r in runs_wanted if (root / r).is_dir()]
+    if split is None:
+        shapes = {run: json.loads((root / run / "train_subset.json").read_text(encoding="utf-8")) for run in runs}
+        if any(shapes[r] != shapes[runs[0]] for r in runs):
+            raise ValueError("the Q0 runs do not use the same training shapes")
+        shape_list = shapes[runs[0]]
+    else:
+        shape_list = shape_ids(split, DATA_ROOT)[:n_shapes]
+    items = [prepare_all(sid, DATA_ROOT) for sid in shape_list]
     for run in runs:
         run_dir = root / run
         cfg = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
@@ -115,8 +122,8 @@ def run_eval(root: Path, its: list[int], device: torch.device) -> None:
             model.eval()
             summary = grid_summaries(model, items, [setting], device, DATA_ROOT)[0]  # deterministic forward inside
             doc = {"run": run, "iteration": it, "setting": setting, "setting_name": summary["setting_name"],
-                   "n_shapes": len(items), "train_loss": train_loss(run_dir, it, int(cfg["val_every"])),
-                   "summary": summary}
+                   "split": split or "train_subset", "n_shapes": len(items),
+                   "train_loss": train_loss(run_dir, it, int(cfg["val_every"])), "summary": summary}
             (out / f"{run}_it{it}.json").write_text(json.dumps(doc, default=float), encoding="utf-8")
             print(f"eval {run} it {it} {summary['setting_name']}: F1 {summary['deltas'][DK]['f1']:.4f}, "
                   f"ordinary recall {summary['diag']['ord_recall'][DK]:.3f}, "
@@ -348,9 +355,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--v2-final", type=int, default=60000, help="rule v2: the verdict iteration")
     p.add_argument("--lr-step", type=int, default=50000, help="the iteration of the learning-rate drop (descriptive)")
     p.add_argument("--out", type=Path, default=H5_DIR / "results" / "q0")
+    p.add_argument("--runs", type=lambda s: tuple(x for x in s.split(",") if x.strip()), default=RUNS,
+                   help="eval: comma-separated run directory names (default: the Q0 runs)")
+    p.add_argument("--split", type=str, default=None,
+                   help="eval: shape split to evaluate on (default: the training subset of the Q0 runs)")
+    p.add_argument("--n-shapes", type=int, default=None, help="eval with --split: the first n shapes of the split")
     args = p.parse_args(argv)
     if args.stage == "eval":
-        run_eval(args.root, args.its, torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        run_eval(args.root, args.its, torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+                 args.runs, args.split, args.n_shapes)
     else:
         run_report(args.root, args.its, args.final_it, args.prev_it, args.out, args.v2_final, args.lr_step)
     return 0
