@@ -313,8 +313,114 @@ def build_point_item(shape_dir: Path, rng: np.random.Generator, target: str, n_p
             "occ": occ.astype(np.float32), "from_surface": from_surface}
 
 
+# ---------------------------------------------------------------------------------------------------
+# Ray-interval query points (H5-K2-1a): query points for the point decoder from the GT intervals of rays.
+# ---------------------------------------------------------------------------------------------------
+
+RAYINT_TARGETS: tuple[str, ...] = ("points_rayint_a", "points_rayint_b")
+RAYINT_N_RAYS: int = 512  # sampled rays per item
+RAYINT_MIN_SEGMENT: float = 1e-9  # segments shorter than this are dropped
+
+
+def rayint_segments(axes, start_inside: tuple[np.ndarray, np.ndarray, np.ndarray],
+                    g: np.ndarray) -> dict[str, np.ndarray]:
+    """The segments of the rays ``g``: the box ``[BOX_LO, BOX_HI]`` cut at the hits ``t_0 < ... < t_{k-1}``.
+
+    Occupancy alternates from outside: the first segment of a ray is outside, then every hit toggles. This needs
+    ``start_inside == 0`` for every sampled ray, which is asserted (it holds in csgbox dataset v1). Segments
+    shorter than ``RAYINT_MIN_SEGMENT`` are dropped. Returns float64 ``start``, ``end``, bool ``occ`` and int64
+    ``row`` (the position of the ray in ``g``) per segment, rays in the order of ``g``.
+    """
+    ray_axis, ray_index, _uv = ray_fields(g)
+    starts, ends, occs, rows = [], [], [], []
+    for a in range(3):
+        sel = np.flatnonzero(ray_axis == a)
+        if not sel.size:
+            continue
+        r = ray_index[sel]
+        if np.any(start_inside[a][r] != 0):
+            raise AssertionError("a sampled ray has start_inside != 0; the alternation from outside does not hold")
+        sub = subset_rays(axes[a], r)
+        n_seg = np.diff(sub.offsets) + 1  # k hits cut the box into k + 1 segments
+        ray_of_seg = np.repeat(np.arange(sel.size), n_seg)
+        first_seg = np.concatenate([[0], np.cumsum(n_seg)[:-1]])
+        j = np.arange(ray_of_seg.size) - first_seg[ray_of_seg]  # index of the segment within its ray
+        lo = np.insert(sub.t, sub.offsets[:-1], BOX_LO)  # per ray: BOX_LO, t_0, ..., t_{k-1}
+        hi = np.insert(sub.t, sub.offsets[1:], BOX_HI)  # per ray: t_0, ..., t_{k-1}, BOX_HI
+        starts.append(lo)
+        ends.append(hi)
+        occs.append(j % 2 == 1)
+        rows.append(sel[ray_of_seg])
+    start, end = np.concatenate(starts), np.concatenate(ends)
+    occ, row = np.concatenate(occs), np.concatenate(rows)
+    order = np.argsort(row, kind="stable")  # rays in the order of g, segments in t order within a ray
+    start, end, occ, row = start[order], end[order], occ[order], row[order]
+    keep = (end - start) >= RAYINT_MIN_SEGMENT
+    return {"start": start[keep], "end": end[keep], "occ": occ[keep], "row": row[keep]}
+
+
+def _rayint_sample(shape_dir: Path, rng: np.random.Generator, target: str, n_points: int, noise: float,
+                   n_query: int, n_rays: int) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
+    """``build_rayint_item`` and, for the tests, the sampled rays, their segments and the segment of every point."""
+    if target not in RAYINT_TARGETS:
+        raise ValueError(f"target must be one of {RAYINT_TARGETS}, got {target!r}")
+    with np.load(Path(shape_dir) / POINTCLOUD_FILE) as pc:  # encoder input: as build_point_item, rng first
+        cloud = pc["points"]
+        idx = rng.choice(cloud.shape[0], size=n_points, replace=False)
+        pts = cloud[idx].astype(np.float64)
+    pts = pts + rng.normal(0.0, noise, size=pts.shape)
+    dex = dexio.read(Path(shape_dir) / DEXELS_FILE)
+    axes = tuple(rayhits_from_arrays(dex.axes[letter]) for letter in AXIS_LETTERS)
+    start_inside = tuple(np.asarray(dex.axes[letter].start_inside) for letter in AXIS_LETTERS)
+    g = sample_global_rays(ray_counts(axes), rng, n_rays)
+    seg = rayint_segments(axes, start_inside, g)
+    length = seg["end"] - seg["start"]
+    n_seg = length.size
+    if target == "points_rayint_a":
+        pick = rng.integers(0, n_seg, size=n_query)  # every segment equally likely
+    else:
+        pick = rng.choice(n_seg, size=n_query, replace=True, p=length / length.sum())  # proportional to length
+    t = rng.uniform(seg["start"][pick], seg["end"][pick])
+    ray_axis, _ray_index, uv = ray_fields(g)
+    row = seg["row"][pick]
+    a = ray_axis[row]
+    query = np.empty((n_query, 3), dtype=np.float64)
+    for axis in range(3):
+        col_axis, row_axis = [b for b in range(3) if b != axis]  # (y, z) for x-rays, (x, z) for y, (x, y) for z
+        m = a == axis
+        query[m, axis] = t[m]
+        query[m, col_axis] = uv[row[m], 0]
+        query[m, row_axis] = uv[row[m], 1]
+    item = {"inputs": pts.astype(np.float32), "query": query.astype(np.float32),
+            "occ": seg["occ"][pick].astype(np.float32), "from_surface": np.zeros(n_query, dtype=bool)}
+    extra = {"g": g, "segments": seg, "pick": pick, "t": t}
+    return item, extra
+
+
+def build_rayint_item(shape_dir: Path, rng: np.random.Generator, target: str, n_points: int, noise: float,
+                      n_query: int = N_QUERY, n_rays: int = RAYINT_N_RAYS) -> dict[str, np.ndarray]:
+    """One point-decoder item with query points from the GT intervals of sampled rays (H5-K2-1a).
+
+    Same keys as ``build_point_item``: ``inputs`` (n_points, 3) float32, ``query`` (n_query, 3) float32, ``occ``
+    (n_query,) float32 in {0, 1}, ``from_surface`` (n_query,) bool, all False. Order of the draws from ``rng``:
+
+    1. the encoder input exactly as ``build_point_item`` (subset of ``pointcloud.npz``, then the noise);
+    2. ``n_rays`` rays with the mixture sampler (``sample_global_rays``) over ``dexels_128.npz``;
+    3. ``n_query`` segments with replacement (``rayint_segments``): ``points_rayint_a`` uniform over all segments of
+       all sampled rays, ``points_rayint_b`` with probability proportional to the length (points uniform along the
+       sampled rays, the control);
+    4. ``t`` uniform in each chosen segment.
+
+    The point is the cell centre of its ray on the two transverse axes (``ray_fields``) and ``t`` on the ray axis;
+    ``occ`` is the occupancy of the segment.
+    """
+    return _rayint_sample(shape_dir, rng, target, n_points, noise, n_query, n_rays)[0]
+
+
 class PointShapeDataset(Dataset):
     """One item per shape of ``csg/{split}.lst``, as ``RayShapeDataset``, for the point decoders.
+
+    ``POINT_TARGETS`` use ``build_point_item``, ``RAYINT_TARGETS`` (H5-K2-1a) ``build_rayint_item``.
 
     Same encoder input and the same per-item seeding (``seed`` gives ``SeedSequence([seed, index])``).
     Items: ``inputs`` (n_points, 3), ``query`` (n_query, 3), ``occ`` (n_query,), ``from_surface`` (n_query,) bool.
@@ -322,8 +428,8 @@ class PointShapeDataset(Dataset):
 
     def __init__(self, split: str, target: str, n_points: int = 10000, noise: float = 0.001,
                  seed: int | None = None, root: Path = DATA_ROOT):
-        if target not in POINT_TARGETS:
-            raise ValueError(f"target must be one of {POINT_TARGETS}, got {target!r}")
+        if target not in POINT_TARGETS + RAYINT_TARGETS:
+            raise ValueError(f"target must be one of {POINT_TARGETS + RAYINT_TARGETS}, got {target!r}")
         self.split, self.target, self.n_points, self.noise, self.seed = split, target, n_points, noise, seed
         self.root = Path(root)
         self.ids = shape_ids(split, self.root)
@@ -336,4 +442,5 @@ class PointShapeDataset(Dataset):
             rng = np.random.default_rng(np.random.SeedSequence([self.seed, index]))
         else:
             rng = np.random.default_rng(np.random.SeedSequence([int(torch.initial_seed()) % (2**63), index]))
-        return build_point_item(self.root / "csg" / self.ids[index], rng, self.target, self.n_points, self.noise)
+        build = build_rayint_item if self.target in RAYINT_TARGETS else build_point_item
+        return build(self.root / "csg" / self.ids[index], rng, self.target, self.n_points, self.noise)
