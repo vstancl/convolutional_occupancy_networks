@@ -79,7 +79,8 @@ def test_a_short_run(tmp_path, target):
         assert len(r["f1"]) == n_settings
         assert r["selected"] in [s["setting_name"] for s in r["settings"]]
     if target == "occfrac_128":
-        assert all("occ_snap" in s["setting"] for s in val[0]["settings"])
+        # occ_snap settings, and the binarize setting (occ_mode) of H5-K1-1b
+        assert all("occ_snap" in s["setting"] or "occ_mode" in s["setting"] for s in val[0]["settings"])
     if target == "hits_8":
         assert all("thr" in s["setting"] for s in val[0]["settings"])
     print(f"\na {target}: loss {first:.4f} (it 50-100) -> {last:.4f} (it 150-200); "
