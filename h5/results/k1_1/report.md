@@ -2,19 +2,28 @@
 
 Evaluation: val (first 200 shapes, all rays). Setting of each row: the H5-K1-1a band selection of training (rows without a label), and for occfrac_128 (grid) the band selection over the extended grid, which includes `binarize` (H5-K1-1b). Best F1 at 0.002 among the settings with decoded/GT in [0.8, 1.25]; otherwise the closest ratio. Recall and distances at delta 0.002 unless labelled h/2.
 
-M (H5-6) in the per-checkpoint table: pooled recall at 0.002 of the walls and gaps with L/h < 1 only. The verdict instead uses the population-weighted recall at 0.002 of all thin features (material and gap) in the four L/h < 1 bins of the thin-bin tables, so the two numbers differ.
+M (H5-6): recall at 0.002 of the walls and gaps with L/h < 1, both ends matched, pooled over the four L/h < 1 bins; walls+gaps per bin: the same per L/h bin. These are the thin-feature quantities of the verdict. The thin-bin tables below show the per-hit thin recall, which is descriptive.
 
 ## Verdict (H5, SPEC section 5, layer 1, delta 0.002)
 
-**undecided (SPEC: compactness only)** at iteration 120000: hits_8 against points_strong (the best F1 of the dense runs in band: occfrac_128 (grid), points_strong).
+**undecided (SPEC: compactness only)** at iteration 120000: hits_8 against the dense ray runs in band (occfrac_128 (grid)); the dense value is the better of them, per L/h bin for the bins. points_strong is not a dense competitor (it enters H5 only through the cost criterion, not evaluated here).
 
 | quantity | hits_8 | dense | difference | rule |
 |---|---|---|---|---|
-| weighted recall of all thin features, L/h < 1 | 0.129 | 0.0606 | 0.0688 | at least +0.05 |
-| F1 of all hits, 0.002 | 0.176 | 0.232 | -0.0561 | not below -0.01 (t/h > 2 condition) |
-| largest recall gain of hits_8 over the dense run, any L/h bin | | | 0.0841 | at most +0.02 in every bin for refuted |
+| M (walls+gaps, L/h < 1) | 0.0306 | 0.00338 | 0.0272 | at least +0.05 |
+| F1 of all hits, 0.002 | 0.176 | 0.21 | -0.0335 | not below -0.01 (t/h > 2 condition) |
+| walls+gaps [0,0.125) | 0.000348 | 0 | 0.000348 | refuted if at most +0.02 in every bin |
+| walls+gaps [0.125,0.25) | 0.0376 | 0 | 0.0376 | refuted if at most +0.02 in every bin |
+| walls+gaps [0.25,0.5) | 0.0342 | 0.000228 | 0.034 | refuted if at most +0.02 in every bin |
+| walls+gaps [0.5,1) | 0.0282 | 0.00579 | 0.0224 | refuted if at most +0.02 in every bin |
+| walls+gaps [1,2) | 0.0291 | 0.00447 | 0.0246 | refuted if at most +0.02 in every bin |
+| walls+gaps [2,4) | 0.0189 | 0.00861 | 0.0103 | refuted if at most +0.02 in every bin |
 
-The rule is applied to the ray layer only; IoU and the mesh layer are not evaluated in this report. The SPEC condition "with a smaller output" is not checked here, and the SPEC compares against TSDF M = 128, which K1-1 did not train: the best dense run in band stands in for it.
+Largest per-bin walls+gaps gain of hits_8: 0.0376.
+
+Absolute walls+gaps recall at 0.002 in the L/h < 1 bins ([0,0.125), [0.125,0.25), [0.25,0.5), [0.5,1)), iteration 120000: hits_8 (thr=0.6): 0.000348, 0.0376, 0.0342, 0.0282; occfrac_128 (occ_snap=0.45, out of band): 0.00854, 0.0194, 0.081, 0.0763; points_strong (iso=0.5): 0.00174, 0.00141, 0.00274, 0.00309; occfrac_128 (grid) (binarize): 0, 0, 0.000228, 0.00579.
+
+The rule is applied to the ray layer only; IoU and the mesh layer are not evaluated in this report. The SPEC condition "with a smaller output" and the cost criterion are not checked here, and the SPEC compares against TSDF M = 128, which K1-1 did not train: the dense ray runs in band stand in for it.
 
 ## Per checkpoint
 
@@ -44,17 +53,6 @@ The rule is applied to the ray layer only; IoU and the mesh layer are not evalua
 | [1,2) | 0.0844 (1058120) | 0.106 (1058120) | 0.11 (1058120) |
 | [2,4) | 0.0758 (1034922) | 0.0893 (1034922) | 0.0978 (1034922) |
 
-## Thin bins, occfrac_128: thin recall at 0.002 (n) per L/h bin
-
-| L/h bin | it 40000 | it 80000 | it 120000 |
-|---|---|---|---|
-| [0,0.125) | 0.105 (26933) | 0.107 (26933) | 0.104 (26933) |
-| [0.125,0.25) | 0.14 (33718) | 0.143 (33718) | 0.137 (33718) |
-| [0.25,0.5) | 0.213 (495361) | 0.212 (495361) | 0.211 (495361) |
-| [0.5,1) | 0.204 (861490) | 0.214 (861490) | 0.21 (861490) |
-| [1,2) | 0.24 (1058120) | 0.246 (1058120) | 0.242 (1058120) |
-| [2,4) | 0.25 (1034922) | 0.251 (1034922) | 0.252 (1034922) |
-
 ## Thin bins, points_strong: thin recall at 0.002 (n) per L/h bin
 
 | L/h bin | it 40000 | it 80000 | it 120000 |
@@ -66,7 +64,7 @@ The rule is applied to the ray layer only; IoU and the mesh layer are not evalua
 | [1,2) | 0.0405 (1058120) | 0.0452 (1058120) | 0.0514 (1058120) |
 | [2,4) | 0.056 (1034922) | 0.0664 (1034922) | 0.0738 (1034922) |
 
-## Thin bins, occfrac_128 (grid): thin recall at 0.002 (n) per L/h bin
+## Thin bins, occfrac_128, grid-selected setting (binarize): thin recall at 0.002 (n) per L/h bin
 
 | L/h bin | it 40000 | it 80000 | it 120000 |
 |---|---|---|---|
@@ -76,6 +74,17 @@ The rule is applied to the ray layer only; IoU and the mesh layer are not evalua
 | [0.5,1) | 0.043 (861490) | 0.0542 (861490) | 0.0566 (861490) |
 | [1,2) | 0.0406 (1058120) | 0.0532 (1058120) | 0.056 (1058120) |
 | [2,4) | 0.0523 (1034922) | 0.0678 (1034922) | 0.0732 (1034922) |
+
+## Thin bins, occfrac_128, occ_snap=0.45: out of band, not comparable: thin recall at 0.002 (n) per L/h bin
+
+| L/h bin | it 40000 | it 80000 | it 120000 |
+|---|---|---|---|
+| [0,0.125) | 0.105 (26933) | 0.107 (26933) | 0.104 (26933) |
+| [0.125,0.25) | 0.14 (33718) | 0.143 (33718) | 0.137 (33718) |
+| [0.25,0.5) | 0.213 (495361) | 0.212 (495361) | 0.211 (495361) |
+| [0.5,1) | 0.204 (861490) | 0.214 (861490) | 0.21 (861490) |
+| [1,2) | 0.24 (1058120) | 0.246 (1058120) | 0.242 (1058120) |
+| [2,4) | 0.25 (1034922) | 0.251 (1034922) | 0.252 (1034922) |
 
 ## Thin bins, hits_8: thin recall at h/2 (descriptive, not the criterion) (n) per L/h bin
 
@@ -88,17 +97,6 @@ The rule is applied to the ray layer only; IoU and the mesh layer are not evalua
 | [1,2) | 0.178 (1058120) | 0.221 (1058120) | 0.227 (1058120) |
 | [2,4) | 0.159 (1034922) | 0.188 (1034922) | 0.203 (1034922) |
 
-## Thin bins, occfrac_128: thin recall at h/2 (descriptive, not the criterion) (n) per L/h bin
-
-| L/h bin | it 40000 | it 80000 | it 120000 |
-|---|---|---|---|
-| [0,0.125) | 0.213 (26933) | 0.212 (26933) | 0.204 (26933) |
-| [0.125,0.25) | 0.244 (33718) | 0.246 (33718) | 0.232 (33718) |
-| [0.25,0.5) | 0.39 (495361) | 0.387 (495361) | 0.383 (495361) |
-| [0.5,1) | 0.425 (861490) | 0.441 (861490) | 0.433 (861490) |
-| [1,2) | 0.499 (1058120) | 0.508 (1058120) | 0.5 (1058120) |
-| [2,4) | 0.518 (1034922) | 0.517 (1034922) | 0.518 (1034922) |
-
 ## Thin bins, points_strong: thin recall at h/2 (descriptive, not the criterion) (n) per L/h bin
 
 | L/h bin | it 40000 | it 80000 | it 120000 |
@@ -110,7 +108,7 @@ The rule is applied to the ray layer only; IoU and the mesh layer are not evalua
 | [1,2) | 0.0841 (1058120) | 0.0928 (1058120) | 0.106 (1058120) |
 | [2,4) | 0.114 (1034922) | 0.134 (1034922) | 0.147 (1034922) |
 
-## Thin bins, occfrac_128 (grid): thin recall at h/2 (descriptive, not the criterion) (n) per L/h bin
+## Thin bins, occfrac_128, grid-selected setting (binarize): thin recall at h/2 (descriptive, not the criterion) (n) per L/h bin
 
 | L/h bin | it 40000 | it 80000 | it 120000 |
 |---|---|---|---|
@@ -120,3 +118,14 @@ The rule is applied to the ray layer only; IoU and the mesh layer are not evalua
 | [0.5,1) | 0.0919 (861490) | 0.114 (861490) | 0.12 (861490) |
 | [1,2) | 0.0865 (1058120) | 0.112 (1058120) | 0.119 (1058120) |
 | [2,4) | 0.109 (1034922) | 0.14 (1034922) | 0.151 (1034922) |
+
+## Thin bins, occfrac_128, occ_snap=0.45: out of band, not comparable: thin recall at h/2 (descriptive, not the criterion) (n) per L/h bin
+
+| L/h bin | it 40000 | it 80000 | it 120000 |
+|---|---|---|---|
+| [0,0.125) | 0.213 (26933) | 0.212 (26933) | 0.204 (26933) |
+| [0.125,0.25) | 0.244 (33718) | 0.246 (33718) | 0.232 (33718) |
+| [0.25,0.5) | 0.39 (495361) | 0.387 (495361) | 0.383 (495361) |
+| [0.5,1) | 0.425 (861490) | 0.441 (861490) | 0.433 (861490) |
+| [1,2) | 0.499 (1058120) | 0.508 (1058120) | 0.5 (1058120) |
+| [2,4) | 0.518 (1034922) | 0.517 (1034922) | 0.518 (1034922) |

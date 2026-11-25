@@ -11,13 +11,17 @@ Per row (run and checkpoint): the values of ``q0_report.run_row``: ordinary reca
 p90 distance, thin-bin recall per L/h bin, the weighted recall of the L/h < 1 bins, F1 of all hits at 0.002, precision,
 decoded/GT, whether that ratio is in ``RATIO_BAND``, and the setting.
 
-Verdict (H5-K1-1b, rule of SPEC section 5, layer 1, delta 0.002, at the last checkpoint): hits_8 against the best dense
-run that is in band (dense = occfrac_128, with the grid selection, and points_strong). Rule, fixed for this report:
+Verdict (H5-K1-1c, rule of SPEC section 5, layer 1, delta 0.002, at the last checkpoint): hits_8 against the dense ray
+representations that are in band: occfrac_128 with the grid selection, and tsdf_128 and binary_128 once their eval
+files exist. points_strong is never a dense competitor; it enters the H5 rule only through the cost criterion of the
+SPEC, which this report does not evaluate. The dense value of a quantity is the better of the dense runs in band, per L/h
+bin for the per-bin values. Thin-feature quantity: the walls-and-gaps recall with both ends matched (``walls_gaps`` per
+L/h bin and ``walls_gaps_pooled_L_lt_1`` = the M of H5-6, from the evaluation summary), not the per-hit thin recall.
+Rule, fixed for this report:
 
-- H5 supported if the recall of the thin features with L/h < 1 (population-weighted over the four bins) is at least
-  0.05 higher for hits_8, and the F1 of all hits is not lower by more than 0.01 (the t/h > 2 condition of the SPEC,
-  checked with F1 because the rule does not give a separate t/h > 2 quantity; IoU is not evaluated here);
-- H5 refuted if, in every L/h bin, the recall of hits_8 is at most 0.02 higher than that of the dense run;
+- H5 supported if M of hits_8 is at least 0.05 higher than the dense M, and the F1 of all hits is not lower by more
+  than 0.01 (the t/h > 2 condition of the SPEC, checked with F1; IoU is not evaluated here);
+- H5 refuted if, in every L/h bin, the walls-and-gaps recall of hits_8 is at most 0.02 higher than the dense value;
 - otherwise undecided (the SPEC calls this "compactness only"). If no dense run is in band: "not evaluable".
 """
 
@@ -44,7 +48,9 @@ from eval_rays import BIN_LABELS, RATIO_BAND, dec_gt_ratio  # noqa: E402
 from q0_report import DH, DK, _f, run_row  # noqa: E402
 
 K1_RUNS: tuple[str, ...] = ("hits_8", "occfrac_128", "points_strong")
+OPTIONAL_DENSE: tuple[str, ...] = ("tsdf_128", "binary_128")  # loaded when their eval files exist; not listed missing
 GRID_LABEL = "occfrac_128 (grid)"
+DENSE: tuple[str, ...] = (GRID_LABEL,) + OPTIONAL_DENSE  # the dense ray competitors of the H5 rule (H5-K1-1c)
 RULE = {"small_bins": 4, "small_gain": 0.05, "f1_tolerance": 0.01, "refute_gain": 0.02}
 
 
@@ -60,21 +66,29 @@ def _load(path: Path) -> dict | None:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
 
+def _walls_gaps(row: dict, summary: dict) -> dict:
+    """Adds the walls-and-gaps recall (both ends matched) per L/h bin at 0.002 and h/2 to ``row``."""
+    row["walls_gaps"] = {DK: list(summary["deltas"][DK]["walls_gaps"]),
+                         DH: list(summary["deltas"][DH]["walls_gaps"])}
+    return row
+
+
 def build(root: Path, its: list[int]) -> dict:
     """Rows per run label (checkpoints in ``its`` order), the evaluation set, and the verdict."""
     ev = root / "eval"
     runs: dict[str, list[dict]] = {}
     missing: list[str] = []
     split_info: set[tuple[str, int]] = set()
-    for run in K1_RUNS:
+    for run in K1_RUNS + OPTIONAL_DENSE:
         rows = []
         for it in its:
             doc = _load(ev / f"{run}_it{it}.json")
             if doc is None:
-                missing.append(f"{run}_it{it}")
+                if run in K1_RUNS:
+                    missing.append(f"{run}_it{it}")
                 continue
             split_info.add((doc.get("split", "?"), int(doc.get("n_shapes", -1))))
-            row = run_row(doc, float(doc["train_loss"]))
+            row = _walls_gaps(run_row(doc, float(doc["train_loss"])), doc["summary"])
             row["in_band"] = in_band(row["dec_gt_ratio"])
             rows.append(row)
         if rows:
@@ -90,7 +104,7 @@ def build(root: Path, its: list[int]) -> dict:
             sel = doc["summaries"][doc["selected"]]
             row_doc = {"iteration": it, "setting_name": doc["selected_name"], "summary": sel,
                        "train_loss": doc["train_loss"]}
-            row = run_row(row_doc, float(doc["train_loss"]))
+            row = _walls_gaps(run_row(row_doc, float(doc["train_loss"])), sel)
             row["in_band"] = in_band(row["dec_gt_ratio"])
             row["grid_all"] = [{"setting": s["setting_name"], "F1": s["deltas"][DK]["f1"],
                                 "ratio": dec_gt_ratio(s), "in_band": in_band(dec_gt_ratio(s))}
@@ -110,40 +124,44 @@ def _row(rows: list[dict], it: int) -> dict | None:
     return None
 
 
-def small_recall(row: dict) -> float:
-    """Population-weighted recall at 0.002 of the thin features in the L/h < 1 bins (as the M of H5-6, all classes)."""
-    bins = row["thin"][:RULE["small_bins"]]
-    n = sum(b["n"] for b in bins)
-    return sum(b["recall"][DK] * b["n"] for b in bins if b["n"]) / n if n else float("nan")
+def _nanmax(xs: list[float]) -> float:
+    xs = [x for x in xs if x == x]
+    return max(xs) if xs else float("nan")
 
 
 def verdict(runs: dict[str, list[dict]], its: list[int]) -> dict:
     final = its[-1]
     hits = _row(runs.get("hits_8", []), final)
     dense = []
-    for label in (GRID_LABEL, "occfrac_128", "points_strong"):
+    for label in DENSE:
         row = _row(runs.get(label, []), final)
         if row is not None and row["in_band"]:
             dense.append((label, row))
+    absolute = {label: {"setting": r["setting"], "in_band": r["in_band"],
+                        "walls_gaps_L_lt_1": r["walls_gaps"][DK][:RULE["small_bins"]], "M": r["M"]}
+                for label, rows in runs.items() if (r := _row(rows, final)) is not None}
     if hits is None or not dense:
-        return {"iteration": final, "status": "not evaluable",
+        return {"iteration": final, "status": "not evaluable", "absolute": absolute,
                 "reason": "no dense run is in band" if hits is not None else "hits_8 not evaluated"}
-    label, drow = max(dense, key=lambda x: x[1]["F1"] if x[1]["F1"] == x[1]["F1"] else -math.inf)
-    d_small = small_recall(hits) - small_recall(drow)
-    d_f1 = hits["F1"] - drow["F1"]
-    gains = [h["recall"][DK] - d["recall"][DK] for h, d in zip(hits["thin"], drow["thin"])
-             if h["n"] and d["n"]]
+    m_dense = _nanmax([r["M"] for _, r in dense])
+    f1_dense = _nanmax([r["F1"] for _, r in dense])
+    wg_dense = [_nanmax([r["walls_gaps"][DK][i] for _, r in dense]) for i in range(len(BIN_LABELS))]
+    d_m = hits["M"] - m_dense
+    d_f1 = hits["F1"] - f1_dense
+    gains = [h - d for h, d in zip(hits["walls_gaps"][DK], wg_dense) if h == h and d == d]
     max_gain = max(gains) if gains else float("nan")
-    if d_small >= RULE["small_gain"] and d_f1 >= -RULE["f1_tolerance"]:
+    if d_m >= RULE["small_gain"] and d_f1 >= -RULE["f1_tolerance"]:
         status = "H5 supported"
     elif max_gain <= RULE["refute_gain"]:
         status = "H5 refuted"
     else:
         status = "undecided (SPEC: compactness only)"
-    return {"iteration": final, "status": status, "dense_run": label, "in_band_dense": [x[0] for x in dense],
-            "small_recall_hits": small_recall(hits), "small_recall_dense": small_recall(drow),
-            "gain_small": d_small, "F1_hits": hits["F1"], "F1_dense": drow["F1"], "gain_F1": d_f1,
-            "max_bin_gain": max_gain, "rule": RULE}
+    return {"iteration": final, "status": status, "dense_runs": [x[0] for x in dense],
+            "M_hits": hits["M"], "M_dense": m_dense, "gain_M": d_m,
+            "F1_hits": hits["F1"], "F1_dense": f1_dense, "gain_F1": d_f1,
+            "walls_gaps_hits": hits["walls_gaps"][DK], "walls_gaps_dense": wg_dense,
+            "bin_gains": [h - d for h, d in zip(hits["walls_gaps"][DK], wg_dense)],
+            "max_bin_gain": max_gain, "rule": RULE, "absolute": absolute}
 
 
 def to_markdown(doc: dict) -> str:
@@ -154,27 +172,37 @@ def to_markdown(doc: dict) -> str:
          "occfrac_128 (grid) the band selection over the extended grid, which includes `binarize` (H5-K1-1b). Best F1 "
          f"at 0.002 among the settings with decoded/GT in [{doc['ratio_band'][0]:g}, {doc['ratio_band'][1]:g}]; otherwise "
          "the closest ratio. Recall and distances at delta 0.002 unless labelled h/2.", "",
-         "M (H5-6) in the per-checkpoint table: pooled recall at 0.002 of the walls and gaps with L/h < 1 only. The "
-         "verdict instead uses the population-weighted recall at 0.002 of all thin features (material and gap) in the "
-         "four L/h < 1 bins of the thin-bin tables, so the two numbers differ.", ""]
+         "M (H5-6): recall at 0.002 of the walls and gaps with L/h < 1, both ends matched, pooled over the four L/h < 1 "
+         "bins; walls+gaps per bin: the same per L/h bin. These are the thin-feature quantities of the verdict. The "
+         "thin-bin tables below show the per-hit thin recall, which is descriptive.", ""]
     if doc["missing"]:
         L += [f"Not evaluated yet: {', '.join(doc['missing'])}.", ""]
     L += ["## Verdict (H5, SPEC section 5, layer 1, delta 0.002)", ""]
     if v["status"] == "not evaluable":
         L += [f"**not evaluable** at iteration {v['iteration']}: {v['reason']}.", ""]
     else:
-        L += [f"**{v['status']}** at iteration {v['iteration']}: hits_8 against {v['dense_run']} (the best F1 of the "
-              f"dense runs in band: {', '.join(v['in_band_dense'])}).", "",
+        L += [f"**{v['status']}** at iteration {v['iteration']}: hits_8 against the dense ray runs in band "
+              f"({', '.join(v['dense_runs'])}); the dense value is the better of them, per L/h bin for the bins. "
+              "points_strong is not a dense competitor (it enters H5 only through the cost criterion, not evaluated "
+              "here).", "",
               "| quantity | hits_8 | dense | difference | rule |", "|---|---|---|---|---|",
-              f"| weighted recall of all thin features, L/h < 1 | {_f(v['small_recall_hits'])} | {_f(v['small_recall_dense'])} | "
-              f"{_f(v['gain_small'])} | at least +{v['rule']['small_gain']} |",
+              f"| M (walls+gaps, L/h < 1) | {_f(v['M_hits'])} | {_f(v['M_dense'])} | {_f(v['gain_M'])} | "
+              f"at least +{v['rule']['small_gain']} |",
               f"| F1 of all hits, 0.002 | {_f(v['F1_hits'])} | {_f(v['F1_dense'])} | {_f(v['gain_F1'])} | "
-              f"not below -{v['rule']['f1_tolerance']} (t/h > 2 condition) |",
-              f"| largest recall gain of hits_8 over the dense run, any L/h bin | | | {_f(v['max_bin_gain'])} | "
-              f"at most +{v['rule']['refute_gain']} in every bin for refuted |", "",
-              "The rule is applied to the ray layer only; IoU and the mesh layer are not evaluated in this report. "
-              "The SPEC condition \"with a smaller output\" is not checked here, and the SPEC compares against TSDF "
-              "M = 128, which K1-1 did not train: the best dense run in band stands in for it.", ""]
+              f"not below -{v['rule']['f1_tolerance']} (t/h > 2 condition) |"]
+        for i, lab in enumerate(BIN_LABELS):
+            L.append(f"| walls+gaps {lab} | {_f(v['walls_gaps_hits'][i])} | {_f(v['walls_gaps_dense'][i])} | "
+                     f"{_f(v['bin_gains'][i])} | refuted if at most +{v['rule']['refute_gain']} in every bin |")
+        L += ["", f"Largest per-bin walls+gaps gain of hits_8: {_f(v['max_bin_gain'])}.", ""]
+    abs_txt = "; ".join(f"{run} ({a['setting']}{'' if a['in_band'] else ', out of band'}): "
+                        + ", ".join(_f(x) for x in a["walls_gaps_L_lt_1"])
+                        for run, a in v["absolute"].items())
+    L += [f"Absolute walls+gaps recall at 0.002 in the L/h < 1 bins ({', '.join(BIN_LABELS[:RULE['small_bins']])}), "
+          f"iteration {v['iteration']}: {abs_txt}.", ""]
+    if v["status"] != "not evaluable":
+        L += ["The rule is applied to the ray layer only; IoU and the mesh layer are not evaluated in this report. "
+              "The SPEC condition \"with a smaller output\" and the cost criterion are not checked here, and the SPEC "
+              "compares against TSDF M = 128, which K1-1 did not train: the dense ray runs in band stand in for it.", ""]
     L += ["## Per checkpoint", "",
           "| run | iteration | selected setting | F1 (all hits, 0.002) | precision | decoded/GT | in band | "
           "ord n | ord recall 0.002 | ord recall h/2 | ord median | ord p90 | M (H5-6, walls+gaps L/h < 1) |",
@@ -185,9 +213,18 @@ def to_markdown(doc: dict) -> str:
                      f"{_f(r['dec_gt_ratio'])} | {'yes' if r['in_band'] else 'no'} | {r['ord_n']} | "
                      f"{_f(r['ord_recall'][DK])} | {_f(r['ord_recall'][DH])} | {_f(r['ord_median'])} | "
                      f"{_f(r['ord_p90'])} | {_f(r['M'])} |")
+    order = [r for r in doc["runs"] if r != "occfrac_128"] + (["occfrac_128"] if "occfrac_128" in doc["runs"] else [])
     for key, title in ((DK, "thin recall at 0.002"), (DH, "thin recall at h/2 (descriptive, not the criterion)")):
-        for run, rows in doc["runs"].items():
-            L += ["", f"## Thin bins, {run}: {title} (n) per L/h bin", "",
+        for run in order:
+            rows = doc["runs"][run]
+            names = sorted({r["setting"] for r in rows})
+            if run == GRID_LABEL:
+                head = f"occfrac_128, grid-selected setting ({', '.join(names)})"
+            elif run == "occfrac_128":
+                head = f"occfrac_128, {', '.join(names)}: out of band, not comparable"
+            else:
+                head = run
+            L += ["", f"## Thin bins, {head}: {title} (n) per L/h bin", "",
                   "| L/h bin | " + " | ".join(f"it {r['iteration']}" for r in rows) + " |",
                   "|---|" + "---|" * len(rows)]
             for i, lab in enumerate(BIN_LABELS):
