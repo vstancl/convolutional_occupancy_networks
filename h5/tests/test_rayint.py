@@ -165,3 +165,32 @@ def test_encoder_input_is_that_of_build_point_item():
     r = build_rayint_item(shape_dir_of("train", index), _rng(5), "points_rayint_a", N_POINTS, NOISE)
     np.testing.assert_array_equal(p["inputs"], r["inputs"])
     assert data.RAYINT_N_RAYS == N_RAYS
+
+
+# ---------------------------------------------------------------- H5-K2-1b: the rayint targets are point decoders
+
+def test_rayint_targets_are_point_decoders_everywhere():
+    import train
+    from eval_rays import decoding_grid
+    from models import POINT_TARGET_NAMES, PointModel, build_model
+
+    assert POINT_TARGET_NAMES == data.POINT_TARGETS + RAYINT_TARGETS
+    for target in RAYINT_TARGETS:
+        assert target in train.ALL_TARGETS
+        assert isinstance(build_model(target), PointModel)
+        assert decoding_grid(target) == decoding_grid("points_strong")
+        cfg = train.load_config(H5_DIR / "configs" / f"{target}.yaml", {"out_dir": "/nonexistent"})
+        ref = train.load_config(H5_DIR / "configs" / "points_strong.yaml", {"out_dir": "/nonexistent"})
+        assert {k: v for k, v in cfg.items() if k != "target"} == {k: v for k, v in ref.items() if k != "target"}
+
+
+def test_train_samples_use_the_rayint_builder():
+    import train
+
+    index = _shapes()[0]
+    ds = train.TrainSamples([shape_ids("train")[index]], "points_rayint_a", 64, 1000, NOISE, 0)
+    item = ds[0]
+    rng = np.random.default_rng(np.random.SeedSequence([0, 2, 0]))
+    ref = build_rayint_item(shape_dir_of("train", index), rng, "points_rayint_a", 1000, NOISE, n_rays=64)
+    for key in ref:
+        np.testing.assert_array_equal(item[key], ref[key])

@@ -314,7 +314,7 @@ class PointModel(nn.Module):
 
     def __init__(self, target: str, cfg: dict | None = None):
         super().__init__()
-        if target not in ("points_std", "points_strong"):
+        if target not in POINT_TARGET_NAMES:
             raise ValueError(f"not a point target: {target!r}")
         self.target = target
         self.encoder = _encoder()
@@ -334,7 +334,8 @@ class PointModel(nn.Module):
         return {"logits": self.decode(self.encode(inputs), query)}
 
 
-POINT_TARGET_NAMES: tuple[str, ...] = ("points_std", "points_strong")
+# The point-decoder targets: data.POINT_TARGETS + data.RAYINT_TARGETS (H5-K2-1b; a test checks the two agree).
+POINT_TARGET_NAMES: tuple[str, ...] = ("points_std", "points_strong", "points_rayint_a", "points_rayint_b")
 
 
 def build_model(target: str, cfg: dict | None = None) -> nn.Module:
