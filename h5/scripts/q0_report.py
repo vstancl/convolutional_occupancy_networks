@@ -57,10 +57,12 @@ from eval_rays import (  # noqa: E402
     BIN_LABELS,
     EVAL_DELTAS,
     dec_gt_ratio,
+    decoding_grid,
     grid_summaries,
     m_comparable,
     prepare_all,
 )
+from train import _select  # noqa: E402  (the band selection of training, H5-K1-1a)
 from models import build_model  # noqa: E402
 
 RUNS: tuple[str, ...] = ("Q0_points_strong", "Q0_hits_8", "Q0_occfrac_128")
@@ -89,9 +91,12 @@ def train_loss(run_dir: Path, it: int, val_every: int) -> float:
 # ---------------------------------------------------------------- stage eval
 
 def run_eval(root: Path, its: list[int], device: torch.device, runs_wanted: tuple[str, ...] = RUNS,
-             split: str | None = None, n_shapes: int | None = None) -> None:
+             split: str | None = None, n_shapes: int | None = None, grid: bool = False) -> None:
     """Evaluates the checkpoints of ``runs_wanted`` with all rays. Shapes: the training subset of the Q0 runs
-    (``split`` None), or the first ``n_shapes`` shapes of ``split`` (e.g. ``val`` for H5-K1-1)."""
+    (``split`` None), or the first ``n_shapes`` shapes of ``split`` (e.g. ``val`` for H5-K1-1).
+
+    ``grid`` (H5-K1-1b): every setting of the target's decoding grid is evaluated, and the band selection of
+    ``train._select`` picks one. Written to ``eval/{run}_it{N}_grid.json``; the per-checkpoint files are not touched."""
     out = root / "eval"
     out.mkdir(parents=True, exist_ok=True)
     runs = [r for r in runs_wanted if (root / r).is_dir()]
@@ -112,22 +117,37 @@ def run_eval(root: Path, its: list[int], device: torch.device, runs_wanted: tupl
             if not ck.exists():
                 print(f"eval {run} it {it}: no checkpoint yet, skipped", flush=True)
                 continue
-            if (out / f"{run}_it{it}.json").exists():  # resumed: the evaluation of this checkpoint is done
+            name = f"{run}_it{it}_grid.json" if grid else f"{run}_it{it}.json"
+            if (out / name).exists():  # resumed: the evaluation of this checkpoint is done
                 print(f"eval {run} it {it}: exists, skipped", flush=True)
                 continue
-            setting = json.loads(ck.with_suffix(".json").read_text(encoding="utf-8"))["setting"]
             blob = torch.load(ck, map_location=device, weights_only=False)
             model = build_model(target).to(device)
             model.load_state_dict(blob["state_dict"])
             model.eval()
-            summary = grid_summaries(model, items, [setting], device, DATA_ROOT)[0]  # deterministic forward inside
-            doc = {"run": run, "iteration": it, "setting": setting, "setting_name": summary["setting_name"],
-                   "split": split or "train_subset", "n_shapes": len(items),
-                   "train_loss": train_loss(run_dir, it, int(cfg["val_every"])), "summary": summary}
-            (out / f"{run}_it{it}.json").write_text(json.dumps(doc, default=float), encoding="utf-8")
-            print(f"eval {run} it {it} {summary['setting_name']}: F1 {summary['deltas'][DK]['f1']:.4f}, "
-                  f"ordinary recall {summary['diag']['ord_recall'][DK]:.3f}, "
-                  f"median {summary['diag']['ord_median']:.4g}", flush=True)
+            train_part = {"train_loss": train_loss(run_dir, it, int(cfg["val_every"])),
+                          "split": split or "train_subset", "n_shapes": len(items)}
+            if grid:
+                settings = decoding_grid(target)
+                summaries = grid_summaries(model, items, settings, device, DATA_ROOT)
+                choice = _select(summaries)  # the band selection of training (H5-K1-1a)
+                k = choice["index"]
+                doc = {"run": run, "iteration": it, "grid": True, "selected": k,
+                       "selected_setting": summaries[k]["setting"], "selected_name": summaries[k]["setting_name"],
+                       "ratio": choice["ratio"], "in_band": choice["in_band"],
+                       "settings": [s["setting"] for s in summaries], **train_part, "summaries": summaries}
+                print(f"eval {run} it {it} grid: selected {summaries[k]['setting_name']} "
+                      f"(ratio {choice['ratio']:.3f}, in band {choice['in_band']}), "
+                      f"F1 {summaries[k]['deltas'][DK]['f1']:.4f}", flush=True)
+            else:
+                setting = json.loads(ck.with_suffix(".json").read_text(encoding="utf-8"))["setting"]
+                summary = grid_summaries(model, items, [setting], device, DATA_ROOT)[0]  # deterministic forward inside
+                doc = {"run": run, "iteration": it, "setting": setting, "setting_name": summary["setting_name"],
+                       **train_part, "summary": summary}
+                print(f"eval {run} it {it} {summary['setting_name']}: F1 {summary['deltas'][DK]['f1']:.4f}, "
+                      f"ordinary recall {summary['diag']['ord_recall'][DK]:.3f}, "
+                      f"median {summary['diag']['ord_median']:.4g}", flush=True)
+            (out / name).write_text(json.dumps(doc, default=float), encoding="utf-8")
 
 
 # ---------------------------------------------------------------- stage report
@@ -360,10 +380,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--split", type=str, default=None,
                    help="eval: shape split to evaluate on (default: the training subset of the Q0 runs)")
     p.add_argument("--n-shapes", type=int, default=None, help="eval with --split: the first n shapes of the split")
+    p.add_argument("--grid", action="store_true",
+                   help="eval: all settings of the decoding grid and the band selection (writes *_grid.json)")
     args = p.parse_args(argv)
     if args.stage == "eval":
         run_eval(args.root, args.its, torch.device("cuda" if torch.cuda.is_available() else "cpu"),
-                 args.runs, args.split, args.n_shapes)
+                 args.runs, args.split, args.n_shapes, args.grid)
     else:
         run_report(args.root, args.its, args.final_it, args.prev_it, args.out, args.v2_final, args.lr_step)
     return 0

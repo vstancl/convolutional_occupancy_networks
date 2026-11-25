@@ -27,6 +27,8 @@ from _paths import add_external_paths
 
 add_external_paths()
 
+from occ_binarize import decode_occfrac_binarize  # noqa: E402
+
 from csgbox.ceilings import (  # noqa: E402
     RayHits,
     _sample_positions,
@@ -110,6 +112,8 @@ def _decode_axis(target: str, out: dict, setting: dict) -> RayHits:
         return decode_slots(t, _sigmoid(out["mask_logits"]), K, thr=thr)
     if target == "occfrac_128":
         f = _sigmoid(out["logits"])
+        if setting.get("occ_mode") == "binarize":  # K1-1b: f >= 0.5 is occupied, hits at the changes (no snapping)
+            return decode_occfrac_binarize(f)
         if occ_snap is not None:  # off by default: values within occ_snap of 0 or 1 are snapped
             f = np.where(f < occ_snap, 0.0, np.where(f > 1.0 - occ_snap, 1.0, f))
         return decode_occfrac(f)
@@ -625,6 +629,8 @@ def _diag_markdown(summary: dict, deltas) -> list[str]:
 def setting_name(st: dict) -> str:
     if "iso" in st:
         return f"iso={st['iso']:g}"
+    if st.get("occ_mode") == "binarize":
+        return "binarize"
     if "occ_snap" in st:
         return "literal" if st["occ_snap"] is None else f"occ_snap={st['occ_snap']:g}"
     if "thr" in st:
@@ -637,7 +643,7 @@ def decoding_grid(target: str) -> list[dict]:
     if target in TARGET_K or target == "binary_128":
         return [{"thr": t} for t in MASK_THRESHOLDS]
     if target == "occfrac_128":
-        return [{"occ_snap": s} for s in OCC_SNAP_GRID]
+        return [{"occ_snap": s} for s in OCC_SNAP_GRID] + [{"occ_mode": "binarize"}]  # K1-1b: binarize last
     if target == "tsdf_128":
         return [{}]
     if target in POINT_TARGET_NAMES:
