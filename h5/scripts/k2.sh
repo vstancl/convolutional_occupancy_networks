@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# H5-K2-2 chain: point decoders with ray-interval query points (H5-K2-1a/b), Q0 memorisation settings. Start it with:
+# H5-K2-2 chain: point decoders with ray-interval query points (H5-K2-1a/b/c), Q0 memorisation settings. Start it with:
 #
 #   cd ~/PhD/convonet && h5/scripts/k2.sh              # the real chain, root ~/PhD/runs/k2
 #   cd ~/PhD/convonet && h5/scripts/k2.sh --dry-run    # tiny numbers, scratch directory, CPU only
 #
-# 1. Train K2_points_rayint_a and K2_points_rayint_b from scratch with the Q0 settings: train_subset 32 (seed 0, the
-#    same 32 shapes as Q0), eval_on_train, batch 32, max_it 60000, lr drop to 1e-5 at 50000, validation every 5000.
-# 2. Evaluate model_it{5000..60000} of both runs on the same 32 shapes, all rays, with the H5-6 diagnostics and the
+# 1. Train K2_points_rayint_a, K2_points_rayint_b and (H5-K2-1c) K2_points_rayint_c, in that order, from scratch with
+#    identical Q0 settings: train_subset 32 (seed 0, the same 32 shapes as Q0), eval_on_train, batch 32, max_it 60000,
+#    lr drop to 1e-5 at 50000, validation every 5000.
+# 2. Evaluate model_it{5000..60000} of the three runs on the same 32 shapes, all rays, with the H5-6 diagnostics and the
 #    band selection over the iso grid (q0_report.py eval --grid -> ROOT/eval/{run}_it{N}_grid.json).
 # 3. Re-evaluate Q0_points_strong model_it60000 of ~/PhD/runs/h5_q0 the same way (eval only). It writes
 #    h5_q0/eval/Q0_points_strong_it60000_grid.json next to the old Q0 files, which are kept. In a dry run a tiny
@@ -74,13 +75,14 @@ run_train() {  # run_train ROOT NAME CONFIG
 log "K2 CHAIN root=$ROOT q0_root=$Q0_ROOT dry=$DRY"
 run_train "$ROOT" K2_points_rayint_a points_rayint_a
 run_train "$ROOT" K2_points_rayint_b points_rayint_b
+run_train "$ROOT" K2_points_rayint_c points_rayint_c
 if (( DRY )); then
   mkdir -p "$Q0_ROOT"
   run_train "$Q0_ROOT" Q0_points_strong points_strong  # stand-in for the real Q0 run
 fi
 
 log "START eval K2 (checkpoints $ITS, $SUBSET training shapes, all rays, grid and band selection)"
-"$PY" "$SCRIPTS/q0_report.py" eval --root "$ROOT" --runs K2_points_rayint_a,K2_points_rayint_b --its "$ITS" --grid \
+"$PY" "$SCRIPTS/q0_report.py" eval --root "$ROOT" --runs K2_points_rayint_a,K2_points_rayint_b,K2_points_rayint_c --its "$ITS" --grid \
     2>&1 | tee -a "$LOG"
 log "END eval K2"
 

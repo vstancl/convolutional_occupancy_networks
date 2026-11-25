@@ -335,7 +335,8 @@ class PointModel(nn.Module):
 
 
 # The point-decoder targets: data.POINT_TARGETS + data.RAYINT_TARGETS (H5-K2-1b; a test checks the two agree).
-POINT_TARGET_NAMES: tuple[str, ...] = ("points_std", "points_strong", "points_rayint_a", "points_rayint_b")
+POINT_TARGET_NAMES: tuple[str, ...] = ("points_std", "points_strong", "points_rayint_a", "points_rayint_b",
+                                     "points_rayint_c")
 
 
 def build_model(target: str, cfg: dict | None = None) -> nn.Module:

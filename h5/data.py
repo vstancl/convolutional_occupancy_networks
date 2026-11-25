@@ -317,9 +317,10 @@ def build_point_item(shape_dir: Path, rng: np.random.Generator, target: str, n_p
 # Ray-interval query points (H5-K2-1a): query points for the point decoder from the GT intervals of rays.
 # ---------------------------------------------------------------------------------------------------
 
-RAYINT_TARGETS: tuple[str, ...] = ("points_rayint_a", "points_rayint_b")
+RAYINT_TARGETS: tuple[str, ...] = ("points_rayint_a", "points_rayint_b", "points_rayint_c")
 RAYINT_N_RAYS: int = 512  # sampled rays per item
 RAYINT_MIN_SEGMENT: float = 1e-9  # segments shorter than this are dropped
+RAYINT_C_FLOOR: float = cell_size(M) / 4  # variant c: weight 1 / max(length, RAYINT_C_FLOOR) (H5-K2-1c)
 
 
 def rayint_segments(axes, start_inside: tuple[np.ndarray, np.ndarray, np.ndarray],
@@ -378,8 +379,14 @@ def _rayint_sample(shape_dir: Path, rng: np.random.Generator, target: str, n_poi
     n_seg = length.size
     if target == "points_rayint_a":
         pick = rng.integers(0, n_seg, size=n_query)  # every segment equally likely
-    else:
+    elif target == "points_rayint_b":
         pick = rng.choice(n_seg, size=n_query, replace=True, p=length / length.sum())  # proportional to length
+    else:  # points_rayint_c (H5-K2-1c): half as variant a, the rest weighted towards short segments
+        half = n_query // 2
+        pick_a = rng.integers(0, n_seg, size=half)
+        w = 1.0 / np.maximum(length, RAYINT_C_FLOOR)
+        pick_thin = rng.choice(n_seg, size=n_query - half, replace=True, p=w / w.sum())
+        pick = np.concatenate([pick_a, pick_thin])
     t = rng.uniform(seg["start"][pick], seg["end"][pick])
     ray_axis, _ray_index, uv = ray_fields(g)
     row = seg["row"][pick]
@@ -408,7 +415,8 @@ def build_rayint_item(shape_dir: Path, rng: np.random.Generator, target: str, n_
     2. ``n_rays`` rays with the mixture sampler (``sample_global_rays``) over ``dexels_128.npz``;
     3. ``n_query`` segments with replacement (``rayint_segments``): ``points_rayint_a`` uniform over all segments of
        all sampled rays, ``points_rayint_b`` with probability proportional to the length (points uniform along the
-       sampled rays, the control);
+       sampled rays, the control), ``points_rayint_c`` (H5-K2-1c) ``n_query // 2`` as variant a and the rest with
+       probability proportional to ``1 / max(length, cell_size(128) / 4)`` (thin-focused);
     4. ``t`` uniform in each chosen segment.
 
     The point is the cell centre of its ray on the two transverse axes (``ray_fields``) and ``t`` on the ray axis;

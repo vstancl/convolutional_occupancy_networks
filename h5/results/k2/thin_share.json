@@ -105,7 +105,7 @@
  "step": 100,
  "draws": 20,
  "h": 0.008593828125,
- "seconds": 146.61723929400068,
+ "seconds": 200.7145329379964,
  "rows": {
   "points_strong": {
    "share_lt_h": 0.022442626953125,
@@ -120,6 +120,11 @@
   "points_rayint_b": {
    "share_lt_h": 0.000562744140625,
    "share_lt_4h": 0.0044990234375,
+   "items": 2000
+  },
+  "points_rayint_c": {
+   "share_lt_h": 0.1811630859375,
+   "share_lt_4h": 0.333625732421875,
    "items": 2000
   }
  }

@@ -113,8 +113,9 @@ def test_c_variant_a_favours_short_segments():
         shares[target] = short / total
     print(f"\nshare of points in segments shorter than h(128), shape {shape_ids('train')[index]}, 200 draws: "
           + ", ".join(f"{k} {v:.4f}" for k, v in shares.items()))
-    a, b = shares["points_rayint_a"], shares["points_rayint_b"]
+    a, b, c = shares["points_rayint_a"], shares["points_rayint_b"], shares["points_rayint_c"]
     assert a > 0 and a > 5 * b  # "clearly larger": at least five times the share of the control
+    assert c > 2 * a  # H5-K2-1c: the thin-focused variant c clearly above variant a
 
 
 def test_d_variant_b_mean_occupancy_matches_the_rays():
@@ -151,6 +152,19 @@ POINT_ITEM_DIGEST = {
     "points_std": "33fe5ca534228f7bbfffa9a65b45f875a21176edf7e4478c7b3fbd29051b79ce",
     "points_strong": "28460511332d4f88c0eb3b97b655aa2feb8af8352b726a4ba677029dd961c66b",
 }
+
+
+# sha256 of build_rayint_item(train shape 0, Generator(PCG64(123)), target, 10000, 0.001), computed before K2-1c
+RAYINT_ITEM_DIGEST = {
+    "points_rayint_a": "f11b7e378bdebed99e305b5bec33980afa7b973d28a5f42b671d928a19789fd0",
+    "points_rayint_b": "6ebfe7b8f0945453778c38193f2e079a2d07ef4db1b66b371f6ee831bd06c4a9",
+}
+
+
+@pytest.mark.parametrize("target", sorted(RAYINT_ITEM_DIGEST))
+def test_e_rayint_a_and_b_unchanged_by_variant_c(target):
+    item = build_rayint_item(shape_dir_of("train", 0), _rng(123), target, N_POINTS, NOISE)
+    assert _digest(item) == RAYINT_ITEM_DIGEST[target]
 
 
 @pytest.mark.parametrize("target", sorted(POINT_ITEM_DIGEST))

@@ -5,7 +5,7 @@
 
 Shapes: train shapes 0, step, 2 step, ... (``--n-shapes`` of them). Per shape ``--draws`` items of each target, item
 ``d`` of shape ``i`` drawn with ``Generator(PCG64(SeedSequence([i, d])))`` and the builder of the target
-(``build_point_item`` for points_strong, ``build_rayint_item`` for points_rayint_a/b), 10 000 input points, noise 0.001.
+(``build_point_item`` for points_strong, ``build_rayint_item`` for points_rayint_a/b/c), 10 000 input points, noise 0.001.
 
 Segment of a query point: along an axis, the line through the point parallel to that axis is cut at the analytic
 interval ends of ``tree.json`` (``csgbox.tree.eval_rays``, the full line, ends clipped to the box), and the box
@@ -13,7 +13,7 @@ interval ends of ``tree.json`` (``csgbox.tree.eval_rays``, the full line, ends c
 gaps and the outer segments to the box faces. The point's segment is the one containing its coordinate on the axis. A
 point outside the box on that axis has no segment (counted as not thin).
 
-- points_rayint_a/b: the axis of the ray the point was drawn from;
+- points_rayint_a/b/c: the axis of the ray the point was drawn from;
 - points_strong: all three axes through the point, and the shortest of the three segments.
 
 Per item: the share of the ``n_query`` points whose segment is shorter than h(128), and shorter than 4 h(128). The
@@ -44,7 +44,7 @@ from csgbox.tree import eval_rays, from_json  # noqa: E402
 
 from data import N_QUERY, _rayint_sample, build_point_item, ray_fields, shape_dir_of, shape_ids  # noqa: E402
 
-TARGETS: tuple[str, ...] = ("points_strong", "points_rayint_a", "points_rayint_b")
+TARGETS: tuple[str, ...] = ("points_strong", "points_rayint_a", "points_rayint_b", "points_rayint_c")
 N_POINTS = 10000
 NOISE = 0.001
 H = cell_size(128)
