@@ -7,4 +7,4 @@ ceiling occfrac_128,gate B,0.91,0.885,1.06,n/a,n/a,n/a,n/a,0.405,6291456,n/a
 ceiling tsdf_128,gate B,0.941,0.972,0.938,n/a,n/a,n/a,n/a,0.182,6291456,n/a
 ceiling binary_128,gate B,0.455,0.471,0.938,n/a,n/a,n/a,n/a,0.112,6291456,n/a
 ceiling points_512,gate B,0.999,1,0.997,n/a,n/a,n/a,n/a,0.99,n/a,n/a
-ceiling occfrac_128 binarize,binarize,0.928,0.965,0.926,n/a,n/a,n/a,n/a,n/a,6291456,n/a
+ceiling occfrac_128 binarize,binarize,0.928,0.965,0.926,n/a,n/a,n/a,n/a,0.113,6291456,n/a

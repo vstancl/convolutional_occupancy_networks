@@ -15,8 +15,15 @@ schedule keeps the old config as ``config_resumed_at_<it>.json`` next to the new
 taken. A run whose log lacks a field is skipped for that quantity, with a message.
 
 Two figures per group, written to ``<out>/<group>/`` as PNG (dpi 200) and SVG:
-``curves_all`` (one panel per quantity, all runs) and ``curves_per_run`` (one panel per run, loss on the left axis
-and F1 on the right axis).
+``curves_all`` (validation F1 of all runs in one panel; the training losses of different targets are different
+quantities and are not compared, so they are only in the other figure) and ``curves_per_run`` (one panel per run,
+loss on the left axis and F1 on the right axis).
+
+With ``--report`` (a report JSON of k1_1_report.py or q0_report.py; repeatable), a run whose final evaluation used a
+different decoding than its training-time validation at that iteration (the last ``selected`` of ``val.jsonl``;
+for K1 the band selection over the whole decoding grid, the ``(grid)`` rows) gets a hollow marker at its last
+report iteration with the report's F1 and the label "final decoding: <setting>". The report's F1 is measured on all
+rays, the validation F1 on the fixed validation rays.
 """
 
 from __future__ import annotations
@@ -62,7 +69,7 @@ def lr_drops(run_dir: Path) -> list[tuple[int, float]]:
 
 def load_run(run_dir: Path) -> dict:
     cfg = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))
-    run = {"name": run_dir.name, "target": cfg.get("target"), "drops": lr_drops(run_dir), "loss": None, "f1": None}
+    run = {"name": run_dir.name, "dir": str(run_dir), "target": cfg.get("target"), "drops": lr_drops(run_dir), "loss": None, "f1": None}
     log = [r for r in read_jsonl(run_dir / "log.jsonl") if "iteration" in r]
     loss = [(r["iteration"], r["loss"]) for r in log if isinstance(r.get("loss"), (int, float))]
     if loss:
@@ -91,6 +98,42 @@ def discover(roots: list[Path]) -> list[dict]:
     return runs
 
 
+def final_decodings(report_paths: list[Path], runs: list[dict]) -> dict[str, tuple[int, float, str]]:
+    """Run name -> (iteration, F1, setting) of its final evaluation when the decoding differs from validation."""
+    out: dict[str, tuple[int, float, str]] = {}
+    val_setting = {}
+    for r in runs:
+        rows = read_jsonl(Path(r["dir"]) / "val.jsonl")
+        val_setting[r["name"]] = {row["iteration"]: row.get("selected") for row in rows}
+    for rp in report_paths:
+        rep = json.loads(rp.expanduser().read_text(encoding="utf-8"))
+        labels = list(rep["runs"])
+        for label in labels:
+            base = label.removesuffix(" (grid)")
+            if base not in val_setting or (label == base and f"{base} (grid)" in labels):
+                continue  # not a run of this group, or superseded by its grid row
+            last = max(rep["runs"][label], key=lambda e: e["iteration"])
+            if val_setting[base].get(last["iteration"]) != last["setting"]:
+                out[base] = (last["iteration"], last["F1"], last["setting"])
+    return out
+
+
+def mark_final(ax, run: str, final: dict[str, tuple[int, float, str]], inside: bool = False) -> None:
+    """Hollow marker and label; ``inside``: the label below-left of the marker (small panels), else to its right."""
+    if run not in final:
+        return
+    it, f1, setting = final[run]
+    ax.plot([it], [f1], ls="none", marker="o", ms=9, mfc="none", mec=colour(run), mew=1.6, zorder=4)
+    if inside:
+        ax.annotate(f"final decoding: {setting}", (it, f1), xytext=(-4, -12), textcoords="offset points",
+                    ha="right", va="top", fontsize=7, color=colour(run))
+        return
+    ax.annotate(f"final decoding:\n{setting}", (it, f1), xytext=(9, 0), textcoords="offset points", ha="left",
+                va="center", fontsize=7, color=colour(run))
+    lo, hi = ax.get_xlim()
+    ax.set_xlim(lo, max(hi, it * 1.22))  # room for the label right of the marker
+
+
 def mark_drops(ax, drops: list[tuple[int, float]], label: bool) -> None:
     for it, lr in drops:
         ax.axvline(it, color="0.3", ls="--", lw=0.8)
@@ -111,28 +154,28 @@ def plot_loss(ax, run: dict) -> None:
     ax.plot(it, ema(v), color=c, lw=1.4, ls=style(run["name"]), label=run["name"])
 
 
-def figure_all(runs: list[dict], group: str, title: str) -> plt.Figure:
-    fig, (a_loss, a_f1) = plt.subplots(1, 2, figsize=(12, 4.6))
+def figure_all(runs: list[dict], title: str, final: dict[str, tuple[int, float, str]]) -> plt.Figure:
+    fig, a_f1 = plt.subplots(1, 1, figsize=(8, 5))
     drops = sorted({d for r in runs for d in r["drops"]})
     for r in runs:
-        if r["loss"] is not None:
-            plot_loss(a_loss, r)
         if r["f1"] is not None:
             it, v = r["f1"]
             a_f1.plot(it, v, color=colour(r["name"]), ls=style(r["name"]), marker="o", ms=3, lw=1.4, label=r["name"])
-    a_loss.set_yscale("log")
-    a_loss.set(xlabel="iteration", ylabel="training loss (EMA solid, raw faint)", title="(a) training loss")
-    a_f1.set(xlabel="iteration", ylabel="F1 of all hits, delta 0.002", title="(b) validation F1 (band-selected setting)")
-    for ax in (a_loss, a_f1):
-        mark_drops(ax, drops, label=True)
-        ax.grid(alpha=0.3)
-        ax.legend(fontsize=7)
+        mark_final(a_f1, r["name"], final)
+    a_f1.set(xlabel="iteration", ylabel="F1 of all hits, delta 0.002",
+             title="validation F1 (band-selected setting of training)")
+    mark_drops(a_f1, drops, label=True)
+    a_f1.grid(alpha=0.3)
+    a_f1.legend(fontsize=7)
+    if final:
+        fig.text(0.01, -0.02, "Hollow markers: the final evaluation (all rays) at the decoding chosen over the whole "
+                 "decoding grid, where it differs from the training-time validation.", fontsize=7, ha="left")
     fig.suptitle(title)
     fig.tight_layout()
     return fig
 
 
-def figure_per_run(runs: list[dict], title: str) -> plt.Figure:
+def figure_per_run(runs: list[dict], title: str, final: dict[str, tuple[int, float, str]]) -> plt.Figure:
     n = len(runs)
     cols = min(4, n)
     rows = math.ceil(n / cols)
@@ -150,6 +193,7 @@ def figure_per_run(runs: list[dict], title: str) -> plt.Figure:
             a2 = ax.twinx()
             it, v = r["f1"]
             a2.plot(it, v, color="k", marker="o", ms=2.5, lw=1.0)
+            mark_final(a2, r["name"], final, inside=True)
             a2.set_ylabel("val F1 (black)", fontsize=8)
             a2.tick_params(labelsize=7)
             a2.set_ylim(bottom=0)
@@ -166,14 +210,19 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--group", required=True)
     p.add_argument("--title", default=None, help="figure title (default: the group and its roots)")
     p.add_argument("--out", type=Path, default=H5_DIR / "results" / "figures")
+    p.add_argument("--report", type=Path, action="append", default=[],
+                   help="report JSON: marks the final evaluation where its decoding differs from validation")
     args = p.parse_args(argv)
     runs = discover([r.expanduser() for r in args.root])
     if not runs:
         raise SystemExit("no runs found")
     title = args.title or f"{args.group}: learning curves ({', '.join(r.name for r in args.root)})"
     out = args.out / args.group
-    written = save(figure_all(runs, args.group, title), out, "curves_all")
-    written += save(figure_per_run(runs, title), out, "curves_per_run")
+    final = final_decodings(args.report, runs)
+    for run, (it, f1, setting) in sorted(final.items()):
+        print(f"{run}: final decoding {setting} at {it} (F1 {f1:.4g}) differs from validation; marked")
+    written = save(figure_all(runs, title, final), out, "curves_all")
+    written += save(figure_per_run(runs, title, final), out, "curves_per_run")
     for w in written:
         print(w)
     return 0

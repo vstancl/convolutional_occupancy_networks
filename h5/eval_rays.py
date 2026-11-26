@@ -38,6 +38,7 @@ from csgbox.ceilings import (  # noqa: E402
     gt_hits,
     match,
     thin_bins,
+    thin_pairs,
 )
 from csgbox.constants import (  # noqa: E402
     BOX_LO,
@@ -355,6 +356,38 @@ def nearest_same_type(gt: RayHits, dec: RayHits) -> np.ndarray:
     return out
 
 
+# H5-G1b: distance histograms stored in the evaluation output (for the error CDF). 200 log-spaced bins from 1e-5 to 1;
+# the stored count vectors have DIST_HIST_NB + 3 entries: [underflow (< 1e-5), the 200 bins, overflow (>= 1, finite),
+# inf (no decoded hit of that type on the ray)]. Groups: "ord" (the ordinary hits of the diagnostics above) and
+# "thin_wg_lt1" (GT hits that are an endpoint of a thin wall or gap, grazing excluded, with L/h < 1; a hit that ends two
+# such features counts once).
+DIST_HIST_EDGES: np.ndarray = np.logspace(-5.0, 0.0, 201)
+DIST_HIST_NB: int = len(DIST_HIST_EDGES) - 1
+DIST_HIST_LAYOUT = "underflow (< 1e-5), 200 log-spaced bins 1e-5..1, overflow (>= 1, finite), inf"
+N_LT1_BINS: int = 4  # L/h bins [0, 1/8), [1/8, 1/4), [1/4, 1/2), [1/2, 1)
+
+
+def dist_hist_counts(d: np.ndarray) -> list[int]:
+    """Counts of distances in the stored layout (``DIST_HIST_NB + 3`` entries)."""
+    d = np.asarray(d, dtype=np.float64)
+    fin = np.isfinite(d)
+    df = d[fin]
+    idx = np.searchsorted(DIST_HIST_EDGES, df, side="right")  # 0: below the first edge; NB + 1: at or above the last
+    idx = np.where(df >= DIST_HIST_EDGES[-1], DIST_HIST_NB + 1, idx)
+    counts = np.bincount(idx, minlength=DIST_HIST_NB + 2)
+    return counts.tolist() + [int((~fin).sum())]
+
+
+def thin_wg_lt1_mask(gt: RayHits, axis: int, h: float) -> np.ndarray:
+    """Per GT hit: endpoint of a thin wall or gap (csgbox ``thin_pairs`` classes 0 and 1) with L/h < 1."""
+    k, length, cls = thin_pairs(gt, axis)
+    sel = (cls.astype(int) <= 1) & (thin_bins(length, h) < N_LT1_BINS)
+    mask = np.zeros(gt.t.size, dtype=bool)
+    mask[k[sel]] = True
+    mask[k[sel] + 1] = True
+    return mask
+
+
 def thin_endpoints(gt: RayHits, h: float) -> tuple[np.ndarray, np.ndarray]:
     """Per GT hit: length of its shorter adjacent GT interval if that interval is thin (< GEN_THIN_CELLS h).
 
@@ -378,14 +411,15 @@ def _hist_index(d: np.ndarray) -> np.ndarray:
     return np.where(d >= DIAG_EDGES[-1], DIAG_NB, idx)
 
 
-def hit_diagnostics(gt: RayHits, dec: RayHits, h: float, deltas=EVAL_DELTAS) -> dict:
+def hit_diagnostics(gt: RayHits, dec: RayHits, h: float, deltas=EVAL_DELTAS, axis: int | None = None) -> dict:
     """Per-hit diagnostics of one (shape, axis); every entry is an additive count or a histogram.
 
     Ordinary GT hits are the hits that are not an endpoint of a thin GT interval; thin GT hits are binned by the
     length of their shorter adjacent thin interval (``thin_bins``, the gate's L/h bins). For both groups:
     ``n``, ``hist`` (distance to the nearest same-type decoded hit, ``hist`` of ``DIAG_NB + 1`` bins; thin: one
     list per bin), ``within`` (count with that distance <= delta, per delta) and ``matched`` (GT hits matched at
-    delta by the csgbox greedy matching, per delta: the recall numerator).
+    delta by the csgbox greedy matching, per delta: the recall numerator). With ``axis`` (H5-G1b), also
+    ``dist_hist``: the distance histograms of the ordinary hits and of the thin wall/gap hits with L/h < 1.
     """
     dist = nearest_same_type(gt, dec)
     shorter, thin = thin_endpoints(gt, h)
@@ -408,13 +442,16 @@ def hit_diagnostics(gt: RayHits, dec: RayHits, h: float, deltas=EVAL_DELTAS) -> 
         out["ord"]["matched"][key] = int((m & ordn).sum())
         out["thin"]["within"][key] = np.bincount(bins[thin & within], minlength=n_bins).tolist()
         out["thin"]["matched"][key] = np.bincount(bins[thin & m], minlength=n_bins).tolist()
+    if axis is not None:
+        out["dist_hist"] = {"ord": dist_hist_counts(dist[ordn]),
+                            "thin_wg_lt1": dist_hist_counts(dist[thin_wg_lt1_mask(gt, axis, h)])}
     return out
 
 
 def evaluate_axis_diag(gt: RayHits, dec: RayHits, axis: int, deltas: tuple[float, ...], h: float) -> dict:
     """``evaluate_axis`` (csgbox, unchanged) plus the per-hit diagnostics under the key ``diag``."""
     out = evaluate_axis(gt, dec, axis, tuple(deltas), h)
-    out["diag"] = hit_diagnostics(gt, dec, h, deltas)
+    out["diag"] = hit_diagnostics(gt, dec, h, deltas, axis=axis)
     return out
 
 
@@ -481,6 +518,9 @@ def aggregate(results: list[dict], deltas=EVAL_DELTAS) -> tuple[dict, str]:
           "thin_hist": np.zeros((n_bins, DIAG_NB + 1), dtype=np.int64),
           "thin_within": {str(d): np.zeros(n_bins, dtype=np.int64) for d in deltas},
           "thin_matched": {str(d): np.zeros(n_bins, dtype=np.int64) for d in deltas}}
+    dist_hist = {"ord": np.zeros(DIST_HIST_NB + 3, dtype=np.int64),
+                 "thin_wg_lt1": np.zeros(DIST_HIST_NB + 3, dtype=np.int64)}
+    dist_hist_n = diag_n = 0
     for r in results:
         gt_hits_n += int(r["gt_hits"])
         dec_hits_n += int(r["dec_hits"])
@@ -503,6 +543,11 @@ def aggregate(results: list[dict], deltas=EVAL_DELTAS) -> tuple[dict, str]:
         dg["ord_hist"] += np.asarray(g["ord"]["hist"], dtype=np.int64)
         dg["thin_n"] += np.asarray(g["thin"]["n"], dtype=np.int64)
         dg["thin_hist"] += np.asarray(g["thin"]["hist"], dtype=np.int64)
+        diag_n += 1
+        if "dist_hist" in g:
+            dist_hist_n += 1
+            for grp in dist_hist:
+                dist_hist[grp] += np.asarray(g["dist_hist"][grp], dtype=np.int64)
         for d in deltas:
             key = str(d)
             dg["ord_within"][key] += int(g["ord"]["within"][key])
@@ -528,6 +573,11 @@ def aggregate(results: list[dict], deltas=EVAL_DELTAS) -> tuple[dict, str]:
         "thin_recall": {k: np.where(thin_n > 0, v / np.maximum(thin_n, 1), np.nan).tolist()
                         for k, v in dg["thin_matched"].items()},
     }
+    if dist_hist_n:  # H5-G1b: stored only when every result with diagnostics carries the histograms
+        if dist_hist_n != diag_n:
+            raise ValueError(f"distance histograms in {dist_hist_n} of {diag_n} results")
+        summary["diag"]["dist_hist"] = {"edges": DIST_HIST_EDGES.tolist(), "layout": DIST_HIST_LAYOUT,
+                                        **{grp: v.tolist() for grp, v in dist_hist.items()}}
     for d in deltas:
         key = str(d)
         acc = per_delta[key]

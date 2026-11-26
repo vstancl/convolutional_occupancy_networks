@@ -15,6 +15,6 @@
 | ceiling tsdf_128 | gate B | 0.941 | 0.972 | 0.938 | n/a | n/a | n/a | n/a | 0.182 | 6291456 | n/a |
 | ceiling binary_128 | gate B | 0.455 | 0.471 | 0.938 | n/a | n/a | n/a | n/a | 0.112 | 6291456 | n/a |
 | ceiling points_512 | gate B | 0.999 | 1 | 0.997 | n/a | n/a | n/a | n/a | 0.99 | n/a | n/a |
-| ceiling occfrac_128 binarize | binarize | 0.928 | 0.965 | 0.926 | n/a | n/a | n/a | n/a | n/a | 6291456 | n/a |
+| ceiling occfrac_128 binarize | binarize | 0.928 | 0.965 | 0.926 | n/a | n/a | n/a | n/a | 0.113 | 6291456 | n/a |
 
-Network rows: last checkpoint, band-selected setting (the (grid) rows select over the whole decoding grid); an out-of-band row is not comparable. Ceiling rows: gate B (csgbox gate_v2, 200 gate shapes, not the evaluation shapes), no network; the binarize ceiling stores no walls+gaps value, so its M is n/a. Output values per shape: hits = 3 x 128^2 x 12 (4K hit slots + 2K mask logits per ray, K = 2), dense = 3 x 128^2 x 128, point decoders n/a. Training s/it: median of the training log.
+Network rows: last checkpoint, band-selected setting (the (grid) rows select over the whole decoding grid); an out-of-band row is not comparable. Ceiling rows: gate B (csgbox gate_v2, 200 gate shapes, not the evaluation shapes), no network; the binarize ceiling is computed on the same shapes (h5/results/k1_1/occfrac_ceiling.json). Output values per shape: hits = 3 x 128^2 x 12 (4K hit slots + 2K mask logits per ray, K = 2), dense = 3 x 128^2 x 128, point decoders n/a. Training s/it: median of the training log.
