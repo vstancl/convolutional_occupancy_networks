@@ -1,0 +1,15 @@
+Memorisation of 32 training shapes: 1 run per decoder, the 32 training shapes, all rays
+
+| row | decoding setting | F1 0.002 (up) | precision (up) | decoded/GT (target 1) | in band | ord recall 0.002 (up) | ord recall h/2 (up) | ord median (down) | M walls+gaps L/h<1 (up) | output values per shape (down) | training s/it |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Q0_points_strong | iso=0.5 | 0.606 | 0.6 | 1.02 | yes | 0.722 | 0.861 | 0.000849 | 0.184 | n/a | 0.108 |
+| Q0_hits_8 | thr=0.7 | 0.398 | 0.403 | 0.973 | yes | 0.429 | 0.705 | 0.00243 | 0.165 | 589824 | 0.207 |
+| Q0_occfrac_128 | occ_snap=0.4 | 0.38 | 0.316 | 1.51 | no | 0.547 | 0.881 | 0.00178 | 0.0499 | 6291456 | 0.197 |
+| ceiling hits_8 (= hits_8_plane) | gate B | 0.987 | 1 | 0.975 | n/a | n/a | n/a | n/a | 0.864 | 589824 | n/a |
+| ceiling occfrac_128 | gate B | 0.91 | 0.885 | 1.06 | n/a | n/a | n/a | n/a | 0.405 | 6291456 | n/a |
+| ceiling tsdf_128 | gate B | 0.941 | 0.972 | 0.938 | n/a | n/a | n/a | n/a | 0.182 | 6291456 | n/a |
+| ceiling binary_128 | gate B | 0.455 | 0.471 | 0.938 | n/a | n/a | n/a | n/a | 0.112 | 6291456 | n/a |
+| ceiling points_512 | gate B | 0.999 | 1 | 0.997 | n/a | n/a | n/a | n/a | 0.99 | n/a | n/a |
+| ceiling occfrac_128 binarize | binarize | 0.928 | 0.965 | 0.926 | n/a | n/a | n/a | n/a | n/a | 6291456 | n/a |
+
+Network rows: last checkpoint, band-selected setting (the (grid) rows select over the whole decoding grid); an out-of-band row is not comparable. Ceiling rows: gate B (csgbox gate_v2, 200 gate shapes, not the evaluation shapes), no network; the binarize ceiling stores no walls+gaps value, so its M is n/a. Output values per shape: hits = 3 x 128^2 x 12 (4K hit slots + 2K mask logits per ray, K = 2), dense = 3 x 128^2 x 128, point decoders n/a. Training s/it: median of the training log.
