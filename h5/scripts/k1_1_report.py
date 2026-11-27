@@ -28,6 +28,17 @@ evaluation summary), not the per-hit thin recall. Rule, fixed for this report:
 - H5 refuted if, in every L/h bin, the walls-and-gaps recall of hits_8 is at most 0.02 higher than the dense value;
 - otherwise undecided (the SPEC calls this "compactness only"). If no dense run is in band: "not evaluable".
 
+With ``--k2-3 ROOT`` (H5-K2-3) the script writes instead the K2-3 report (default ``h5/results/k2_3``): the run
+K2_3_points_mix_a of ``ROOT`` (full train split, the K1-1 points_strong settings, evaluated as points_strong: the setting
+of training, ``{run}_it{N}.json``) at ``--new-its`` next to the K1 reference rows points_strong, hits_8,
+occfrac_128 (grid) and tsdf_128 (grid) of the ``--root`` roots at ``--its`` (read from their evaluations, not
+re-evaluated). Columns: ordinary recall 0.002, weighted thin recall L/h < 1 (per-hit thin recall at 0.002,
+population-weighted over the four L/h < 1 bins, as in K2), M, precision, decoded/GT, in band, F1, ordinary median
+distance; per-bin thin recall at 0.002 and h/2 at the last checkpoints. Rule (fixed on 27. 11. 2026, at the last
+``--new-its``): CONTINUE if K2_3_points_mix_a has ordinary recall >= 0.271 AND M >= 0.031 AND decoded/GT in band;
+otherwise STOP; the margins to each threshold are printed. A check line compares the points_strong reference with
+``--check-report`` (h5/results/k1/report.json).
+
 A separate section "Cost (not evaluated yet)" names the hits variant (hits_8 or hits_8_plane) that would carry the cost
 criterion of the SPEC (the same accuracy as the point decoder, at least ``COST_SPEED_NEED`` times faster), from the
 speed ratios measured in the pilot (``PILOT_SPEED``). The cost criterion itself is not computed.
@@ -312,13 +323,139 @@ def to_markdown(doc: dict) -> str:
     return "\n".join(L) + "\n"
 
 
+# ---------------------------------------------------------------- H5-K2-3: points_mix_a on the full train split
+
+K2_3_RUN = "K2_3_points_mix_a"
+K2_3_REFS: tuple[str, ...] = ("points_strong", "hits_8", "occfrac_128" + GRID_SUFFIX, "tsdf_128" + GRID_SUFFIX)
+K2_3_RULE = {"ord": 0.271, "M": 0.031}  # fixed on 27. 11. 2026
+K2_3_CHECK = {"ord": 0.291, "M": 0.003}  # points_strong at 120000 in h5/results/k1/report.md, rounded
+
+
+def weighted_thin(row: dict) -> float:
+    """Per-hit thin recall at 0.002, population-weighted over the L/h < 1 bins (the measure of Q0 and K2)."""
+    bins = row["thin"][: RULE["small_bins"]]
+    n = sum(b["n"] for b in bins)
+    return sum(b["recall"][DK] * b["n"] for b in bins if b["n"]) / n if n else float("nan")
+
+
+def k2_3_build(ref_roots: list[Path], ref_its: list[int], new_root: Path, new_its: list[int],
+               check_report: Path) -> dict:
+    refs = build(ref_roots, ref_its)
+    new = build([new_root], new_its)
+    rows: dict[str, list[dict]] = {K2_3_RUN: new["runs"].get(K2_3_RUN, [])}
+    for lab in K2_3_REFS:
+        rows[lab] = refs["runs"].get(lab, [])
+    for r in (r for rs in rows.values() for r in rs):
+        r["weighted_thin"] = weighted_thin(r)
+    final_new = _row(rows[K2_3_RUN], new_its[-1])
+    if final_new is None:
+        rule = {"decision": "not evaluable", "reason": f"{K2_3_RUN} it {new_its[-1]} not evaluated"}
+    else:
+        m_ord = final_new["ord_recall"][DK] - K2_3_RULE["ord"]
+        m_m = final_new["M"] - K2_3_RULE["M"]
+        ok = m_ord >= 0 and m_m >= 0 and final_new["in_band"]
+        rule = {"decision": "CONTINUE" if ok else "STOP", "iteration": new_its[-1], "thresholds": K2_3_RULE,
+                "ord_recall": final_new["ord_recall"][DK], "M": final_new["M"],
+                "dec_gt_ratio": final_new["dec_gt_ratio"], "in_band": final_new["in_band"],
+                "margin_ord": m_ord, "margin_M": m_m,
+                "margin_band": min(final_new["dec_gt_ratio"] - RATIO_BAND[0], RATIO_BAND[1] - final_new["dec_gt_ratio"])}
+    ps = _row(rows["points_strong"], ref_its[-1])
+    check = {"iteration": ref_its[-1], "report": str(check_report)}
+    if ps is None:
+        check["status"] = "points_strong reference not evaluated"
+    else:
+        rep_doc = json.loads(check_report.read_text(encoding="utf-8"))
+        rep_row = _row(rep_doc["runs"].get("points_strong", []), ref_its[-1])
+        same = rep_row is not None and rep_row["ord_recall"][DK] == ps["ord_recall"][DK] and rep_row["M"] == ps["M"]
+        rounded = round(ps["ord_recall"][DK], 3) == K2_3_CHECK["ord"] and round(ps["M"], 3) == K2_3_CHECK["M"]
+        check.update({"ord_recall": ps["ord_recall"][DK], "M": ps["M"], "equal_to_report": same,
+                      "rounded_as_stated": rounded, "status": "ok" if same and rounded else "MISMATCH"})
+    return {"new_root": str(new_root), "new_its": new_its, "ref_roots": [str(r) for r in ref_roots],
+            "ref_its": ref_its, "ratio_band": list(RATIO_BAND),
+            "evaluation": sorted({(e["split"], e["n_shapes"]) for e in refs["evaluation"] + new["evaluation"]}),
+            "missing": [m for m in new["missing"] if m.startswith(K2_3_RUN)]
+            + [m for m in refs["missing"] if m.rsplit("_it", 1)[0] in {x.removesuffix(GRID_SUFFIX) for x in K2_3_REFS}],
+            "rows": rows, "rule": rule, "check": check}
+
+
+def k2_3_markdown(doc: dict) -> str:
+    ev = ", ".join(f"{s} (first {n} shapes, all rays)" for s, n in doc["evaluation"]) or "none"
+    r, c = doc["rule"], doc["check"]
+    L = ["# H5-K2-3 report: points_mix_a on the full train split against the K1 references", "",
+         f"New run: {K2_3_RUN} ({doc['new_root']}, checkpoints {', '.join(map(str, doc['new_its']))}), the settings of "
+         "the K1-1 points_strong run, only the target differs. References (read from their evaluations, not "
+         f"re-evaluated): {', '.join(K2_3_REFS)} ({', '.join(doc['ref_roots'])}, checkpoints "
+         f"{', '.join(map(str, doc['ref_its']))}).", "",
+         f"Evaluation: {ev}. Setting: the band selection of training (decoded/GT in [{doc['ratio_band'][0]:g}, "
+         f"{doc['ratio_band'][1]:g}], best F1 at 0.002, otherwise the closest ratio); for the rows labelled (grid) the "
+         "same selection over the whole decoding grid. Weighted thin recall L/h < 1: per-hit thin recall at 0.002, "
+         "population-weighted over the four L/h < 1 bins. M: walls and gaps with L/h < 1, both ends matched, pooled.", ""]
+    if doc["missing"]:
+        L += [f"Not evaluated: {', '.join(doc['missing'])}.", ""]
+    L += [f"## Rule (fixed on 27. 11. 2026, at iteration {doc['new_its'][-1]})", ""]
+    if r["decision"] == "not evaluable":
+        L += [f"**not evaluable**: {r['reason']}.", ""]
+    else:
+        t = r["thresholds"]
+        L += [f"**{r['decision']}**: {K2_3_RUN} ordinary recall {_f(r['ord_recall'], 4)} (threshold {t['ord']}, margin "
+              f"{r['margin_ord']:+.4f}), M {_f(r['M'], 4)} (threshold {t['M']}, margin {r['margin_M']:+.4f}), decoded/GT "
+              f"{_f(r['dec_gt_ratio'], 4)} ({'in band' if r['in_band'] else 'out of band'}, margin to the nearer band "
+              f"edge {r['margin_band']:+.4f}).", ""]
+    if "ord_recall" in c:
+        L += [f"Check: points_strong at {c['iteration']} read here: ordinary recall {_f(c['ord_recall'], 4)}, M "
+              f"{_f(c['M'], 4)}; equal to {c['report']}: {'yes' if c['equal_to_report'] else '**no**'}; rounded "
+              f"{round(c['ord_recall'], 3)} / {round(c['M'], 3)} as stated (0.291 / 0.003): "
+              f"{'yes' if c['rounded_as_stated'] else '**no**'}.", ""]
+    else:
+        L += [f"Check: {c['status']}.", ""]
+    L += ["## Per checkpoint", "",
+          "| run | iteration | setting | ordinary recall 0.002 | weighted thin recall L/h < 1 | M | precision | "
+          "decoded/GT | in band | F1 | ordinary median |", "|---|---|---|---|---|---|---|---|---|---|---|"]
+    for lab, rows in doc["rows"].items():
+        if not rows:
+            L.append(f"| {lab} | not evaluated | | | | | | | | | |")
+        for x in rows:
+            L.append(f"| {lab} | {x['iteration']} | {x['setting']} | {_f(x['ord_recall'][DK])} | "
+                     f"{_f(x['weighted_thin'])} | {_f(x['M'])} | {_f(x['precision'])} | {_f(x['dec_gt_ratio'])} | "
+                     f"{'yes' if x['in_band'] else 'no'} | {_f(x['F1'])} | {_f(x['ord_median'])} |")
+    last = {lab: (_row(rows, doc["new_its"][-1] if lab == K2_3_RUN else doc["ref_its"][-1])) for lab, rows in
+            doc["rows"].items()}
+    for key, title in ((DK, "0.002"), (DH, "h/2 (descriptive)")):
+        L += ["", f"## Thin recall per L/h bin at {title}, last checkpoint (n)", "",
+              "| L/h bin | " + " | ".join(f"{lab} ({'it ' + str(x['iteration']) if x else 'n/a'})"
+                                       for lab, x in last.items()) + " |",
+              "|---|" + "---|" * len(last)]
+        for i, b in enumerate(BIN_LABELS):
+            cells = ["" if x is None else f"{_f(x['thin'][i]['recall'][key])} ({x['thin'][i]['n']})"
+                     for x in last.values()]
+            L.append(f"| {b} | " + " | ".join(cells) + " |")
+    return "\n".join(L) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--root", type=Path, action="append", required=True,
                    help="run root (contains eval/ and the run directories); may be repeated")
     p.add_argument("--its", type=_its, default=_its("40000,80000,120000"))
-    p.add_argument("--out", type=Path, default=H5_DIR / "results" / "k1")
+    p.add_argument("--out", type=Path, default=None, help="default h5/results/k1, with --k2-3 h5/results/k2_3")
+    p.add_argument("--k2-3", dest="k2_3", type=Path, default=None,
+                   help="H5-K2-3: the root of K2_3_points_mix_a; --root are then the reference roots")
+    p.add_argument("--new-its", type=_its, default=None, help="--k2-3: checkpoints of the new run (default --its)")
+    p.add_argument("--check-report", type=Path, default=H5_DIR / "results" / "k1" / "report.json")
     args = p.parse_args(argv)
+    if args.k2_3 is not None:
+        out = args.out or H5_DIR / "results" / "k2_3"
+        doc = k2_3_build(args.root, args.its, args.k2_3, args.new_its or args.its, args.check_report)
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "report.json").write_text(json.dumps(doc, indent=1, default=float), encoding="utf-8")
+        (out / "report.md").write_text(k2_3_markdown(doc), encoding="utf-8")
+        r = doc["rule"]
+        extra = "" if r["decision"] == "not evaluable" else (
+            f" (ordinary {r['margin_ord']:+.4f}, M {r['margin_M']:+.4f}, in band {r['in_band']})")
+        print(f"K2-3 report: rule {r['decision']}{extra}; check {doc['check']['status']}; "
+              f"missing {len(doc['missing'])} -> {out}")
+        return 0
+    args.out = args.out or H5_DIR / "results" / "k1"
     doc = build(args.root, args.its)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "report.json").write_text(json.dumps(doc, indent=1, default=float), encoding="utf-8")
