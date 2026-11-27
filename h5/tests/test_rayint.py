@@ -188,7 +188,7 @@ def test_rayint_targets_are_point_decoders_everywhere():
     from eval_rays import decoding_grid
     from models import POINT_TARGET_NAMES, PointModel, build_model
 
-    assert POINT_TARGET_NAMES == data.POINT_TARGETS + RAYINT_TARGETS
+    assert POINT_TARGET_NAMES == data.POINT_TARGETS + RAYINT_TARGETS + data.MIX_TARGETS  # K2'-1 adds the mixtures
     for target in RAYINT_TARGETS:
         assert target in train.ALL_TARGETS
         assert isinstance(build_model(target), PointModel)

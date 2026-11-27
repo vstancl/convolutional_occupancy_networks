@@ -334,9 +334,10 @@ class PointModel(nn.Module):
         return {"logits": self.decode(self.encode(inputs), query)}
 
 
-# The point-decoder targets: data.POINT_TARGETS + data.RAYINT_TARGETS (H5-K2-1b; a test checks the two agree).
+# The point-decoder targets: data.POINT_TARGETS + data.RAYINT_TARGETS + data.MIX_TARGETS (H5-K2-1b, K2'-1; a test
+# checks that they agree).
 POINT_TARGET_NAMES: tuple[str, ...] = ("points_std", "points_strong", "points_rayint_a", "points_rayint_b",
-                                     "points_rayint_c")
+                                     "points_rayint_c", "points_mix_a", "points_mix_b")
 
 
 def build_model(target: str, cfg: dict | None = None) -> nn.Module:

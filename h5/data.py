@@ -281,6 +281,15 @@ def read_occupancy_points(path: Path) -> tuple[np.ndarray, np.ndarray]:
     return points, occ
 
 
+def surface_half(shape_dir: Path, rng: np.random.Generator, n: int) -> tuple[np.ndarray, np.ndarray]:
+    """The near-surface query points of ``points_strong`` (and of the H5-K2' mixtures): ``n`` rows of
+    ``points_surface.npz`` drawn without replacement (both sigma halves of the stored file) and their occupancies.
+    One draw from ``rng``: ``rng.choice(P, size=n, replace=False)``."""
+    sur_p, sur_o = read_occupancy_points(Path(shape_dir) / SURFACE_POINTS_FILE)
+    i_s = rng.choice(sur_p.shape[0], size=n, replace=False)
+    return sur_p[i_s], sur_o[i_s]
+
+
 def build_point_item(shape_dir: Path, rng: np.random.Generator, target: str, n_points: int, noise: float,
                      n_query: int = N_QUERY) -> dict[str, np.ndarray]:
     """One point-decoder item: the encoder input (as ``build_item``) and ``n_query`` query points with occupancy.
@@ -304,10 +313,9 @@ def build_point_item(shape_dir: Path, rng: np.random.Generator, target: str, n_p
     else:
         half = n_query // 2
         i_u = rng.choice(uni_p.shape[0], size=n_query - half, replace=False)
-        sur_p, sur_o = read_occupancy_points(Path(shape_dir) / SURFACE_POINTS_FILE)
-        i_s = rng.choice(sur_p.shape[0], size=half, replace=False)
-        query = np.concatenate([uni_p[i_u], sur_p[i_s]])
-        occ = np.concatenate([uni_o[i_u], sur_o[i_s]])
+        sur_q, sur_occ = surface_half(shape_dir, rng, half)
+        query = np.concatenate([uni_p[i_u], sur_q])
+        occ = np.concatenate([uni_o[i_u], sur_occ])
         from_surface = np.concatenate([np.zeros(n_query - half, dtype=bool), np.ones(half, dtype=bool)])
     return {"inputs": pts.astype(np.float32), "query": query.astype(np.float32),
             "occ": occ.astype(np.float32), "from_surface": from_surface}
@@ -321,6 +329,11 @@ RAYINT_TARGETS: tuple[str, ...] = ("points_rayint_a", "points_rayint_b", "points
 RAYINT_N_RAYS: int = 512  # sampled rays per item
 RAYINT_MIN_SEGMENT: float = 1e-9  # segments shorter than this are dropped
 RAYINT_C_FLOOR: float = cell_size(M) / 4  # variant c: weight 1 / max(length, RAYINT_C_FLOOR) (H5-K2-1c)
+# H5-K2'-1 mixtures: n_query // 2 near-surface points of points_strong (surface_half), the rest from the ray-interval
+# sampler of the given variant. Built by build_rayint_item like the rayint targets.
+MIX_TARGETS: tuple[str, ...] = ("points_mix_a", "points_mix_b")
+MIX_VARIANT: dict[str, str] = {"points_mix_a": "points_rayint_a", "points_mix_b": "points_rayint_b"}
+RAYINT_BUILDER_TARGETS: tuple[str, ...] = RAYINT_TARGETS + MIX_TARGETS  # targets built by build_rayint_item
 
 
 def rayint_segments(axes, start_inside: tuple[np.ndarray, np.ndarray, np.ndarray],
@@ -363,13 +376,18 @@ def rayint_segments(axes, start_inside: tuple[np.ndarray, np.ndarray, np.ndarray
 def _rayint_sample(shape_dir: Path, rng: np.random.Generator, target: str, n_points: int, noise: float,
                    n_query: int, n_rays: int) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
     """``build_rayint_item`` and, for the tests, the sampled rays, their segments and the segment of every point."""
-    if target not in RAYINT_TARGETS:
-        raise ValueError(f"target must be one of {RAYINT_TARGETS}, got {target!r}")
+    if target not in RAYINT_BUILDER_TARGETS:
+        raise ValueError(f"target must be one of {RAYINT_BUILDER_TARGETS}, got {target!r}")
     with np.load(Path(shape_dir) / POINTCLOUD_FILE) as pc:  # encoder input: as build_point_item, rng first
         cloud = pc["points"]
         idx = rng.choice(cloud.shape[0], size=n_points, replace=False)
         pts = cloud[idx].astype(np.float64)
     pts = pts + rng.normal(0.0, noise, size=pts.shape)
+    n_surface = n_query // 2 if target in MIX_TARGETS else 0
+    if n_surface:  # H5-K2'-1: the near-surface half first, then the ray half of the variant
+        sur_q, sur_occ = surface_half(shape_dir, rng, n_surface)
+        target = MIX_VARIANT[target]
+    n_query = n_query - n_surface
     dex = dexio.read(Path(shape_dir) / DEXELS_FILE)
     axes = tuple(rayhits_from_arrays(dex.axes[letter]) for letter in AXIS_LETTERS)
     start_inside = tuple(np.asarray(dex.axes[letter].start_inside) for letter in AXIS_LETTERS)
@@ -398,9 +416,15 @@ def _rayint_sample(shape_dir: Path, rng: np.random.Generator, target: str, n_poi
         query[m, axis] = t[m]
         query[m, col_axis] = uv[row[m], 0]
         query[m, row_axis] = uv[row[m], 1]
+    occ = seg["occ"][pick].astype(np.float32)
+    from_surface = np.zeros(n_query, dtype=bool)
+    if n_surface:
+        query = np.concatenate([sur_q.astype(np.float64), query])
+        occ = np.concatenate([sur_occ.astype(np.float32), occ])
+        from_surface = np.concatenate([np.ones(n_surface, dtype=bool), from_surface])
     item = {"inputs": pts.astype(np.float32), "query": query.astype(np.float32),
-            "occ": seg["occ"][pick].astype(np.float32), "from_surface": np.zeros(n_query, dtype=bool)}
-    extra = {"g": g, "segments": seg, "pick": pick, "t": t}
+            "occ": occ, "from_surface": from_surface}
+    extra = {"g": g, "segments": seg, "pick": pick, "t": t, "n_surface": n_surface}
     return item, extra
 
 
@@ -421,6 +445,11 @@ def build_rayint_item(shape_dir: Path, rng: np.random.Generator, target: str, n_
 
     The point is the cell centre of its ray on the two transverse axes (``ray_fields``) and ``t`` on the ray axis;
     ``occ`` is the occupancy of the segment.
+
+    ``MIX_TARGETS`` (H5-K2'-1): between steps 1 and 2, ``n_query // 2`` near-surface points exactly as the surface
+    half of ``points_strong`` (``surface_half``: the same file, both sigma halves, the stored occupancies); steps 2-4
+    then give the other ``n_query - n_query // 2`` points with variant a (``points_mix_a``) or b (``points_mix_b``).
+    The surface points come first in the arrays, with ``from_surface`` True. One rng stream.
     """
     return _rayint_sample(shape_dir, rng, target, n_points, noise, n_query, n_rays)[0]
 
@@ -428,7 +457,8 @@ def build_rayint_item(shape_dir: Path, rng: np.random.Generator, target: str, n_
 class PointShapeDataset(Dataset):
     """One item per shape of ``csg/{split}.lst``, as ``RayShapeDataset``, for the point decoders.
 
-    ``POINT_TARGETS`` use ``build_point_item``, ``RAYINT_TARGETS`` (H5-K2-1a) ``build_rayint_item``.
+    ``POINT_TARGETS`` use ``build_point_item``, ``RAYINT_TARGETS`` (H5-K2-1a) and ``MIX_TARGETS`` (H5-K2'-1)
+    ``build_rayint_item``.
 
     Same encoder input and the same per-item seeding (``seed`` gives ``SeedSequence([seed, index])``).
     Items: ``inputs`` (n_points, 3), ``query`` (n_query, 3), ``occ`` (n_query,), ``from_surface`` (n_query,) bool.
@@ -436,8 +466,8 @@ class PointShapeDataset(Dataset):
 
     def __init__(self, split: str, target: str, n_points: int = 10000, noise: float = 0.001,
                  seed: int | None = None, root: Path = DATA_ROOT):
-        if target not in POINT_TARGETS + RAYINT_TARGETS:
-            raise ValueError(f"target must be one of {POINT_TARGETS + RAYINT_TARGETS}, got {target!r}")
+        if target not in POINT_TARGETS + RAYINT_BUILDER_TARGETS:
+            raise ValueError(f"target must be one of {POINT_TARGETS + RAYINT_BUILDER_TARGETS}, got {target!r}")
         self.split, self.target, self.n_points, self.noise, self.seed = split, target, n_points, noise, seed
         self.root = Path(root)
         self.ids = shape_ids(split, self.root)
@@ -450,5 +480,5 @@ class PointShapeDataset(Dataset):
             rng = np.random.default_rng(np.random.SeedSequence([self.seed, index]))
         else:
             rng = np.random.default_rng(np.random.SeedSequence([int(torch.initial_seed()) % (2**63), index]))
-        build = build_rayint_item if self.target in RAYINT_TARGETS else build_point_item
+        build = build_rayint_item if self.target in RAYINT_BUILDER_TARGETS else build_point_item
         return build(self.root / "csg" / self.ids[index], rng, self.target, self.n_points, self.noise)

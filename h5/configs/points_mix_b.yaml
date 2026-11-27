@@ -1,0 +1,5 @@
+# points_mix_b: H5-K2'-1 point decoder (ConvONet LocalDecoder), the model and loss of points_strong; only the query
+# points differ: half near-surface as points_strong, half from the ray-interval sampler variant b
+# (data.build_rayint_item; n_rays = rays per item, 512 by default). See default.yaml for the shared keys.
+target: points_mix_b
+out_dir: ~/PhD/data/csgbox/h5_runs/points_mix_b

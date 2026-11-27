@@ -46,7 +46,8 @@ from _paths import add_external_paths  # noqa: E402
 add_external_paths()
 
 from data import (  # noqa: E402
-    DATA_ROOT, POINT_TARGETS, RAYINT_TARGETS, TARGETS, build_item, build_point_item, build_rayint_item, shape_ids,
+    DATA_ROOT, MIX_TARGETS, POINT_TARGETS, RAYINT_BUILDER_TARGETS, RAYINT_TARGETS, TARGETS, build_item,
+    build_point_item, build_rayint_item, shape_ids,
 )
 from eval_rays import RATIO_BAND, decoding_grid, dec_gt_ratio, grid_summaries, prepare_all, prepare_fixed  # noqa: E402
 from losses import POS_WEIGHT_K2, dense_loss, hits_loss  # noqa: E402
@@ -54,6 +55,7 @@ from models import POINT_TARGET_NAMES, build_model  # noqa: E402
 
 CONFIG_DIR: Path = H5_DIR / "configs"
 ALL_TARGETS: tuple[str, ...] = tuple(TARGETS) + ("hits_8_plane",) + tuple(POINT_TARGETS) + tuple(RAYINT_TARGETS)
+ALL_TARGETS = ALL_TARGETS + tuple(MIX_TARGETS)  # H5-K2'-1: the mixture samplers
 HITS_TARGETS: tuple[str, ...] = ("hits_8", "hits_16", "hits_8_plane")
 SELECTION_DELTA: str = "0.002"  # the validation metric is F1 at this delta
 
@@ -128,7 +130,7 @@ class TrainSamples(Dataset):
 
     def __getitem__(self, g: int) -> dict[str, np.ndarray]:
         rng = np.random.default_rng(np.random.SeedSequence([self.seed, 2, int(g)]))
-        if self.target in RAYINT_TARGETS:  # point decoder, query points from the GT intervals of rays (H5-K2-1a)
+        if self.target in RAYINT_BUILDER_TARGETS:  # point decoder, query points from GT intervals of rays (H5-K2-1a, K2'-1)
             # n_rays of the config is the number of sampled rays per item (default 512 = data.RAYINT_N_RAYS)
             return build_rayint_item(self.shape_of(g), rng, self.target, self.n_points, self.noise,
                                      n_rays=self.n_rays)

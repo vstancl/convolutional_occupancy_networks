@@ -24,7 +24,7 @@ H5_DIR = Path(__file__).resolve().parents[1]
 if str(H5_DIR) not in sys.path:
     sys.path.insert(0, str(H5_DIR))
 
-from data import POINT_TARGETS, RAYINT_TARGETS, TARGETS, fixed_val_rays, shape_ids  # noqa: E402
+from data import MIX_TARGETS, POINT_TARGETS, RAYINT_TARGETS, TARGETS, fixed_val_rays, shape_ids  # noqa: E402
 from eval_rays import EVAL_CHUNK_RAYS, EVAL_THR, aggregate, evaluate_shape, to_markdown  # noqa: E402
 from models import build_model  # noqa: E402
 
@@ -43,7 +43,7 @@ def load_model(target: str, checkpoint: str | None, seed: int, device: torch.dev
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--target", required=True, choices=sorted(set(TARGETS) | {"hits_8_plane"} | set(POINT_TARGETS) | set(RAYINT_TARGETS)))
+    p.add_argument("--target", required=True, choices=sorted(set(TARGETS) | {"hits_8_plane"} | set(POINT_TARGETS) | set(RAYINT_TARGETS) | set(MIX_TARGETS)))
     src = p.add_mutually_exclusive_group(required=True)
     src.add_argument("--checkpoint", type=str)
     src.add_argument("--untrained", action="store_true")
