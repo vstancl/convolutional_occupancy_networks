@@ -39,7 +39,7 @@ add_external_paths()
 from data import DATA_ROOT, ray_fields, shape_ids  # noqa: E402
 from eval_points import BISECT_STEPS, _decode_iso, _sample_probs, network_prob_fn, ray_geometry  # noqa: E402
 from eval_rays import EVAL_THR, decode_by_axis, deterministic_kernels, shape_points  # noqa: E402
-from models import build_model  # noqa: E402
+from models import build_model, load_trained  # noqa: E402
 
 RAY_METHODS: tuple[str, ...] = ("hits_8", "hits_8_plane", "occfrac_128")
 POINT_METHOD: str = "points_strong"
@@ -74,10 +74,7 @@ def load_method(method: str, ckpt: Path | None, device: torch.device) -> tuple[t
             {"thr": EVAL_THR} if method in ("hits_8", "hits_8_plane") else {"occ_snap": OCC_SNAP_DEFAULT})
         model.eval()
         return model, setting, "untrained"
-    model = build_model(target).to(device)
-    blob = torch.load(ckpt, map_location=device, weights_only=False)
-    model.load_state_dict(blob["state_dict"])
-    model.eval()
+    model, blob = load_trained(ckpt, device, target)  # with the run's model config (H5-K2-4)
     side = ckpt.with_suffix(".json")
     if side.exists():
         setting = json.loads(side.read_text(encoding="utf-8"))["setting"]

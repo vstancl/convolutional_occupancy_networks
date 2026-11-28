@@ -239,10 +239,15 @@ def perpendicular_plane_feature(ray_axis: torch.Tensor, ray_origin_uv: torch.Ten
     return feats.gather(2, idx).squeeze(2)
 
 
-def _encoder() -> LocalPoolPointnet:
-    """ConvONet's encoder as in ``shapenet_3plane.yaml``."""
+def _encoder(plane_resolution: int = PLANE_RES) -> LocalPoolPointnet:
+    """ConvONet's encoder as in ``shapenet_3plane.yaml``; ``plane_resolution`` may differ (H5-K2-4), the U-Net depth
+    stays the same, so its receptive field in shape units shrinks as the resolution grows."""
+    base = 2 ** (UNET_KWARGS["depth"] - 1)
+    if int(plane_resolution) <= 0 or int(plane_resolution) % base:
+        raise ValueError(f"plane_resolution must be a positive multiple of {base} (U-Net depth "
+                         f"{UNET_KWARGS['depth']}), got {plane_resolution!r}")
     return LocalPoolPointnet(
-        c_dim=ENC_C_DIM, dim=3, hidden_dim=ENC_HIDDEN, plane_resolution=PLANE_RES,
+        c_dim=ENC_C_DIM, dim=3, hidden_dim=ENC_HIDDEN, plane_resolution=int(plane_resolution),
         plane_type=list(PLANES), padding=PADDING, unet=True, unet_kwargs=dict(UNET_KWARGS),
     )
 
@@ -300,6 +305,7 @@ def n_params(module: nn.Module | None) -> int:
 # Point decoders (H5-5a): the same encoder, and ConvONet's LocalDecoder as the point-wise decoder.
 # ---------------------------------------------------------------------------------------------------
 
+POINT_MODEL_KEYS: tuple[str, ...] = ("plane_resolution",)  # the ``model`` config keys of PointModel (H5-K2-4)
 POINT_HIDDEN: int = 32  # shapenet_3plane.yaml decoder_kwargs.hidden_size; n_blocks is LocalDecoder's default (5)
 
 
@@ -316,8 +322,13 @@ class PointModel(nn.Module):
         super().__init__()
         if target not in POINT_TARGET_NAMES:
             raise ValueError(f"not a point target: {target!r}")
+        cfg = dict(cfg or {})
+        unknown = set(cfg) - set(POINT_MODEL_KEYS)
+        if unknown:
+            raise ValueError(f"unknown model keys for a point target: {sorted(unknown)} (allowed {POINT_MODEL_KEYS})")
         self.target = target
-        self.encoder = _encoder()
+        self.plane_resolution = int(cfg.get("plane_resolution", PLANE_RES))
+        self.encoder = _encoder(self.plane_resolution)
         self.decoder = LocalDecoder(dim=3, c_dim=ENC_C_DIM, hidden_size=POINT_HIDDEN, sample_mode=SAMPLE_MODE,
                                     padding=PADDING)
         self.trunk = None
@@ -345,3 +356,32 @@ def build_model(target: str, cfg: dict | None = None) -> nn.Module:
     if target in POINT_TARGET_NAMES:
         return PointModel(target, cfg)
     return H5RayModel(target, cfg)
+
+
+def checkpoint_model_cfg(checkpoint: Path, blob: dict) -> dict | None:
+    """The ``model`` config a checkpoint was trained with (H5-K2-4).
+
+    ``blob["model_cfg"]`` if the checkpoint stores it (train.py does from K2-4 on), else the ``model`` key of the
+    ``config.json`` next to the checkpoint, else None (the defaults). Needed because the U-Net weights do not depend on
+    the plane resolution: a 128 checkpoint loads into a 64 model without an error.
+    """
+    if "model_cfg" in blob:
+        return blob["model_cfg"] or None
+    cfg = Path(checkpoint).parent / "config.json"
+    if cfg.is_file():
+        import json
+        return json.loads(cfg.read_text(encoding="utf-8")).get("model") or None
+    return None
+
+
+def load_trained(checkpoint: Path, device: torch.device, target: str | None = None) -> tuple[nn.Module, dict]:
+    """The model of a training checkpoint (``model_it{N}.pt``, ``model_best.pt``, ``model_last.pt``), built with the
+    model config it was trained with, weights loaded, in eval mode. Returns ``(model, blob)``. With ``target`` the
+    checkpoint must be for that target."""
+    blob = torch.load(checkpoint, map_location=device, weights_only=False)
+    if target is not None and blob.get("target") not in (None, target):
+        raise ValueError(f"checkpoint is for {blob.get('target')!r}, not {target!r}")
+    model = build_model(target or blob["target"], checkpoint_model_cfg(checkpoint, blob)).to(device)
+    model.load_state_dict(blob["state_dict"])
+    model.eval()
+    return model, blob

@@ -298,7 +298,8 @@ def run(cfg: dict, resume: bool = False, device: torch.device | None = None) -> 
                                   "selected_f1": f1_all[sel], "selected_ratio": choice["ratio"],
                                   "selected_in_band": choice["in_band"], "f1": f1_all, "settings": summaries,
                                   "val_seconds": time.perf_counter() - t_val})
-            state = {"target": target, "state_dict": model.state_dict(), "iteration": iteration,
+            state = {"target": target, "model_cfg": cfg.get("model") or None, "state_dict": model.state_dict(),
+                     "iteration": iteration,
                      "decoding": summaries[sel]["setting"], "f1": f1_all[sel], "ratio": choice["ratio"],
                      "in_band": choice["in_band"]}
             torch.save({**state, "summary": summaries[sel]}, out / f"model_it{iteration}.pt")
@@ -312,7 +313,8 @@ def run(cfg: dict, resume: bool = False, device: torch.device | None = None) -> 
                 torch.save({**state, "best_iteration": best_it}, out / "model_best.pt")
             rng_cuda = torch.cuda.get_rng_state(device).cpu() if device.type == "cuda" else None
             save_checkpoint(out / "model_last.pt", {
-                "target": target, "state_dict": model.state_dict(), "optimizer": opt.state_dict(),
+                "target": target, "model_cfg": cfg.get("model") or None, "state_dict": model.state_dict(),
+                "optimizer": opt.state_dict(),
                 "iteration": iteration, "best_f1": best_f1, "best_iteration": best_it,
                 "rng_cpu": torch.get_rng_state(), "rng_cuda": rng_cuda, "config": cfg})
             window_t, window_n = time.perf_counter(), 0  # validation time is not training time

@@ -26,18 +26,16 @@ if str(H5_DIR) not in sys.path:
 
 from data import MIX_TARGETS, POINT_TARGETS, RAYINT_TARGETS, TARGETS, fixed_val_rays, shape_ids  # noqa: E402
 from eval_rays import EVAL_CHUNK_RAYS, EVAL_THR, aggregate, evaluate_shape, to_markdown  # noqa: E402
-from models import build_model  # noqa: E402
+from models import build_model, load_trained  # noqa: E402
 
 
 def load_model(target: str, checkpoint: str | None, seed: int, device: torch.device) -> torch.nn.Module:
     if checkpoint is None:
         torch.manual_seed(seed)
         return build_model(target).to(device)
-    blob = torch.load(checkpoint, map_location=device, weights_only=False)
+    model, blob = load_trained(checkpoint, device, target)  # with the run's model config (H5-K2-4)
     if blob.get("target") != target:
         raise ValueError(f"checkpoint is for {blob.get('target')!r}, not {target!r}")
-    model = build_model(target).to(device)
-    model.load_state_dict(blob["state_dict"])
     return model
 
 

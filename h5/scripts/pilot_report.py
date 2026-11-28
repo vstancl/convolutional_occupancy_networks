@@ -59,7 +59,7 @@ from eval_rays import (  # noqa: E402
     m_comparable,
     prepare_all,
 )
-from models import build_model  # noqa: E402
+from models import load_trained  # noqa: E402
 
 P2_RUNS: dict[str, str] = {"hits_8": "hits_8", "hits_8_plane": "hits_8_plane", "occfrac_128": "occfrac_128",
                            "points_strong": "points_strong"}
@@ -86,10 +86,7 @@ def run_eval(root: Path, its: list[int], n_val: int, device: torch.device) -> No
             ck = root / f"P2_{run}" / f"model_it{it}.pt"
             side = ck.with_suffix(".json")
             setting = json.loads(side.read_text(encoding="utf-8"))["setting"]
-            blob = torch.load(ck, map_location=device, weights_only=False)
-            model = build_model(target).to(device)
-            model.load_state_dict(blob["state_dict"])
-            model.eval()
+            model, blob = load_trained(ck, device, target)  # with the run's model config (H5-K2-4)
             summary = grid_summaries(model, items, [setting], device, DATA_ROOT)[0]  # deterministic forward inside
             doc = {"run": run, "iteration": it, "setting": setting, "setting_name": summary["setting_name"],
                    "n_shapes": len(ids), "summary": summary}

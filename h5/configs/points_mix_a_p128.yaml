@@ -1,0 +1,8 @@
+# points_mix_a_p128: H5-K2-4. points_mix_a (K2-3) with encoder planes of 128^2 instead of 64^2; nothing else differs.
+# The U-Net depth (4) and all other encoder and decoder settings stay as they are, so the U-Net's receptive field in
+# shape units is half that of the 64^2 planes (a deliberate choice). The point decoder samples the planes in
+# normalised coordinates (ConvONet's sample_plane_feature), so it follows the resolution without a change.
+target: points_mix_a
+model:
+  plane_resolution: 128
+out_dir: ~/PhD/data/csgbox/h5_runs/points_mix_a_p128

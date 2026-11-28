@@ -32,7 +32,7 @@ add_external_paths()
 
 from data import DATA_ROOT, shape_ids  # noqa: E402
 from eval_rays import grid_summaries, prepare_all  # noqa: E402
-from models import build_model  # noqa: E402
+from models import load_trained  # noqa: E402
 
 DK = "0.002"
 
@@ -81,10 +81,7 @@ def main(argv: list[str] | None = None) -> int:
                     items = [prepare_all(sid, DATA_ROOT) for sid in shape_ids(ev["split"], DATA_ROOT)[: ev["n_shapes"]]]
                 setting = setting_of(root, label, run, args.it)
                 target = json.loads((run_dir / "config.json").read_text(encoding="utf-8"))["target"]
-                blob = torch.load(run_dir / f"model_it{args.it}.pt", map_location=device, weights_only=False)
-                model = build_model(target).to(device)
-                model.load_state_dict(blob["state_dict"])
-                model.eval()
+                model, _ = load_trained(run_dir / f"model_it{args.it}.pt", device, target)
                 summary = grid_summaries(model, items, [setting], device, DATA_ROOT)[0]
                 doc = {"run": run, "iteration": args.it, "row": label, "setting": setting,
                        "setting_name": summary["setting_name"], "split": ev["split"], "n_shapes": len(items),

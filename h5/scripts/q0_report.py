@@ -63,7 +63,7 @@ from eval_rays import (  # noqa: E402
     prepare_all,
 )
 from train import _select  # noqa: E402  (the band selection of training, H5-K1-1a)
-from models import build_model  # noqa: E402
+from models import load_trained  # noqa: E402
 
 RUNS: tuple[str, ...] = ("Q0_points_strong", "Q0_hits_8", "Q0_occfrac_128")
 V1_RUNS: tuple[str, ...] = ("Q0_points_strong", "Q0_hits_8")  # the rules compare these two runs only
@@ -121,10 +121,7 @@ def run_eval(root: Path, its: list[int], device: torch.device, runs_wanted: tupl
             if (out / name).exists():  # resumed: the evaluation of this checkpoint is done
                 print(f"eval {run} it {it}: exists, skipped", flush=True)
                 continue
-            blob = torch.load(ck, map_location=device, weights_only=False)
-            model = build_model(target).to(device)
-            model.load_state_dict(blob["state_dict"])
-            model.eval()
+            model, blob = load_trained(ck, device, target)  # with the run's model config (H5-K2-4)
             train_part = {"train_loss": train_loss(run_dir, it, int(cfg["val_every"])),
                           "split": split or "train_subset", "n_shapes": len(items)}
             if grid:
