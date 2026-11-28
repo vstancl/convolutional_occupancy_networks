@@ -26,6 +26,9 @@ COLOURS: dict[str, str] = {
     "points_rayint_a": "#bcbd22",
     "points_rayint_b": "#7b4173",
     "points_rayint_c": "#17becf",
+    # H5-G6: the mixtures in the hue family of their ray-interval variant (b purple, a olive), darker
+    "points_mix_a": "#637939",
+    "points_mix_b": "#a55194",
     "points_512": "#393b79",  # gate-B point-sample ceiling (no network)
 }
 OTHER = "#000000"
@@ -37,11 +40,11 @@ BIN_LABELS: tuple[str, ...] = ("<1/8", "1/8-1/4", "1/4-1/2", "1/2-1", "1-2", "2-
 DELTA_002 = "0.002"
 DELTA_HALF_H = "0.0042969140625"  # h(128) / 2, the key the evaluations use
 
-_PREFIX = re.compile(r"^(P\d+|Q\d+|K\d+)_")
+_PREFIX = re.compile(r"^(P\d+|Q\d+|K\d+p?)_")  # K2p_: the K2' runs
 
 
 def decoder_of(name: str) -> str:
-    """``Q0_hits_8`` -> ``hits_8``; ``tsdf_128 (grid)`` -> ``tsdf_128``."""
+    """``Q0_hits_8`` -> ``hits_8``; ``K2p_points_mix_a`` -> ``points_mix_a``; ``tsdf_128 (grid)`` -> ``tsdf_128``."""
     return _PREFIX.sub("", name.split(" (")[0])
 
 
@@ -49,12 +52,21 @@ def colour(name: str) -> str:
     return COLOURS.get(decoder_of(name), OTHER)
 
 
-def save(fig, out_dir: Path, stem: str) -> list[Path]:
-    """PNG (dpi 200) and SVG, without timestamps in the metadata."""
+_METADATA: dict[str, dict] = {
+    "png": {"Software": None},
+    "svg": {"Date": None, "Creator": None},
+    "pdf": {"CreationDate": None, "ModDate": None, "Creator": None, "Producer": None},
+}
+
+
+def save(fig, out_dir: Path, stem: str, formats: tuple[str, ...] = ("png", "svg")) -> list[Path]:
+    """PNG (dpi 200) and SVG by default (``formats`` may name pdf instead, H5-G6), without timestamps in the
+    metadata."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    paths = [out_dir / f"{stem}.png", out_dir / f"{stem}.svg"]
+    paths = [out_dir / f"{stem}.{ext}" for ext in formats]
     plt.rcParams["svg.hashsalt"] = "h5-g1"
-    fig.savefig(paths[0], dpi=DPI, bbox_inches="tight", metadata={"Software": None})
-    fig.savefig(paths[1], bbox_inches="tight", metadata={"Date": None, "Creator": None})
+    for path, ext in zip(paths, formats):
+        kw = {"dpi": DPI} if ext == "png" else {}
+        fig.savefig(path, bbox_inches="tight", metadata=_METADATA[ext], **kw)
     plt.close(fig)
     return paths
